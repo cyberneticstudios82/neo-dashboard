@@ -133,6 +133,13 @@ var ctp=new THREE.Mesh(new THREE.CylinderGeometry(0.3,0.4,0.1,16),new THREE.Mesh
 // Plants
 function mkP(x,z){var p=new THREE.Group();p.add(new THREE.Mesh(new THREE.CylinderGeometry(0.15,0.2,0.8,8),new THREE.MeshLambertMaterial({color:0x1a1a1a})).translateY(0.4));p.add(new THREE.Mesh(new THREE.SphereGeometry(0.35,8,8),new THREE.MeshLambertMaterial({color:0x113311})).translateY(1));p.position.set(x,0,z);sc.add(p);}
 mkP(-12,-6);mkP(12,-6);mkP(-12,6);mkP(12,6);
+
+// Coffee machine
+var cmBase=new THREE.Mesh(new THREE.BoxGeometry(1,1.5,0.6),new THREE.MeshLambertMaterial({color:0x111111}));cmBase.position.set(12,0.75,-8);sc.add(cmBase);
+var cmTop=new THREE.Mesh(new THREE.BoxGeometry(1.1,0.4,0.7),new THREE.MeshLambertMaterial({color:0x222222})).translate(12,1.7,-8);sc.add(cmTop);
+var cmScreen=new THREE.Mesh(new THREE.PlaneGeometry(0.6,0.4),new THREE.MeshLambertMaterial({color:0x001100,emissive:0x00ff44,emissiveIntensity:0.3})).translate(12,1.3,-7.69);sc.add(cmScreen);
+var cmSpout=new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.06,0.4,8),new THREE.MeshLambertMaterial({color:0xcccccc})).translate(12,1.1,-7.6);sc.add(cmSpout);
+var cmLight=new THREE.PointLight(0x00ff44,0.6,4);cmLight.position.set(12,1.5,-8);sc.add(cmLight);
 // Bookshelf
 var bs=new THREE.Mesh(new THREE.BoxGeometry(3,4,0.4),new THREE.MeshLambertMaterial({color:0x1a1a2e}));bs.position.set(-14,2,0);sc.add(bs);
 for(var bi=0;bi<4;bi++){var bh=new THREE.Mesh(new THREE.BoxGeometry(2.5,0.5,0.35),new THREE.MeshLambertMaterial({color:bi%2===0?0x442211:0x112244}));bh.position.set(-14,0.5+bi*0.9,0);sc.add(bh);}
@@ -141,14 +148,22 @@ var tv=new THREE.Mesh(new THREE.BoxGeometry(3,1.8,0.1),new THREE.MeshLambertMate
 var tvS=new THREE.Mesh(new THREE.PlaneGeometry(2.8,1.6),new THREE.MeshLambertMaterial({color:0x001100,emissive:0x00ff88,emissiveIntensity:0.1}));tvS.position.set(0,5,-9.84);sc.add(tvS);
 var cols={aria:0x00ff88,sentinel:0xff4400,mercury:0x0088ff,apex:0xff8800,dexter:0x00ffff};
 var desks=[];
+var agentEyes=[];
 function mk(x,col,name){
 var g=new THREE.Group();
-g.add(new THREE.Mesh(new THREE.BoxGeometry(2.5,0.12,1.6),new THREE.MeshLambertMaterial({color:0x1a1a2e})).translateY(1.1));
-g.add(new THREE.Mesh(new THREE.BoxGeometry(0.08,1,0.65),new THREE.MeshLambertMaterial({color:col,emissive:col,emissiveIntensity:0.5})).translate(0,1.9,-0.35));
-g.add(new THREE.Mesh(new THREE.BoxGeometry(0.65,0.08,0.5),new THREE.MeshLambertMaterial({color:0x333344})).translate(0,0.65,0.85));
-g.add(new THREE.Mesh(new THREE.BoxGeometry(0.6,0.65,0.08),new THREE.MeshLambertMaterial({color:0x333344})).translate(0,1.1,1.15));
-g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.2,0.25,0.65,8),new THREE.MeshLambertMaterial({color:0x222233,emissive:col,emissiveIntensity:0.2})).translateY(1.55));
-g.add(new THREE.Mesh(new THREE.BoxGeometry(0.28,0.25,0.28),new THREE.MeshLambertMaterial({color:0x222233,emissive:col,emissiveIntensity:0.6})).translateY(2.05));
+g.add(new THREE.Mesh(new THREE.BoxGeometry(3,0.12,1.8),new THREE.MeshLambertMaterial({color:0x1a1a2e})).translateY(1.1));
+// Dual monitors
+g.add(new THREE.Mesh(new THREE.BoxGeometry(0.1,1.1,0.7),new THREE.MeshLambertMaterial({color:col,emissive:col,emissiveIntensity:0.5})).translate(-0.5,1.95,-0.4));
+g.add(new THREE.Mesh(new THREE.BoxGeometry(0.7,0.55,0.05),new THREE.MeshLambertMaterial({color:0x222233})).translate(-0.5,1.55,-0.02));
+g.add(new THREE.Mesh(new THREE.BoxGeometry(0.1,1.1,0.7),new THREE.MeshLambertMaterial({color:col,emissive:col,emissiveIntensity:0.5})).translate(0.5,1.95,-0.4));
+g.add(new THREE.Mesh(new THREE.BoxGeometry(0.7,0.55,0.05),new THREE.MeshLambertMaterial({color:0x222233})).translate(0.5,1.55,-0.02));
+g.add(new THREE.Mesh(new THREE.BoxGeometry(0.8,0.06,0.35),new THREE.MeshLambertMaterial({color:0x333344})).translate(0,0.68,0.8));
+g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.25,0.3,0.7,8),new THREE.MeshLambertMaterial({color:0x222233,emissive:col,emissiveIntensity:0.15})).translateY(1.55));
+// Head with eyes
+var head=new THREE.Mesh(new THREE.BoxGeometry(0.35,0.4,0.3),new THREE.MeshLambertMaterial({color:0x333344}));head.position.set(0,2.3,0.8);g.add(head);
+var eyeL=new THREE.Mesh(new THREE.SphereGeometry(0.04,8,8),new THREE.MeshLambertMaterial({color:0xffffff,emissive:col,emissiveIntensity:0.8}));eyeL.position.set(-0.08,2.35,0.92);g.add(eyeL);
+var eyeR=new THREE.Mesh(new THREE.SphereGeometry(0.04,8,8),new THREE.MeshLambertMaterial({color:0xffffff,emissive:col,emissiveIntensity:0.8}));eyeR.position.set(0.08,2.35,0.92);g.add(eyeR);
+agentEyes.push({eyeL,eyeR,g});
 var la=new THREE.Mesh(new THREE.BoxGeometry(0.06,0.4,0.06),new THREE.MeshLambertMaterial({color:0x333344}));la.translate(-0.32,1.55,0);la.rotation.z=0.25;g.add(la);
 var ra=new THREE.Mesh(new THREE.BoxGeometry(0.06,0.4,0.06),new THREE.MeshLambertMaterial({color:0x333344}));ra.translate(0.32,1.55,0);ra.rotation.z=-0.25;g.add(ra);
 var orb=new THREE.Mesh(new THREE.SphereGeometry(0.1,12,12),new THREE.MeshLambertMaterial({color:col,emissive:col,emissiveIntensity:0.8}));orb.translateY(2.5);g.add(orb);
@@ -176,7 +191,11 @@ setInterval(function(){upt('apex','ap');lg('lx','⚡ APEX: '+atasks.apex[ast.ape
 setInterval(function(){upt('dexter','dx');lg('ld','💳 DEXTER: '+atasks.dexter[ast.dexter.i]);},3400);
 setInterval(trade,4500);setInterval(sec,2800);setInterval(res,2200);setInterval(fin,2600);setInterval(collab,5500);
 setTimeout(function(){lg('la','🔬 ARIA: Online');lg('ls','🛡️ SENTINEL: Online');lg('lm','📈 MERCURY: Online');lg('lx','⚡ APEX: Online');lg('ld','💳 DEXTER: Online');nf('APEX HQ - 5 Agents Ready');},1200);
-var tm=0;function anim(){requestAnimationFrame(anim);tm+=0.016;desks.forEach(function(d,i){d.orb.position.y=2.5+Math.sin(tm*2+i)*0.08;d.la.rotation.x=Math.sin(tm*1.5+i)*0.15;d.ra.rotation.x=Math.sin(tm*1.5+i+Math.PI)*0.15;d.pl.intensity=0.5+Math.sin(tm*3+i)*0.15;});ca.position.x=Math.sin(tm*0.08)*0.3;ca.lookAt(0,1,0);re.render(sc,ca);}
+var tm=0;function anim(){requestAnimationFrame(anim);tm+=0.016;
+desks.forEach(function(d,i){d.orb.position.y=2.7+Math.sin(tm*2+i)*0.08;d.pl.intensity=0.5+Math.sin(tm*3+i)*0.15;});
+// Eyes follow camera
+agentEyes.forEach(function(e){var dx=(ca.position.x-e.g.position.x)*0.02;var dz=(ca.position.z-e.g.position.z)*0.02;e.eyeL.position.x=-0.08+dx;e.eyeR.position.x=0.08+dx;e.eyeL.lookAt(ca.position);e.eyeR.lookAt(ca.position);});
+ca.position.x=Math.sin(tm*0.08)*0.3;ca.lookAt(0,1,0);re.render(sc,ca);}
 window.onresize=function(){ca.aspect=innerWidth/innerHeight;ca.updateProjectionMatrix();re.setSize(innerWidth,innerHeight);};anim();
 }catch(e){console.error(e);document.getElementById('ta').textContent='Error';}
 </script></body></html>
