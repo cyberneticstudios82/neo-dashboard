@@ -231,7 +231,7 @@ setInterval(function(){upt('apex','ap');lg('lx','⚡ APEX: '+atasks.apex[ast.ape
 setInterval(function(){upt('dexter','dx');lg('ld','💳 DEXTER: '+atasks.dexter[ast.dexter.i]);},3400);
 setInterval(trade,12000);setInterval(sec,2800);setInterval(res,2200);setInterval(fin,2600);setInterval(collab,5500);
 setTimeout(function(){lg('la','🔬 ARIA: Online');lg('ls','🛡️ SENTINEL: Online');lg('lm','📈 MERCURY: Online');lg('lx','⚡ APEX: Online');lg('ld','💳 DEXTER: Online');nf('APEX HQ - 5 Agents Ready');},1200);
-var tm=0;function anim(){requestAnimationFrame(anim);tm+=0.016;var mouseDown=false,mouseX=0,mouseY=0;
+var tm=0;var mouseDown=false,mouseX=0,mouseY=0;function anim(){requestAnimationFrame(anim);tm+=0.016;
 document.addEventListener('mousedown',function(e){mouseDown=true;});
 document.addEventListener('mouseup',function(e){mouseDown=false;});
 document.addEventListener('mousemove',function(e){mouseX=(e.clientX-innerWidth/2)/100;mouseY=(e.clientY-innerHeight/2)/100;});
