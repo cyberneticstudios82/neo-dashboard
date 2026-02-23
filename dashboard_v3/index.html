@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>APEX HQ</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+body{margin:0;overflow:hidden;background:#000;font-family:'Courier New',monospace;color:#fff}
+#c{position:fixed;top:0;left:0;width:100%;height:100%}
+.top{position:fixed;top:0;left:0;right:0;height:40px;background:rgba(0,0,0,0.9);border-bottom:1px solid #0f8;display:flex;align-items:center;justify-content:space-between;padding:0 20px;z-index:100}
+.logo{font-size:16px;font-weight:bold;color:#0f8}
+.charts-btn{position:fixed;top:45px;left:50%;transform:translateX(-50%);padding:5px 10px;background:#000;border:1px solid #0f8;border-radius:4px;color:#0f8;font-size:10px;cursor:pointer;z-index:90}
+.charts-panel{position:fixed;top:70px;left:50%;transform:translateX(-50%);width:380px;height:140px;background:rgba(0,0,0,0.95);border:1px solid #0f8;border-radius:8px;padding:8px;z-index:85;display:none}
+.charts-panel.show{display:block}
+.chart canvas{width:100%;height:90px;background:#000;border:1px solid #333}
+.p{padding:4px 8px;border-radius:4px;font-size:10px;margin-left:5px}
+.pa{background:rgba(0,255,136,0.2);color:#0f8}.ps{background:rgba(255,68,0,0.2);color:#f40}.pm{background:rgba(0,136,255,0.2);color:#08f}.px{background:rgba(255,136,0,0.2);color:#f80}.pd{background:rgba(0,255,255,0.2);color:#0ff}
+.left{position:fixed;left:10px;top:50px;width:180px;bottom:10px;display:flex;flex-direction:column;gap:8px;z-index:50;overflow-y:auto}
+.card{background:rgba(0,0,0,0.8);border:1px solid #0f8;border-radius:6px;padding:8px}
+.ca{color:#0f8}.cs{color:#f40}.cm{color:#08f}.cx{color:#f80}.cd{color:#0ff}
+.hdr{display:flex;align-items:center;gap:6px;margin-bottom:4px}
+.av{width:20px;height:20px;border-radius:50%;background:#222;border:2px solid currentColor;display:flex;align-items:center;justify-content:center;font-size:10px}
+.if h3{font-size:10px;margin:0}.if p{font-size:8px;color:#666;margin:0}
+.task{font-size:9px;color:#888;margin:4px 0}
+.right{position:fixed;right:10px;top:50px;width:200px;bottom:10px;background:rgba(0,0,0,0.8);border:1px solid #0f8;border-radius:6px;padding:8px;z-index:50}
+.logt{font-size:10px;color:#0f8;margin-bottom:6px;border-bottom:1px solid #0f8;padding-bottom:4px}
+.logf{flex:1;overflow-y:auto;height:calc(100%-30px)}
+.le{font-size:8px;margin-bottom:3px}
+.bot{position:fixed;bottom:10px;left:200px;right:220px;height:30px;background:rgba(0,0,0,0.8);border:1px solid #0f8;border-radius:6px;display:flex;align-items:center;justify-content:space-around}
+.m{text-align:center}.mv{font-size:14px;font-weight:bold}.ml{font-size:8px;color:#666}
+</style></head>
+<body>
+<div id="c"></div>
+<div class="top"><div class="logo">APEX HQ</div>
+<div><span class="p pa">ARIA</span><span class="p ps">SENTINEL</span><span class="p pm">MERCURY</span><span class="p px">APEX</span><span class="p pd">DEXTER</span></div></div>
+<div class="left">
+<div class="card ca"><div class="hdr"><div class="av">🔬</div><div class="if"><h3>ARIA</h3><p>Research</p></div></div><div class="task" id="ta">Initializing...</div><div class="stats"><span id="st1">0</span> Tools <span id="st2">0</span> Ideas</div></div>
+<div class="card cs"><div class="hdr"><div class="av">🛡️</div><div class="if"><h3>SENTINEL</h3><p>Security</p></div></div><div class="task" id="ts">Initializing...</div><div class="stats"><span id="st4">0</span> Threats <span id="st5">0</span> Audits</div></div>
+<div class="card cm"><div class="hdr"><div class="av">📈</div><div class="if"><h3>MERCURY</h3><p>Markets</p></div></div><div class="task" id="tm">Initializing...</div><div class="stats"><span id="st7">0</span> Trades <span id="st8">$0</span> P&L</div></div>
+<div class="card cx"><div class="hdr"><div class="av">⚡</div><div class="if"><h3>APEX</h3><p>Coordinator</p></div></div><div class="task" id="tap">Initializing...</div><div class="stats"><span id="st10">0</span> Tasks <span id="st11">0</span> Collab</div></div>
+<div class="card cd"><div class="hdr"><div class="av">💳</div><div class="if"><h3>DEXTER</h3><p>Research</p></div></div><div class="task" id="tdx">Initializing...</div><div class="stats"><span id="std1">0</span> Reports</div></div>
+</div>
+<div class="right"><div class="logt">ACTIVITY</div><div class="logf" id="lf"></div></div>
+<div class="bot"><div class="m"><div class="mv" id="mp">$0</div><div class="ml">P&L</div></div><div class="m"><div class="mv" id="mt">0</div><div class="ml">Trades</div></div></div>
+<script>
+var sc=new THREE.Scene();
+sc.background=new THREE.Color(0x111122);
+var ca=new THREE.PerspectiveCamera(60,innerWidth/innerHeight,0.1,1000);
+ca.position.set(0,8,15);
+var re=new THREE.WebGLRenderer({antialias:true});
+re.setSize(innerWidth,innerHeight);document.getElementById('c').appendChild(re.domElement);
+// Floor
+sc.add(new THREE.Mesh(new THREE.PlaneGeometry(30,30),new THREE.MeshLambertMaterial({color:0x222233})).rotateX(-Math.PI/2));
+// Lights
+// Wall panels
+sc.add(new THREE.Mesh(new THREE.PlaneGeometry(15,12),new THREE.MeshLambertMaterial({color:0x3a2a1a})).translate(-14.9,5,0).rotateY(Math.PI/2));
+sc.add(new THREE.Mesh(new THREE.PlaneGeometry(15,12),new THREE.MeshLambertMaterial({color:0x2a1a10})).translate(14.9,5,0).rotateY(-Math.PI/2));
+sc.add(new THREE.AmbientLight(0x999999,1.0));
+var dl=new THREE.DirectionalLight(0xffffff,0.8);dl.position.set(5,10,5);sc.add(dl);
+sc.add(new THREE.PointLight(0xff8844,0.3,15).translate(-10,3,0));
+sc.add(new THREE.PointLight(0x4488ff,0.3,15).translate(10,3,0));
+// Coffee machine
+sc.add(new THREE.Mesh(new THREE.BoxGeometry(0.8,1.2,0.5),new THREE.MeshLambertMaterial({color:0x111111})).translate(12,0.6,-8));
+sc.add(new THREE.Mesh(new THREE.PlaneGeometry(0.4,0.25),new THREE.MeshLambertMaterial({color:0x002200,emissive:0x00ff44,emissiveIntensity:0.5})).translate(12,1.1,-7.74));
+
+// Sofa
+sc.add(new THREE.Mesh(new THREE.BoxGeometry(4,0.4,1.5),new THREE.MeshLambertMaterial({color:0x333355})).translate(0,0.2,7));
+sc.add(new THREE.Mesh(new THREE.BoxGeometry(4,0.8,0.3),new THREE.MeshLambertMaterial({color:0x444466})).translate(0,0.6,6.2));
+// Plants
+for(var px=-1;px<=1;px+=2){for(var pz=-1;pz<=1;pz+=2){sc.add(new THREE.Mesh(new THREE.CylinderGeometry(0.15,0.2,0.5,8),new THREE.MeshLambertMaterial({color:0x3a2a1a})).translate(px*10,0.25,pz*8));sc.add(new THREE.Mesh(new THREE.SphereGeometry(0.3,8,8),new THREE.MeshLambertMaterial({color:0x1a4a1a})).translate(px*10,0.8,pz*8));}}
+
+// Agents
+var cols=[0x00ff88,0xff4400,0x0088ff,0xff8800,0x00ffff];
+var desks=[];
+for(var i=0;i<5;i++){
+var x=(i-2)*4;
+var g=new THREE.Group();
+g.add(new THREE.Mesh(new THREE.BoxGeometry(2,0.1,1.2),new THREE.MeshLambertMaterial({color:0x333355})).translateY(1));
+g.add(new THREE.Mesh(new THREE.BoxGeometry(0.1,0.8,0.6),new THREE.MeshLambertMaterial({color:cols[i],emissive:cols[i],emissiveIntensity:0.5})).translate(0,1.6,-0.3));
+g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.2,0.25,0.6,8),new THREE.MeshLambertMaterial({color:0x222244})).translateY(1.5));
+// Head with eyes
+var head=new THREE.Mesh(new THREE.BoxGeometry(0.25,0.3,0.2),new THREE.MeshLambertMaterial({color:0x333355}));head.position.set(0,2,0.5);g.add(head);
+var eyeL=new THREE.Mesh(new THREE.SphereGeometry(0.05,8,8),new THREE.MeshLambertMaterial({color:0xfff,emissive:cols[i],emissiveIntensity:0.8}));eyeL.position.set(-0.05,2.05,0.58);g.add(eyeL);
+var eyeR=new THREE.Mesh(new THREE.SphereGeometry(0.05,8,8),new THREE.MeshLambertMaterial({color:0xfff,emissive:cols[i],emissiveIntensity:0.8}));eyeR.position.set(0.05,2.05,0.58);g.add(eyeR);
+var orb=new THREE.Mesh(new THREE.SphereGeometry(0.08,12,12),new THREE.MeshLambertMaterial({color:cols[i],emissive:cols[i],emissiveIntensity:0.8}));
+orb.translateY(2.3);g.add(orb);
+var pl=new THREE.PointLight(cols[i],0.5,5);pl.position.set(x,3,0);sc.add(pl);
+g.position.x=x;sc.add(g);desks.push({g,orb});}
+var atasks=[['Scanning...','Analyzing...','Researching...'],['Monitoring...','Scanning...','Auditing...'],['Analyzing...','Computing...','Watching...'],['Coordinating...','Planning...','Managing...'],['Researching...','Analyzing...','Reporting...']];
+var ast=[{i:0,t:0,tools:0,ideas:0},{i:0,t:0,threats:0,audits:0},{i:0,t:0,trades:0,pnl:0,wins:0,wr:65},{i:0,t:0,tasks:0,collab:0},{i:0,t:0,reports:0}];
+function lg(m){var f=document.getElementById('lf');var e=document.createElement('div');e.className='le';e.textContent=m;f.appendChild(e);f.scrollTop=f.scrollHeight;if(f.children.length>20)f.removeChild(f.firstChild);}
+function upt(i,p){var s=ast[i];s.t++;if(s.t>180){s.i=(s.i+1)%atasks[i].length;s.t=0;document.getElementById(p).textContent=atasks[i][s.i];}}
+function trade(){var s=ast[2];var w=Math.random()*100<s.wr;var a=30+Math.floor(Math.random()*50);s.trades++;s.pnl+=w?a:-a;if(w)s.wins++;var wr=s.trades>0?Math.round(s.wins/s.trades*100):0;document.getElementById('st7').textContent=s.trades;document.getElementById('st8').textContent='$'+(s.pnl>=0?'+':'')+s.pnl;document.getElementById('mp').textContent='$'+(s.pnl>=0?'+':'')+s.pnl;document.getElementById('mt').textContent=s.trades;lg((w?'✅':'❌')+' Trade '+(w?'WIN':'LOSS')+' $'+a);s.wr=w?Math.min(80,s.wr+0.3):Math.max(40,s.wr-0.4);}
+setInterval(function(){upt(0,'ta');lg('🔬 ARIA: '+atasks[0][ast[0].i]);},3000);
+setInterval(function(){upt(1,'ts');lg('🛡️ SENTINEL: '+atasks[1][ast[1].i]);},3500);
+setInterval(function(){upt(2,'tm');lg('📈 MERCURY: '+atasks[2][ast[2].i]);},3200);
+setInterval(function(){upt(3,'tap');lg('⚡ APEX: '+atasks[3][ast[3].i]);},3800);
+setInterval(function(){upt(4,'tdx');lg('💳 DEXTER: '+atasks[4][ast[4].i]);},3400);
+setInterval(trade,12000);
+setTimeout(function(){lg('🔬 ARIA: Online');lg('🛡️ SENTINEL: Online');lg('📈 MERCURY: Online');lg('⚡ APEX: Online');lg('💳 DEXTER: Online');},1500);
+var pnlHistory=[];
+function updatePnlChart(){
+var c=document.getElementById('pnlChart');if(!c)return;var ctx=c.getContext('2d');c.width=c.offsetWidth;c.height=c.offsetHeight;ctx.fillStyle='#000';ctx.fillRect(0,0,c.width,c.height);if(pnlHistory.length<2)return;var min=Math.min(...pnlHistory),max=Math.max(...pnlHistory),range=max-min||1;var pts=pnlHistory.map(function(v,i){return{x:i/(pnlHistory.length-1)*(c.width-20)+10,y:c.height-10-((v-min)/range*(c.height-25))}});ctx.strokeStyle='#0f8';ctx.lineWidth=2;ctx.beginPath();pts.forEach(function(p,i){i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y)});ctx.stroke();}
+function anim(){requestAnimationFrame(anim);desks.forEach(function(d,i){d.orb.position.y=2.3+Math.sin(Date.now()*0.002+i)*0.05;});ca.lookAt(0,1,0);re.render(sc,ca);}
+anim();
+</script></body></html>
