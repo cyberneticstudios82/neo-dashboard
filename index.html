@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BOSS HQ — Agent Ops Center</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Courier New', monospace;
+      background: #0a0a1a;
+      color: #ffffff;
+      overflow: hidden;
+    }
+    #canvas-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; }
+    canvas { display: block; }
+
+    .ui-layer { position: fixed; z-index: 10; pointer-events: none; }
+    .ui-layer > * { pointer-events: auto; }
+
+    .top-bar {
+      position: fixed; top: 0; left: 0; right: 0; height: 50px;
+      background: rgba(0,0,0,0.78); backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(0,255,136,0.13);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 20px; z-index: 100;
+    }
+    .logo { font-size: 15px; font-weight: bold; letter-spacing: 3px; color: #00ff88; }
+    .status-pills { display: flex; gap: 15px; }
+    .pill {
+      padding: 5px 12px; border-radius: 12px; font-size: 9px;
+      letter-spacing: 2px; text-transform: uppercase;
+    }
+    .pill.green { background: rgba(0,255,136,0.15); color: #00ff88; border: 1px solid rgba(0,255,136,0.3); }
+    .pill.orange { background: rgba(255,68,0,0.15); color: #ff6600; border: 1px solid rgba(255,68,0,0.3); }
+    .pill.blue { background: rgba(0,136,255,0.15); color: #0099ff; border: 1px solid rgba(0,136,255,0.3); }
+    .clock { font-size: 13px; color: #ffffff; letter-spacing: 2px; }
+
+    .left-panel {
+      position: fixed; left: 15px; top: 70px; bottom: 70px;
+      width: 220px; display: flex; flex-direction: column; gap: 12px;
+      z-index: 50;
+    }
+    .agent-card {
+      background: rgba(0,0,0,0.78); backdrop-filter: blur(10px);
+      border: 1px solid rgba(0,255,136,0.13); border-radius: 8px;
+      padding: 12px; transition: all 0.4s ease;
+    }
+    .agent-card.active { border-color: currentColor; box-shadow: 0 0 20px currentColor; }
+    .agent-card.aria { color: #00ff88; }
+    .agent-card.sentinel { color: #ff4400; }
+    .agent-card.mercury { color: #0088ff; }
+    .agent-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+    .agent-avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: rgba(0,0,0,0.5); border: 2px solid currentColor;
+      display: flex; align-items: center; justify-content: center; font-size: 18px;
+    }
+    .agent-info h3 { font-size: 12px; letter-spacing: 1px; margin-bottom: 2px; }
+    .agent-info p { font-size: 8px; color: #ffffff99; letter-spacing: 1px; text-transform: uppercase; }
+    .agent-task {
+      font-size: 10px; color: #ffffffaa; line-height: 1.4; min-height: 35px;
+      margin-bottom: 8px;
+    }
+    .progress-bar {
+      height: 3px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; margin-bottom: 10px;
+    }
+    .progress-fill { height: 100%; background: currentColor; width: 0%; transition: width 0.3s ease; }
+    .agent-stats { display: flex; justify-content: space-between; }
+    .stat { text-align: center; }
+    .stat-value { font-size: 16px; font-weight: bold; color: #ffffff; }
+    .stat-label { font-size: 7px; color: #ffffff66; letter-spacing: 1px; text-transform: uppercase; }
+
+    .right-panel {
+      position: fixed; right: 15px; top: 70px; bottom: 70px; width: 260px;
+      background: rgba(0,0,0,0.78); backdrop-filter: blur(10px);
+      border: 1px solid rgba(0,255,136,0.13); border-radius: 8px;
+      padding: 12px; z-index: 50; display: flex; flex-direction: column;
+    }
+    .log-title { font-size: 10px; letter-spacing: 2px; color: #00ff88; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid rgba(0,255,136,0.2); }
+    .log-feed { flex: 1; overflow-y: auto; }
+    .log-entry {
+      font-size: 9px; line-height: 1.5; margin-bottom: 6px;
+      animation: slideIn 0.3s ease; padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .log-entry:last-child { border-bottom: none; }
+    @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+    .log-time { color: #ffffff44; margin-right: 6px; }
+    .log-aria { color: #00ff88; }
+    .log-sentinel { color: #ff4400; }
+    .log-mercury { color: #0088ff; }
+    .log-system { color: #ffffff99; }
+    .log-feed::-webkit-scrollbar { width: 4px; }
+    .log-feed::-webkit-scrollbar-track { background: transparent; }
+    .log-feed::-webkit-scrollbar-thumb { background: #00ff88; border-radius: 2px; }
+
+    .bottom-bar {
+      position: fixed; bottom: 15px; left: 250px; right: 290px; height: 45px;
+      background: rgba(0,0,0,0.78); backdrop-filter: blur(10px);
+      border: 1px solid rgba(0,255,136,0.13); border-radius: 8px;
+      display: flex; align-items: center; justify-content: space-around; padding: 0 20px;
+      z-index: 50;
+    }
+    .metric { text-align: center; }
+    .metric-value { font-size: 18px; font-weight: bold; color: #ffffff; }
+    .metric-label { font-size: 8px; color: #ffffff66; letter-spacing: 1px; text-transform: uppercase; }
+    .metric-divider { width: 1px; height: 25px; background: rgba(255,255,255,0.1); }
+
+    .notification {
+      position: fixed; top: 70px; left: 50%; transform: translateX(-50%) translateY(-20px);
+      padding: 10px 20px; border-radius: 6px; font-size: 11px;
+      background: rgba(0,0,0,0.9); backdrop-filter: blur(10px);
+      border: 1px solid currentColor; color: #ffffff;
+      opacity: 0; transition: all 0.4s ease; z-index: 200; white-space: nowrap;
+    }
+    .notification.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .notification.aria { color: #00ff88; }
+    .notification.sentinel { color: #ff4400; }
+    .notification.mercury { color: #0088ff; }
+    .notification.system { color: #ffffff; }
+  </style>
+</head>
+<body>
+  <div id="canvas-container"></div>
+
+  <div class="top-bar">
+    <div class="logo">⚡ BOSS HQ — AGENT OPS CENTER</div>
+    <div class="status-pills">
+      <span class="pill green">● ARIA ONLINE</span>
+      <span class="pill orange">● SENTINEL WATCH</span>
+      <span class="pill blue">● MERCURY LIVE</span>
+    </div>
+    <div class="clock" id="clock">00:00:00</div>
+  </div>
+
+  <div class="left-panel">
+    <div class="agent-card aria active" id="card-aria">
+      <div class="agent-header">
+        <div class="agent-avatar">🔬</div>
+        <div class="agent-info">
+          <h3>ARIA</h3>
+          <p>Research & Intelligence</p>
+        </div>
+      </div>
+      <div class="agent-task" id="task-aria">Initializing...</div>
+      <div class="progress-bar"><div class="progress-fill" id="progress-aria"></div></div>
+      <div class="agent-stats">
+        <div class="stat"><div class="stat-value" id="stat-tasks-aria">0</div><div class="stat-label">Tasks</div></div>
+        <div class="stat"><div class="stat-value" id="stat-finds-aria">0</div><div class="stat-label">Finds</div></div>
+        <div class="stat"><div class="stat-value" id="stat-pulse-aria">1</div><div class="stat-label">Pulse</div></div>
+      </div>
+    </div>
+
+    <div class="agent-card sentinel" id="card-sentinel">
+      <div class="agent-header">
+        <div class="agent-avatar">🛡️</div>
+        <div class="agent-info">
+          <h3>SENTINEL</h3>
+          <p>Security & Monitoring</p>
+        </div>
+      </div>
+      <div class="agent-task" id="task-sentinel">Initializing...</div>
+      <div class="progress-bar"><div class="progress-fill" id="progress-sentinel"></div></div>
+      <div class="agent-stats">
+        <div class="stat"><div class="stat-value" id="stat-tasks-sentinel">0</div><div class="stat-label">Tasks</div></div>
+        <div class="stat"><div class="stat-value" id="stat-scans-sentinel">0</div><div class="stat-label">Scans</div></div>
+        <div class="stat"><div class="stat-value" id="stat-pulse-sentinel">1</div><div class="stat-label">Pulse</div></div>
+      </div>
+    </div>
+
+    <div class="agent-card mercury" id="card-mercury">
+      <div class="agent-header">
+        <div class="agent-avatar">📈</div>
+        <div class="agent-info">
+          <h3>MERCURY</h3>
+          <p>Market Intelligence</p>
+        </div>
+      </div>
+      <div class="agent-task" id="task-mercury">Initializing...</div>
+      <div class="progress-bar"><div class="progress-fill" id="progress-mercury"></div></div>
+      <div class="agent-stats">
+        <div class="stat"><div class="stat-value" id="stat-tasks-mercury">0</div><div class="stat-label">Tasks</div></div>
+        <div class="stat"><div class="stat-value" id="stat-briefs-mercury">0</div><div class="stat-label">Briefs</div></div>
+        <div class="stat"><div class="stat-value" id="stat-pulse-mercury">1</div><div class="stat-label">Pulse</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="right-panel">
+    <div class="log-title">⚡ LIVE OPERATIONS LOG</div>
+    <div class="log-feed" id="log-feed"></div>
+  </div>
+
+  <div class="bottom-bar">
+    <div class="metric"><div class="metric-value" id="metric-pulses">0</div><div class="metric-label">Pulses Run</div></div>
+    <div class="metric-divider"></div>
+    <div class="metric"><div class="metric-value" id="metric-tasks">0</div><div class="metric-label">Tasks Done</div></div>
+    <div class="metric-divider"></div>
+    <div class="metric"><div class="metric-value" id="metric-tools">0</div><div class="metric-label">Tools Found</div></div>
+    <div class="metric-divider"></div>
+    <div class="metric"><div class="metric-value" id="metric-markets">18</div><div class="metric-label">Markets Watched</div></div>
+    <div class="metric-divider"></div>
+    <div class="metric"><div class="metric-value" id="metric-threats">0</div><div class="metric-label">Threats Blocked</div></div>
+    <div class="metric-divider"></div>
+    <div class="metric"><div class="metric-value" id="metric-uptime">00:00:00</div><div class="metric-label">Uptime</div></div>
+  </div>
+
+  <div class="notification" id="notification"></div>
+
+  <script>
+    const container = document.getElementById('canvas-container');
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(0x0a0a1a, 0.035);
+    scene.background = new THREE.Color(0x0a0a1a);
+
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.set(0, 5, 12);
+    camera.lookAt(0, 1, 0);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    container.appendChild(renderer.domElement);
+
+    const floorGeo = new THREE.PlaneGeometry(30, 30);
+    const floorMat = new THREE.MeshLambertMaterial({ color: 0x111122 });
+    const floor = new THREE.Mesh(floorGeo, floorMat);
+    floor.rotation.x = -Math.PI / 2;
+    floor.receiveShadow = true;
+    scene.add(floor);
+
+    const wallMat = new THREE.MeshLambertMaterial({ color: 0x0d0d1f });
+    const backWall = new THREE.Mesh(new THREE.PlaneGeometry(30, 10), wallMat);
+    backWall.position.set(0, 5, -10);
+    scene.add(backWall);
+    const leftWall = new THREE.Mesh(new THREE.PlaneGeometry(30, 10), wallMat);
+    leftWall.position.set(-15, 5, 0);
+    leftWall.rotation.y = Math.PI / 2;
+    scene.add(leftWall);
+    const rightWall = new THREE.Mesh(new THREE.PlaneGeometry(30, 10), wallMat);
+    rightWall.position.set(15, 5, 0);
+    rightWall.rotation.y = -Math.PI / 2;
+    scene.add(rightWall);
+
+    const gridHelper = new THREE.GridHelper(30, 30, 0x00ff88, 0x00ff88);
+    gridHelper.position.y = 9;
+    gridHelper.material.opacity = 0.1;
+    gridHelper.material.transparent = true;
+    scene.add(gridHelper);
+
+    const ambient = new THREE.AmbientLight(0x334466, 0.4);
+    scene.add(ambient);
+
+    const dirLight = new THREE.DirectionalLight(0xffffff, 0.3);
+    dirLight.position.set(5, 15, 5);
+    dirLight.castShadow = true;
+    dirLight.shadow.mapSize.width = 1024;
+    dirLight.shadow.mapSize.height = 1024;
+    scene.add(dirLight);
+
+    const colors = { aria: 0x00ff88, sentinel: 0xff4400, mercury: 0x0088ff };
+    const desks = [];
+    const robots = [];
+    const particles = [];
+    const lights = [];
+    const orbs = [];
+
+    function createDesk(x, color, name) {
+      const group = new THREE.Group();
+      
+      const deskGeo = new THREE.BoxGeometry(3, 0.15, 2);
+      const deskMat = new THREE.MeshLambertMaterial({ color: 0x1a1a2e });
+      const desk = new THREE.Mesh(deskGeo, deskMat);
+      desk.position.y = 1.2;
+      desk.castShadow = true;
+      desk.receiveShadow = true;
+      group.add(desk);
+
+      const monitorGeo = new THREE.BoxGeometry(0.1, 1.2, 0.8);
+      const monitorMat = new THREE.MeshLambertMaterial({ color: color, emissive: color, emissiveIntensity: 0.5 });
+      const monitor = new THREE.Mesh(monitorGeo, monitorMat);
+      monitor.position.set(0, 2.1, -0.4);
+      monitor.castShadow = true;
+      group.add(monitor);
+
+      const seatGeo = new THREE.BoxGeometry(0.8, 0.1, 0.6);
+      const chairMat = new THREE.MeshLambertMaterial({ color: 0x333344 });
+      const seat = new THREE.Mesh(seatGeo, chairMat);
+      seat.position.set(0, 0.7, 1);
+      group.add(seat);
+      const backGeo = new THREE.BoxGeometry(0.8, 0.8, 0.1);
+      const back = new THREE.Mesh(backGeo, chairMat);
+      back.position.set(0, 1.2, 1.35);
+      group.add(back);
+
+      const robotGroup = new THREE.Group();
+      
+      const bodyGeo = new THREE.CylinderGeometry(0.25, 0.3, 0.8, 8);
+      const bodyMat = new THREE.MeshLambertMaterial({ color: 0x222233, emissive: color, emissiveIntensity: 0.2 });
+      const body = new THREE.Mesh(bodyGeo, bodyMat);
+      body.position.y = 1.7;
+      robotGroup.add(body);
+
+      const headGeo = new THREE.BoxGeometry(0.35, 0.3, 0.35);
+      const headMat = new THREE.MeshLambertMaterial({ color: 0x222233, emissive: color, emissiveIntensity: 0.6 });
+      const head = new THREE.Mesh(headGeo, headMat);
+      head.position.y = 2.3;
+      robotGroup.add(head);
+
+      const armGeo = new THREE.BoxGeometry(0.08, 0.5, 0.08);
+      const armMat = new THREE.MeshLambertMaterial({ color: 0x333344 });
+      const leftArm = new THREE.Mesh(armGeo, armMat);
+      leftArm.position.set(-0.4, 1.7, 0);
+      leftArm.rotation.z = 0.3;
+      robotGroup.add(leftArm);
+      const rightArm = new THREE.Mesh(armGeo, armMat);
+      rightArm.position.set(0.4, 1.7, 0);
+      rightArm.rotation.z = -0.3;
+      robotGroup.add(rightArm);
+
+      group.add(robotGroup);
+
+      const orbGeo = new THREE.SphereGeometry(0.12, 16, 16);
+      const orbMat = new THREE.MeshLambertMaterial({ color: color, emissive: color, emissiveIntensity: 0.8 });
+      const orb = new THREE.Mesh(orbGeo, orbMat);
+      orb.position.set(0, 2.8, 0);
+      group.add(orb);
+      orbs.push(orb);
+
+      const light = new THREE.PointLight(color, 0.8, 8);
+      light.position.set(x, 4, 0);
+      scene.add(light);
+      lights.push(light);
+
+      const particleCount = 40;
+      const particleGeo = new THREE.BufferGeometry();
+      const positions = new Float32Array(particleCount * 3);
+      const velocities = [];
+      for(let i = 0; i < particleCount; i++) {
+        positions[i*3] = x + (Math.random() - 0.5) * 1.5;
+        positions[i*3+1] = 2.5 + Math.random() * 2;
+        positions[i*3+2] = (Math.random() - 0.5) * 1;
+        velocities.push(0.005 + Math.random() * 0.01);
+      }
+      particleGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      const particleMat = new THREE.PointsMaterial({ color: color, size: 0.05, transparent: true, opacity: 0.6 });
+      const particleSystem = new THREE.Points(particleGeo, particleMat);
+      particleSystem.userData.velocities = velocities;
+      particleSystem.userData.baseX = x;
+      scene.add(particleSystem);
+      particles.push(particleSystem);
+
+      group.position.x = x;
+      scene.add(group);
+      desks.push({ group, monitor, robot: robotGroup, leftArm, rightArm, color });
+    }
+
+    createDesk(-4, colors.aria, 'ARIA');
+    createDesk(0, colors.sentinel, 'SENTINEL');
+    createDesk(4, colors.mercury, 'MERCURY');
+
+    const floorGridGeo = new THREE.BufferGeometry();
+    const floorGridMat = new THREE.LineBasicMaterial({ color: 0x00ff88, transparent: true, opacity: 0.15 });
+    const floorGridLines = [];
+    for(let i = -15; i <= 15; i += 2) {
+      floorGridLines.push(new THREE.Vector3(i, 0.01, -15), new THREE.Vector3(i, 0.01, 15));
+      floorGridLines.push(new THREE.Vector3(-15, 0.01, i), new THREE.Vector3(15, 0.01, i));
+    }
+    floorGridGeo.setFromPoints(floorGridLines);
+    const floorGrid = new THREE.LineSegments(floorGridGeo, floorGridMat);
+    scene.add(floorGrid);
+
+    const ariaTasks = [
+      "Scanning GitHub repositories for high-value tools...",
+      "Evaluating LangChain v0.2 — 45k stars, checking CVEs...",
+      "Generating daily idea forge report...",
+      "Scoring 5 business opportunities by ROI...",
+      "Researching underserved automation niches...",
+      "Writing to memory/opportunities.md...",
+      "Checking latest AI paper releases on ArXiv...",
+      "Identifying quick-win freelance automation gigs..."
+    ];
+    const sentinelTasks = [
+      "Running full CVE audit on installed packages...",
+      "Monitoring tech news for critical security alerts...",
+      "Scanning system health — all processes nominal...",
+      "Checking API key exposure in memory files...",
+      "Flagging new CVE in dependency tree...",
+      "Verifying package integrity hashes...",
+      "Monitoring network anomalies...",
+      "Writing risk report to memory/risk_log.md..."
+    ];
+    const mercuryTasks = [
+      "Analyzing Polymarket open positions and sentiment...",
+      "Calculating base rate probabilities for market #4421...",
+      "Cross-referencing news sentiment vs market price...",
+      "Updating paper trading log — hypothetical position...",
+      "Running confidence scoring on 3 active markets...",
+      "Flagging LOW confidence — insufficient data...",
+      "Writing brief to memory/market_intelligence.md...",
+      "Comparing implied probability vs historical base rates..."
+    ];
+
+    const ariaLogs = [
+      "Memory loaded — latest_log.md current",
+      "GitHub scan complete — 12 repos evaluated",
+      "New tool flagged: AutoGen 3.1 — 28k stars ✓",
+      "Opportunity scored: Browser automation SaaS — 8.2/10",
+      "Idea forge running — generating 5 concepts",
+      "Skill registry updated — 3 new entries",
+      "Writing to memory/ideas_2024.md",
+      "Research complete — niche identified: AI report automation",
+      "Package evaluation: CrewAI — passes all 5 criteria",
+      "Opportunity tagged: 🟢 QUICK WIN"
+    ];
+    const sentinelLogs = [
+      "System health check — all green ✓",
+      "CVE scan complete — 0 critical vulnerabilities",
+      "Package audit: 24 packages checked, 0 flags",
+      "News feed parsed — no critical security events",
+      "API exposure check — no keys in memory files ✓",
+      "Risk score: SECURE",
+      "Monitoring active — uptime 99.98%",
+      "Dependency tree verified — all hashes match",
+      "Alert: minor warning in axios@1.4 — LOW severity",
+      "Sentinel log written to memory/risk_log.md"
+    ];
+    const mercuryLogs = [
+      "Polymarket scan — 18 active markets monitored",
+      "Market #4421: implied 67% vs estimated 71% — small edge",
+      "Confidence level: MEDIUM — 3 confirming sources",
+      "Paper trade logged — hypothetical $50 position",
+      "Base rate analysis complete — historical accuracy 61%",
+      "News sentiment: NEUTRAL on market #4421",
+      "Market intelligence brief written",
+      "Flagging market #4890 — LOW confidence, skipping",
+      "30-day paper log: +12% hypothetical return",
+      "Boss approval required before any real capital action"
+    ];
+    const systemLogs = [
+      "System initialized — all agents ready",
+      "Pulse scheduler running on interval",
+      "Memory architecture verified",
+      "Security protocols active"
+    ];
+
+    let currentTask = { aria: 0, sentinel: 0, mercury: 0 };
+    let activeAgent = 'aria';
+    let counters = { pulses: 0, tasks: 0, tools: 0, markets: 18, threats: 0 };
+    let startTime = Date.now();
+    let logEntries = [];
+
+    function updateClock() {
+      const now = new Date();
+      document.getElementById('clock').textContent = now.toLocaleTimeString('en-US', { hour12: false });
+      const uptime = Math.floor((Date.now() - startTime) / 1000);
+      const h = String(Math.floor(uptime / 3600)).padStart(2, '0');
+      const m = String(Math.floor((uptime % 3600) / 60)).padStart(2, '0');
+      const s = String(uptime % 60).padStart(2, '0');
+      document.getElementById('metric-uptime').textContent = `${h}:${m}:${s}`;
+    }
+
+    function rotateTasks() {
+      const t = Date.now() / 8000;
+      currentTask.aria = Math.floor(t) % ariaTasks.length;
+      currentTask.sentinel = Math.floor(t + 2.66) % sentinelTasks.length;
+      currentTask.mercury = Math.floor(t + 5.33) % mercuryTasks.length;
+      document.getElementById('task-aria').textContent = ariaTasks[currentTask.aria];
+      document.getElementById('task-sentinel').textContent = sentinelTasks[currentTask.sentinel];
+      document.getElementById('task-mercury').textContent = mercuryTasks[currentTask.mercury];
+
+      const p = (Date.now() % 8000) / 8000 * 100;
+      document.getElementById('progress-aria').style.width = p + '%';
+      document.getElementById('progress-sentinel').style.width = p + '%';
+      document.getElementById('progress-mercury').style.width = p + '%';
+    }
+
+    function rotateActiveAgent() {
+      const agents = ['aria', 'sentinel', 'mercury'];
+      activeAgent = agents[Math.floor(Date.now() / 15000) % 3];
+      document.querySelectorAll('.agent-card').forEach(c => c.classList.remove('active'));
+      document.getElementById('card-' + activeAgent).classList.add('active');
+    }
+
+    function addLog(agent, msg) {
+      const feed = document.getElementById('log-feed');
+      const time = new Date().toLocaleTimeString('en-US', { hour12: false });
+      const entry = document.createElement('div');
+      entry.className = 'log-entry';
+      entry.innerHTML = `<span class="log-time">${time}</span><span class="log-${agent}">${msg}</span>`;
+      feed.appendChild(entry);
+      logEntries.push(entry);
+      if (logEntries.length > 80) {
+        feed.removeChild(logEntries.shift());
+      }
+      feed.scrollTop = feed.scrollHeight;
+    }
+
+    function showNotification(type, msg) {
+      const notif = document.getElementById('notification');
+      notif.className = 'notification ' + type;
+      notif.textContent = msg;
+      notif.classList.add('show');
+      setTimeout(() => notif.classList.remove('show'), 4000);
+    }
+
+    function incrementStats() {
+      if (Math.random() < 0.3) {
+        counters.tasks++;
+        document.getElementById('metric-tasks').textContent = counters.tasks;
+        const agents = ['aria', 'sentinel', 'mercury'];
+        const agent = agents[Math.floor(Math.random() * 3)];
+        const statId = agent === 'aria' ? 'stat-tasks' : agent === 'sentinel' ? 'stat-tasks' : 'stat-tasks';
+        const el = document.getElementById(statId + '-' + agent);
+        if (el) el.textContent = parseInt(el.textContent) + 1;
+      }
+      if (Math.random() < 0.15) {
+        counters.tools++;
+        document.getElementById('metric-tools').textContent = counters.tools;
+        document.getElementById('stat-finds-aria').textContent = parseInt(document.getElementById('stat-finds-aria').textContent) + 1;
+      }
+      if (Math.random() < 0.1) {
+        document.getElementById('stat-scans-sentinel').textContent = parseInt(document.getElementById('stat-scans-sentinel').textContent) + 1;
+      }
+      if (Math.random() < 0.1) {
+        document.getElementById('stat-briefs-mercury').textContent = parseInt(document.getElementById('stat-briefs-mercury').textContent) + 1;
+      }
+    }
+
+    setInterval(() => {
+      const pools = { aria: ariaLogs, sentinel: sentinelLogs, mercury: mercuryLogs };
+      const agents = ['aria', 'sentinel', 'mercury'];
+      const agent = agents[Math.floor(Math.random() * 3)];
+      const msg = pools[agent][Math.floor(Math.random() * pools[agent].length)];
+      addLog(agent, msg);
+    }, 2500);
+
+    const notifications = [
+      { type: 'aria', msg: '🔬 ARIA: New tool found — AutoGen 3.1 ★28k' },
+      { type: 'sentinel', msg: '🛡️ SENTINEL: System health — all clear ✓' },
+      { type: 'mercury', msg: '📈 MERCURY: Market edge detected — confidence MEDIUM' },
+      { type: 'aria', msg: '🔬 ARIA: Opportunity tagged QUICK WIN' },
+      { type: 'sentinel', msg: '🛡️ SENTINEL: CVE scan complete — 0 threats' },
+      { type: 'mercury', msg: '📈 MERCURY: Paper trade logged — awaiting Boss review' },
+      { type: 'aria', msg: '🔬 ARIA: Idea forge complete — top idea scored 9.1' },
+      { type: 'system', msg: '⚡ SYSTEM: All 7 pulses running on schedule' }
+    ];
+    setInterval(() => {
+      const n = notifications[Math.floor(Math.random() * notifications.length)];
+      showNotification(n.type, n.msg);
+    }, 25000);
+
+    setInterval(() => {
+      counters.pulses++;
+      document.getElementById('metric-pulses').textContent = counters.pulses;
+      ['aria', 'sentinel', 'mercury'].forEach(a => {
+        const el = document.getElementById('stat-pulse-' + a);
+        if (el) el.textContent = counters.pulses;
+      });
+    }, 30000);
+
+    setInterval(updateClock, 1000);
+    setInterval(rotateTasks, 100);
+    setInterval(rotateActiveAgent, 100);
+    setInterval(incrementStats, 5000);
+    rotateTasks();
+    rotateActiveAgent();
+    updateClock();
+    systemLogs.forEach((m, i) => setTimeout(() => addLog('system', m), i * 500));
+
+    let time = 0;
+    function animate() {
+      requestAnimationFrame(animate);
+      time += 0.016;
+
+      const orbitSpeed = 0.03;
+      camera.position.x = Math.sin(time * orbitSpeed) * 12;
+      camera.position.z = Math.cos(time * orbitSpeed) * 12;
+      camera.lookAt(0, 1, 0);
+
+      desks.forEach((d, i) => {
+        const offset = i * 2;
+        d.leftArm.rotation.x = Math.sin(time * 2 + offset) * 0.5;
+        d.rightArm.rotation.x = Math.sin(time * 2 + offset + Math.PI) * 0.5;
+        d.robot.position.y = Math.sin(time * 0.8 + offset) * 0.03;
+        d.monitor.material.emissiveIntensity = 0.4 + Math.sin(time * 5 + offset) * 0.15;
+      });
+
+      orbs.forEach((orb, i) => {
+        const scale = Math.sin(time * 3 + i) * 0.1 + 1;
+        orb.scale.set(scale, scale, scale);
+      });
+
+      lights.forEach((light, i) => {
+        light.intensity = 0.6 + Math.sin(time * 2 + i) * 0.2;
+      });
+
+      particles.forEach((ps, i) => {
+        const positions = ps.geometry.attributes.position.array;
+        const vels = ps.userData.velocities;
+        for(let j = 0; j < positions.length / 3; j++) {
+          positions[j*3+1] += vels[j];
+          if(positions[j*3+1] > 5) {
+            positions[j*3+1] = 2.5;
+            positions[j*3] = ps.userData.baseX + (Math.random() - 0.5) * 1.5;
+            positions[j*3+2] = (Math.random() - 0.5) * 1;
+          }
+        }
+        ps.geometry.attributes.position.needsUpdate = true;
+      });
+
+      renderer.render(scene, camera);
+    }
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    animate();
+  </script>
+</body>
+</html>
