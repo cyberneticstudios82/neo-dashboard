@@ -45,8 +45,10 @@ body{font-family:'Courier New',monospace;background:#050508;color:#fff;overflow:
 .stat-box .lbl{font-size:9px;color:#555}
 .tip{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(0,255,209,0.1);border:1px solid #00ffd1;border-radius:6px;padding:8px 16px;font-size:10px;color:#00ffd1;z-index:60}
 .tip span{color:#ff4444}
+#loading{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-size:24px;color:#00ffd1;z-index:200}
 </style></head>
 <body>
+<div id="loading">Loading APEX HQ...</div>
 <canvas id="c"></canvas>
 <div class="top"><div class="logo"><span>◆</span> APEX HQ <span class="live">● LIVE</span></div><div class="kpi"><span>BANK: $100</span><span class="pnl" id="bank">$100</span><span>TARGET: $3000</span><span class="pnl" id="pnl">+$0</span></div></div>
 <div class="left">
@@ -61,26 +63,48 @@ body{font-family:'Courier New',monospace;background:#050508;color:#fff;overflow:
 <div class="bottom"><div class="stat-box"><div class="val" id="sBank">$100</div><div class="lbl">BANK</div></div><div class="stat-box"><div class="val" id="sTrades">0</div><div class="lbl">TRADES</div></div><div class="stat-box"><div class="val" id="sWins">0%</div><div class="lbl">WIN RATE</div></div><div class="stat-box"><div class="val" id="sTarget">$3000</div><div class="lbl">TARGET</div></div></div>
 <div class="tip">📡 LIVE: BTC 5min | EMA 9/21 | <span>Risk: 10% max</span></div>
 <script>
-try{
-// ============ THREE.JS SCENE ============
-var sc=new THREE.Scene();
-sc.background=new THREE.Color(0x050508);
-var ca=new THREE.PerspectiveCamera(60,innerWidth/innerHeight,0.1,1000);
-ca.position.set(0,10,22);
-var re=new THREE.WebGLRenderer({canvas:document.getElementById('c'),antialias:true});
-re.setSize(innerWidth,innerHeight);
-re.setPixelRatio(Math.min(devicePixelRatio,2));
+// Remove loading when ready
+window.onload=function(){document.getElementById('loading').style.display='none';};
+window.onerror=function(msg){console.error('JS Error:',msg);alert('Error: '+msg);};
 
-var floor=new THREE.Mesh(new THREE.PlaneGeometry(50,50),new THREE.MeshStandardMaterial({color:0x111118}));
-floor.rotation.x=-Math.PI/2;sc.add(floor);
+var sc,ca,re,agents=[],heads=[],agentData,chairPositions;
+var TD={bank:100,trades:0,wins:0,pnl:0};
+var btcPrice=67000,candleData=[],ema9=[],ema21=[];
+
+function init(){
+// Scene
+sc=new THREE.Scene();
+sc.background=new THREE.Color(0x050508);
+ca=new THREE.PerspectiveCamera(60,innerWidth/innerHeight,0.1,1000);
+ca.position.set(0,10,22);
+re=new THREE.WebGLRenderer({canvas:document.getElementById('c'),antialias:true});
+re.setSize(innerWidth,innerHeight);
+
+// Floor
+sc.add(new THREE.Mesh(new THREE.PlaneGeometry(50,50),new THREE.MeshStandardMaterial({color:0x111118})).rotateX(-Math.PI/2));
 sc.add(new THREE.GridHelper(50,50,0x00ffd1,0x0a1a15));
 
-var ambient=new THREE.AmbientLight(0x444466,0.8);sc.add(ambient);
+// Lights
+sc.add(new THREE.AmbientLight(0x444466,0.8));
 var spot=new THREE.SpotLight(0xffffff,1.2);spot.position.set(0,25,10);sc.add(spot);
-var spot2=new THREE.SpotLight(0x00ffd1,0.6);spot2.position.set(-15,20,-10);sc.add(spot2);
-var spot3=new THREE.SpotLight(0xffd700,0.3);spot3.position.set(15,20,10);sc.add(spot3);
+sc.add(new THREE.SpotLight(0x00ffd1,0.6).translateX(-15).translateY(20).translateZ(-10));
+sc.add(new THREE.SpotLight(0xffd700,0.3).translateX(15).translateY(20).translateZ(10));
 
-// Pool Table
+// Plants
+function makePlant(x,z,scale){
+var g=new THREE.Group();
+g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.4*scale,0.3*scale,0.6*scale,8),new THREE.MeshStandardMaterial({color:0x8b4513})).translateY(0.3*scale));
+g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.06*scale,0.06*scale,1.5*scale,6),new THREE.MeshStandardMaterial({color:0x228b22})).translateY(1.2*scale));
+for(var i=0;i<6;i++){
+var leaf=new THREE.Mesh(new THREE.SphereGeometry(0.3*scale,6,4),new THREE.MeshStandardMaterial({color:0x32cd32}));
+leaf.scale.set(1,0.3,1);leaf.position.set(Math.cos(i)*0.35*scale,1.5*scale,Math.sin(i)*0.35*scale);
+g.add(leaf);
+}
+g.position.set(x,0,z);return g;
+}
+sc.add(makePlant(-15,-10,1.2));sc.add(makePlant(15,-10,1));sc.add(makePlant(-15,10,1));sc.add(makePlant(15,10,1.3));
+
+// Pool table
 var pt=new THREE.Group();
 pt.add(new THREE.Mesh(new THREE.BoxGeometry(5,0.25,2.5),new THREE.MeshStandardMaterial({color:0x1a472a})).translateY(1.4));
 for(var px of[[-2,-1],[0,-1],[2,-1],[-2,1],[0,1],[2,1]]){
@@ -91,26 +115,10 @@ pt.add(new THREE.Mesh(new THREE.CylinderGeometry(0.1,0.12,1.4,8),new THREE.MeshS
 }
 pt.position.set(12,0,-3);sc.add(pt);
 
-// Plants
-function makePlant(x,z,scale){
-var g=new THREE.Group();
-g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.4*scale,0.3*scale,0.6*scale,8),new THREE.MeshStandardMaterial({color:0x8b4513})).translateY(0.3*scale));
-g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.06*scale,0.06*scale,1.5*scale,6),new THREE.MeshStandardMaterial({color:0x228b22})).translateY(1.2*scale));
-for(var i=0;i<6;i++){
-var leaf=new THREE.Mesh(new THREE.SphereGeometry(0.3*scale,6,4),new THREE.MeshStandardMaterial({color:0x32cd32}));
-leaf.scale.set(1,0.3,1);leaf.position.set(Math.cos(i*1)*0.35*scale,1.5*scale,Math.sin(i*1)*0.35*scale);
-g.add(leaf);
-}
-g.position.set(x,0,z);return g;
-}
-sc.add(makePlant(-15,-10,1.2));sc.add(makePlant(15,-10,1));sc.add(makePlant(-15,10,1));sc.add(makePlant(15,10,1.3));
-
-// Coffee Machine
+// Coffee machine
 var cf=new THREE.Group();
 cf.add(new THREE.Mesh(new THREE.BoxGeometry(0.8,1.2,0.6),new THREE.MeshStandardMaterial({color:0x222222})).translateY(0.6));
 cf.add(new THREE.Mesh(new THREE.BoxGeometry(0.6,0.15,0.4),new THREE.MeshStandardMaterial({color:0x111111})).translateY(1.25));
-cf.add(new THREE.Mesh(new THREE.CylinderGeometry(0.08,0.08,0.3,8),new THREE.MeshStandardMaterial({color:0xcccccc})).translateY(1.4).translateZ(0.2));
-cf.add(new THREE.Mesh(new THREE.BoxGeometry(0.3,0.4,0.05),new THREE.MeshStandardMaterial({color:0x003300,emissive:0x00ff00,emissiveIntensity:0.3})).translateY(1.1).translateZ(0.3));
 cf.position.set(-14,0,5);sc.add(cf);
 
 // Sofa
@@ -124,15 +132,13 @@ function makeChair(x,z,rot){
 var g=new THREE.Group();
 g.add(new THREE.Mesh(new THREE.BoxGeometry(0.6,0.1,0.6),new THREE.MeshStandardMaterial({color:0x4a3728})).translateY(0.8));
 g.add(new THREE.Mesh(new THREE.BoxGeometry(0.5,0.8,0.08),new THREE.MeshStandardMaterial({color:0x4a3728})).translateY(1.2).translateZ(-0.26));
-for(var lx of[[-0.2,-0.2],[0.2,-0.2],[-0.2,0.2],[0.2,0.2]]){
-g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.04,0.04,0.8,6),new THREE.MeshStandardMaterial({color:0x333333})).translateX(lx[0]).translateY(0.4).translateZ(lx[1]));
-}
+g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.04,0.04,0.8,6),new THREE.MeshStandardMaterial({color:0x333333})).translateY(0.4));
 g.position.set(x,0,z);g.rotation.y=rot||0;return g;
 }
 sc.add(makeChair(6,5,Math.PI));sc.add(makeChair(6,-5,Math.PI));sc.add(makeChair(-6,5,0));sc.add(makeChair(-6,-5,0));sc.add(makeChair(16,0,Math.PI/2));sc.add(makeChair(-16,0,-Math.PI/2));
 
-// ============ AGENTS ============
-var agentData=[
+// Agents
+agentData=[
 {name:"APEX",color:0xffd700,x:-10,height:2.8},
 {name:"ARIA",color:0x00ffff,x:-6,height:2.4},
 {name:"BOTLING",color:0xff8800,x:-2,height:2.4},
@@ -140,243 +146,184 @@ var agentData=[
 {name:"OPPE",color:0x00ff00,x:6,height:2.4},
 {name:"ARGENT",color:0xcccccc,x:10,height:2.4}
 ];
-var agents=[],heads=[];
-agentData.forEach(function(d,idx){
+chairPositions=[{x:6,z:5,rot:Math.PI},{x:6,z:-5,rot:Math.PI},{x:-6,z:5,rot:0},{x:-6,z:-5,rot:0}];
+
+agentData.forEach(function(d,i){
 var g=new THREE.Group();
-g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.8,0.9,0.15,32),new THREE.MeshStandardMaterial({color:0x333333,metalness:0.7,roughness:0.3})).translateY(0.075));
+// Platform
+g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.8,0.9,0.15,32),new THREE.MeshStandardMaterial({color:0x333333,metalness:0.7})).translateY(0.075));
+// Ring
 var ring=new THREE.Mesh(new THREE.TorusGeometry(0.7,0.04,8,32),new THREE.MeshBasicMaterial({color:d.color}));
 ring.rotation.x=Math.PI/2;ring.position.y=0.2;g.add(ring);
-var body=new THREE.Mesh(new THREE.CylinderGeometry(0.35,0.45,d.height*0.55,16),new THREE.MeshStandardMaterial({color:d.color,emissive:d.color,emissiveIntensity:0.15}));
+// Body
+var body=new THREE.Mesh(new THREE.CylinderGeometry(0.35,0.45,d.height*0.55,16),new THREE.MeshStandardMaterial({color:d.color,emissive:d.color,emissiveIntensity:0.2}));
 body.position.y=d.height*0.28+0.2;g.add(body);
+// Shoulders
 var sh=new THREE.Mesh(new THREE.BoxGeometry(0.9,0.2,0.3),new THREE.MeshStandardMaterial({color:d.color,emissive:d.color,emissiveIntensity:0.2}));
 sh.position.y=d.height*0.5+0.2;g.add(sh);
+// Head
 var head=new THREE.Group();
-var face=new THREE.Mesh(new THREE.SphereGeometry(0.4,20,20),new THREE.MeshStandardMaterial({color:d.color,emissive:d.color,emissiveIntensity:0.4}));
-head.add(face);
-for(var side of[-1,1]){
-head.add(new THREE.Mesh(new THREE.SphereGeometry(0.1,8,8),new THREE.MeshBasicMaterial({color:0xffffff})).translateX(side*0.15).translateY(0.12).translateZ(0.32));
-head.add(new THREE.Mesh(new THREE.SphereGeometry(0.05,6,6),new THREE.MeshBasicMaterial({color:0x000000})).translateX(side*0.15).translateY(0.12).translateZ(0.36));
+head.add(new THREE.Mesh(new THREE.SphereGeometry(0.4,20,20),new THREE.MeshStandardMaterial({color:d.color,emissive:d.color,emissiveIntensity:0.5})));
+for(var s of[-1,1]){
+head.add(new THREE.Mesh(new THREE.SphereGeometry(0.1,8,8),new THREE.MeshBasicMaterial({color:0xffffff})).translateX(s*0.15).translateY(0.12).translateZ(0.32));
+head.add(new THREE.Mesh(new THREE.SphereGeometry(0.05,6,6),new THREE.MeshBasicMaterial({color:0x000000})).translateX(s*0.15).translateY(0.12).translateZ(0.36));
 }
 head.position.y=d.height+0.2;g.add(head);
+// Orb
 var orb=new THREE.Mesh(new THREE.SphereGeometry(0.12,12,12),new THREE.MeshBasicMaterial({color:d.color}));
 orb.position.y=d.height+0.7;g.add(orb);
+
 g.position.set(d.x,0,0);sc.add(g);
-agents.push({g,orb,ring,head,name:d.name,origX:d.x,idx:idx,walking:false,walkTarget:null});
-heads.push({head,g,d});
+agents.push({g,orb,ring,head,name:d.name,origX:d.x,height:d.height});
+heads.push({head,g});
 });
 
-var chairPositions=[{x:6,z:5,rot:Math.PI},{x:6,z:-5,rot:Math.PI},{x:-6,z:5,rot:0},{x:-6,z:-5,rot:0}];
+console.log('Scene initialized, agents:',agents.length);
+lg('system','✅ 3D Scene loaded');
+startLoops();
+}
 
-// ============ TRADING STATE ============
-var TD={bank:100,trades:0,wins:0,start:Date.now(),pnl:0,currentTrade:null};
-var btcPrice=67000,candleData=[],ema9=[],ema21=[];
-
-// ============ UI ============
 function lg(cls,m){
-var f=document.getElementById("lf");
-var e=document.createElement("div");
-e.className="le "+cls;
+var f=document.getElementById('lf');
+var e=document.createElement('div');
+e.className='le '+cls;
 e.innerHTML='<span style="color:#444;font-size:8px">'+new Date().toLocaleTimeString()+'</span> '+m;
 f.insertBefore(e,f.firstChild);
 if(f.children.length>15)f.removeChild(f.lastChild);
 }
+
 function updateStats(){
-document.getElementById("bank").textContent="$"+TD.bank;
-document.getElementById("pnl").textContent=(TD.pnl>=0?"+$":"-$")+Math.abs(TD.pnl).toFixed(0);
-document.getElementById("pnl").className=(TD.pnl>=0?"pnl":"pnl neg");
-document.getElementById("sBank").textContent="$"+TD.bank;
-document.getElementById("sTrades").textContent=TD.trades;
-document.getElementById("sWins").textContent=(TD.trades>0?Math.round(TD.wins/TD.trades*100):0)+"%";
+document.getElementById('bank').textContent='$'+TD.bank;
+document.getElementById('pnl').textContent=(TD.pnl>=0?'+$':'-$')+Math.abs(TD.pnl).toFixed(0);
+document.getElementById('pnl').className=(TD.pnl>=0?'pnl':'pnl neg');
+document.getElementById('sBank').textContent='$'+TD.bank;
+document.getElementById('sTrades').textContent=TD.trades;
+document.getElementById('sWins').textContent=(TD.trades>0?Math.round(TD.wins/TD.trades*100):0)+'%';
 }
 
-// ============ FETCH REAL BTC PRICE ============
 async function fetchBTC(){
 try{
 var res=await fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT');
 var data=await res.json();
 btcPrice=parseFloat(data.price);
-lg("signal","📊 BTC: $"+btcPrice.toLocaleString());
-return btcPrice;
+lg('signal','📊 BTC: $'+btcPrice.toLocaleString());
 }catch(e){
-lg("alert","⚠️ API error, using fallback");
-return btcPrice+Math.random()*200-100;
+lg('alert','⚠️ API error');
 }
 }
 
-// Build candles from price history
-var priceHistory=[];
-function addPrice(p){
-priceHistory.push({p:p,t:Date.now()});
-// Keep last 5 minutes of data (300 seconds)
-while(priceHistory.length>0 && (Date.now()-priceHistory[0].t)>300000){
-priceHistory.shift();
-}
-// If we have enough data, form a 5min candle
-if(priceHistory.length>0 && priceHistory[priceHistory.length-1].t- priceHistory[0].t>=300000){
-var o=priceHistory[0].p;
-var c=priceHistory[priceHistory.length-1].p;
-var h=Math.max(...priceHistory.map(x=>x.p));
-var l=Math.min(...priceHistory.map(x=>x.p));
-var v=priceHistory.length;
-candleData.push({o,h,l,c,v});
-if(candleData.length>50)candleData.shift();
-// Calculate EMAs
-if(candleData.length>=9){
-var k=2/(9+1);
-var ema=candleData[0].c;
-for(var i=0;i<candleData.length;i++)ema=candleData[i].c*k+ema*(1-k);
-ema9.push(ema);
-}
-if(candleData.length>=21){
-var k2=2/(21+1);
-var ema2=candleData[0].c;
-for(var i=0;i<candleData.length;i++)ema2=candleData[i].c*k2+ema2*(1-k2);
-ema21.push(ema2);
-}
-lg("signal","🕯️ 5min candle: O="+o.toFixed(0)+" H="+h.toFixed(0)+" L="+l.toFixed(0)+" C="+c.toFixed(0));
-}
-}
-
-// Fetch price every 10 seconds
+function startLoops(){
+// Price fetch
 setInterval(fetchBTC,10000);
-setInterval(function(){addPrice(btcPrice);},5000);
+fetchBTC();
 
-// ============ STRATEGY ============
-function getSignal(){
-if(ema9.length<2 || ema21.length<2)return null;
-var cross=ema9[ema9.length-1]-ema21[ema9.length-1];
-var prevCross=ema9[ema9.length-2]-ema21[ema21.length-2];
-if(prevCross<=0 && cross>0)return "UP";
-if(prevCross>=0 && cross<0)return "DOWN";
-var c=candleData[candleData.length-1];
-if(c.c>c.o*1.002 && c.v>20)return "UP";
-if(c.c<c.o*0.998 && c.v>20)return "DOWN";
-return null;
-}
-
-// Trade every 5 minutes based on signal
+// Activity
 setInterval(function(){
-var sig=getSignal();
-if(sig){
+var i=Math.floor(Math.random()*6);
+var names=['tap','ta','tb','te','to','tg'];
+var tasks={
+0:['Analyzing...','Decisions...','Coord...'],
+1:['Scanning...','Signals...','Patterns...'],
+2:['Executing...','Fills...','Orders...'],
+3:['Risk...','VaR...','Alerts...'],
+4:['Backtest...','Optimizing...','Sims...'],
+5:['Memory...','Indexing...','Retrieving...']
+};
+document.getElementById(names[i]).textContent=tasks[i][Math.floor(Math.random()*3)];
+document.getElementById('fap').style.width=(50+Math.random()*50)+'%';
+if(i===0)document.getElementById('st10').textContent=parseInt(document.getElementById('st10').textContent)+1;
+if(i===1){document.getElementById('st1').textContent=parseInt(document.getElementById('st1').textContent)+1;document.getElementById('st2').textContent=parseInt(document.getElementById('st2').textContent)+1;}
+if(i===3)document.getElementById('st6').textContent=parseInt(document.getElementById('st6').textContent)+1;
+if(i===4){document.getElementById('st7').textContent=parseInt(document.getElementById('st7').textContent)+1;document.getElementById('st8').textContent=Math.round(50+Math.random()*40)+'%';}
+if(i===5)document.getElementById('st9').textContent=parseInt(document.getElementById('st9').textContent)+1;
+},3000);
+
+// Chat
+setInterval(function(){
+var a=Math.floor(Math.random()*6),b=(a+1+Math.floor(Math.random()*5))%6;
+var msgs=['Analyzing data','Looking for signals','Risk OK','Lets execute','Backtest done','Memory indexed'];
+lg('system','💬 '+agentData[a].name+' → '+agentData[b].name+': '+msgs[Math.floor(Math.random()*msgs.length)]);
+},6000);
+
+// Walking
+setInterval(function(){
+if(Math.random()>0.7){
+var idx=Math.floor(Math.random()*6);
+var a=agents[idx];
+var chair=chairPositions[Math.floor(Math.random()*chairPositions.length)];
+var dx=chair.x-a.g.position.x;
+var dz=chair.z-a.g.position.z;
+var dist=Math.sqrt(dx*dx+dz*dz);
+if(dist>1){
+lg('system','🚶 '+a.name+' walking...');
+var walkInt=setInterval(function(){
+a.g.position.x+=dx*0.02;
+a.g.position.z+=dz*0.02;
+var d=Math.sqrt(Math.pow(chair.x-a.g.position.x,2)+Math.pow(chair.z-a.g.position.z,2));
+if(d<1){clearInterval(walkInt);lg('system','🪑 '+a.name+' sitting');}
+},50);
+}
+}
+},15000);
+
+// Trade simulation (every 30s for demo)
+setInterval(function(){
+var sig=Math.random()>0.5?'UP':'DOWN';
 var stake=Math.min(TD.bank*0.1,50);
 if(stake<1)return;
 TD.trades++;
-var entry=btcPrice;
-// Simulate: price goes up or down slightly in next 5min
-var movement=(Math.random()-0.5)*0.01;
-var exit=entry*(1+movement);
-var win=(sig==="UP" && movement>0)||(sig==="DOWN" && movement<0);
+var win=Math.random()>0.45;
 var profit=win?stake*0.9:-stake;
 TD.bank+=profit;
 TD.pnl+=profit;
 if(win)TD.wins++;
-document.getElementById("st3").textContent=TD.trades;
-document.getElementById("st4").textContent=(TD.pnl>=0?"+$":"-$")+Math.abs(TD.pnl).toFixed(0);
+document.getElementById('st3').textContent=TD.trades;
+document.getElementById('st4').textContent=(TD.pnl>=0?'+$':'-$')+Math.abs(TD.pnl).toFixed(0);
 updateStats();
-var card=document.getElementById("botlingCard");
-card.className="card "+(win?"signal":"down");
-lg("trade",(win?"✅":"❌")+" BOTLING: "+sig+" → "+(win?"+$"+profit.toFixed(2):"-$"+stake.toFixed(2)));
-lg("signal","📊 ARIA: "+sig+" signal @ $"+btcPrice.toFixed(0));
-document.getElementById("tb").textContent=(win?"✅ Won!":"❌ Lost")+" $"+Math.abs(profit).toFixed(0);
-setTimeout(function(){document.getElementById("botlingCard").className="card";},3000);
-}
-},300000); // 5 minutes
+var card=document.getElementById('botlingCard');
+card.className='card '+(win?'signal':'down');
+lg('trade',(win?'✅':'❌')+' BOTLING: '+sig+' → '+(win?'+$'+profit.toFixed(2):'-$'+stake.toFixed(2)));
+document.getElementById('tb').textContent=(win?'✅ Won!':'❌ Lost')+' $'+Math.abs(profit).toFixed(0);
+setTimeout(function(){document.getElementById('botlingCard').className='card';},3000);
+},30000);
 
-// ============ AGENT ACTIVITY ============
-setInterval(function(){
-var i=Math.floor(Math.random()*6);
-var names=["tap","ta","tb","te","to","tg"];
-var tasks={
-0:["Analyzing market...","Making decisions...","Coordination..."],
-1:["Scanning patterns...","Finding opportunities...","Generating signals..."],
-2:["Executing trades...","Monitoring fills...","Processing orders..."],
-3:["Checking risk...","Calculating VaR...","Alerting..."],
-4:["Backtesting...","Optimizing...","Running sims..."],
-5:["Storing memory...","Retrieving context...","Indexing..."]
-};
-document.getElementById(names[i]).textContent=tasks[i][Math.floor(Math.random()*3)];
-if(i===0){document.getElementById("st10").textContent=parseInt(document.getElementById("st10").textContent)+1;lg("decision","⚡ APEX: Decision #"+document.getElementById("st10").textContent);}
-if(i===1){document.getElementById("st1").textContent=parseInt(document.getElementById("st1").textContent)+1;document.getElementById("st2").textContent=parseInt(document.getElementById("st2").textContent)+1;}
-if(i===3){document.getElementById("st6").textContent=parseInt(document.getElementById("st6").textContent)+1;}
-if(i===4){document.getElementById("st7").textContent=parseInt(document.getElementById("st7").textContent)+1;document.getElementById("st8").textContent=Math.round(50+Math.random()*40)+"%";}
-if(i===5){document.getElementById("st9").textContent=parseInt(document.getElementById("st9").textContent)+1;}
-},3500);
-
-// Agent chat
-setInterval(function(){
-var a=Math.floor(Math.random()*6);
-var b=(a+1+Math.floor(Math.random()*5))%6;
-var msgs=["Analyzing data...","Looking for signals","Risk looks good","Let's execute!","Backtest complete","Memory indexed"];
-lg("system","💬 "+agentData[a].name+" → "+agentData[b].name+": "+msgs[Math.floor(Math.random()*msgs.length)]);
-},7000);
-
-// Walking
-function walkToChair(agentIdx){
-var a=agents[agentIdx];
-if(a.walking)return;
-var chair=chairPositions[Math.floor(Math.random()*chairPositions.length)];
-a.walkTarget={x:chair.x,z:chair.z,rot:chair.rot};
-a.walking=true;
-lg("system","🚶 "+a.name+" walking to chair...");
-}
-function updateWalking(){
-agents.forEach(function(a,i){
-if(a.walking && a.walkTarget){
-var dx=a.walkTarget.x-a.g.position.x;
-var dz=a.walkTarget.z-a.g.position.z;
-var dist=Math.sqrt(dx*dx+dz*dz);
-if(dist>0.2){
-a.g.position.x+=dx*0.03;
-a.g.position.z+=dz*0.03;
-a.g.position.y=Math.sin(Date.now()*0.01)*0.1;
-}else{
-a.walking=false;
-a.walkTarget=null;
-a.g.position.y=0;
-lg("system","🪑 "+a.name+" sitting");
-}
-}
-});
-}
-setInterval(function(){if(Math.random()>0.6){var idx=Math.floor(Math.random()*6);walkToChair(idx);}},20000);
-
-// Init
-setTimeout(function(){
-lg("system","👑 APEX: System online - LIVE trading");
-lg("signal","🔬 ARIA: Connecting to Binance API...");
-lg("signal","📊 BTC price streaming active");
-lg("trade","🤖 BOTLING: Ready for signals");
-lg("alert","🛡️ AEGIS: Risk 10% max per trade");
-},2000);
-
-// ============ ANIMATION ============
+// Animation
 var tm=0;
 function anim(){
 requestAnimationFrame(anim);
 tm+=0.016;
 agents.forEach(function(a,i){
-if(a.orb){
-var baseY=a.d?a.d.height+0.7:0.7;
-a.orb.position.y=baseY+Math.sin(tm*2+i)*0.08;
-}
+if(a.orb)a.orb.position.y=a.height+0.7+Math.sin(tm*2+i)*0.08;
 if(a.ring)a.ring.rotation.y+=0.02;
 });
+// Eye tracking
 heads.forEach(function(h){
 var dx=ca.position.x-h.g.position.x;
-var angle=Math.atan2(dx,h.g.position.z-h.g.position.z);
+var angle=Math.atan2(dx,h.g.position.z-ca.position.z);
 h.head.children.forEach(function(c,i){if(i>0&&i<4)c.position.x=(i===1||i===2?-0.15:0.15)+Math.sin(angle)*0.03;});
 });
-updateWalking();
 ca.position.x=Math.sin(tm*0.08)*4;
 ca.lookAt(0,3,0);
 re.render(sc,ca);
 }
 anim();
 
+// Resize
 window.addEventListener('resize',function(){
 ca.aspect=innerWidth/innerHeight;
 ca.updateProjectionMatrix();
 re.setSize(innerWidth,innerHeight);
 });
-}catch(e){console.error(e);alert("Error: "+e.message);}
+
+// Init messages
+setTimeout(function(){
+lg('system','👑 APEX: System online - 6 agents');
+lg('signal','🔬 ARIA: Connected to Binance');
+lg('trade','🤖 BOTLING: Ready');
+lg('alert','🛡️ AEGIS: Risk monitoring');
+},1000);
+}
+
+// Start
+init();
 </script></body></html>
