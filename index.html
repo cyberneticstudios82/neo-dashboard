@@ -114,7 +114,7 @@ var C=document.getElementById('c'),sc=new THREE.Scene();
 sc.fog=new THREE.FogExp2(0x1a1a2a,0.025);
 sc.background=new THREE.Color(0x1a1a2a);
 var ca=new THREE.PerspectiveCamera(55,innerWidth/innerHeight,0.1,1000);
-ca.position.set(0,5,12);ca.lookAt(0,1.5,0);
+ca.position.set(0,12,16);ca.lookAt(0,2,0);
 var re=new THREE.WebGLRenderer({antialias:true});
 re.setSize(innerWidth,innerHeight);re.setPixelRatio(Math.min(devicePixelRatio,2));C.appendChild(re.domElement);
 // Floor
@@ -133,11 +133,27 @@ var pl=new THREE.PointLight(0x00ff88,0.4,8);pl.position.set(x,11,0);sc.add(pl);}
 // Grid
 var gh=new THREE.GridHelper(30,30,0x00ff88,0x00ff88);gh.position.y=0.01;gh.material.opacity=0.1;gh.material.transparent=true;sc.add(gh);
 // Lighting
-sc.add(new THREE.AmbientLight(0x666688,0.7));
+sc.add(new THREE.AmbientLight(0x888899,0.9));
 var dl=new THREE.DirectionalLight(0xffffff,0.6);dl.position.set(5,15,5);sc.add(dl);
 // Accent lights
 var al1=new THREE.PointLight(0xff8800,0.3,10);al1.position.set(-12,3,5);sc.add(al1);
 var al2=new THREE.PointLight(0x0088ff,0.3,10);al2.position.set(12,3,-5);sc.add(al2);
+
+// Wall panels - brown wood texture
+var wp1=new THREE.Mesh(new THREE.PlaneGeometry(8,10),new THREE.MeshLambertMaterial({color:0x3a2a1a}));wp1.position.set(-16.9,5,0);wp1.rotation.y=Math.PI/2;sc.add(wp1);
+var wp2=new THREE.Mesh(new THREE.PlaneGeometry(8,10),new THREE.MeshLambertMaterial({color:0x2a1a10}));wp2.position.set(16.9,5,0);wp2.rotation.y=-Math.PI/2;sc.add(wp2);
+// Decorative brown cabinets
+var cab1=new THREE.Mesh(new THREE.BoxGeometry(2,3,0.6),new THREE.MeshLambertMaterial({color:0x4a3520}));cab1.position.set(-15,1.5,-8);sc.add(cab1);
+var cab2=new THREE.Mesh(new THREE.BoxGeometry(2,3,0.6),new THREE.MeshLambertMaterial({color:0x4a3520}));cab2.position.set(-15,1.5,8);sc.add(cab2);
+var cab3=new THREE.Mesh(new THREE.BoxGeometry(2,3,0.6),new THREE.MeshLambertMaterial({color:0x3a2515}));cab3.position.set(15,1.5,-8);sc.add(cab3);
+var cab4=new THREE.Mesh(new THREE.BoxGeometry(2,3,0.6),new THREE.MeshLambertMaterial({color:0x3a2515}));cab4.position.set(15,1.5,8);sc.add(cab4);
+// Brown shelves
+for(var sh=0;sh<3;sh++){var shlf=new THREE.Mesh(new THREE.BoxGeometry(3,0.15,0.5),new THREE.MeshLambertMaterial({color:0x5a4030})).translate(14,2+sh*1.2,0);sc.add(shlf);}
+// Side tables
+var st1=new THREE.Mesh(new THREE.CylinderGeometry(0.4,0.5,0.6,8),new THREE.MeshLambertMaterial({color:0x3a2a1a}));st1.position.set(-3,0.3,9);sc.add(st1);
+var st2=new THREE.Mesh(new THREE.CylinderGeometry(0.4,0.5,0.6,8),new THREE.MeshLambertMaterial({color:0x3a2a1a}));st2.position.set(3,0.3,9);sc.add(st2);
+var st3=new THREE.Mesh(new THREE.CylinderGeometry(0.4,0.5,0.6,8),new THREE.MeshLambertMaterial({color:0x3a2a1a}));st3.position.set(-3,0.3,-9);sc.add(st3);
+var st4=new THREE.Mesh(new THREE.CylinderGeometry(0.4,0.5,0.6,8),new THREE.MeshLambertMaterial({color:0x3a2a1a}));st4.position.set(3,0.3,-9);sc.add(st4);
 // Sofa area
 var sofaBase=new THREE.Mesh(new THREE.BoxGeometry(4,0.4,1.5),new THREE.MeshLambertMaterial({color:0x222233}));sofaBase.position.set(0,0.2,6);sc.add(sofaBase);
 var sofaBack=new THREE.Mesh(new THREE.BoxGeometry(4,1,0.3),new THREE.MeshLambertMaterial({color:0x333344}));sofaBack.position.set(0,0.9,6.6);sc.add(sofaBack);
@@ -215,7 +231,7 @@ desks.forEach(function(d,i){d.orb.position.y=2.7+Math.sin(tm*2+i)*0.08;d.pl.inte
 agentEyes.forEach(function(e){var dx=(ca.position.x-e.g.position.x)*0.02;var dz=(ca.position.z-e.g.position.z)*0.02;e.eyeL.position.x=-0.08+dx;e.eyeR.position.x=0.08+dx;e.eyeL.lookAt(ca.position);e.eyeR.lookAt(ca.position);});
 // Mouse controls for zoom/rotate
 if(mouseDown){ca.position.x+=(-mouseX*0.01-ca.position.x)*0.02;ca.position.y+=((mouseY*0.01+3)-ca.position.y)*0.02;ca.lookAt(0,1.5,0);}
-ca.position.x+=Math.sin(tm*0.08)*0.3;ca.lookAt(0,1,0);re.render(sc,ca);}
+# ca.position.x+=Math.sin(tm*0.08)*0.3;ca.lookAt(0,1,0);re.render(sc,ca);}
 window.onresize=function(){ca.aspect=innerWidth/innerHeight;ca.updateProjectionMatrix();re.setSize(innerWidth,innerHeight);};anim();
 }catch(e){console.error(e);document.getElementById('ta').textContent='Error';}
 </script></body></html>
