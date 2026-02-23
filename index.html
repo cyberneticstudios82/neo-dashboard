@@ -52,8 +52,9 @@
 <div class="clock" id="clk">00:00</div></div>
 <button class="charts-btn" onclick="document.querySelector('.charts-panel').classList.toggle('show')">📊 CHARTS</button>
 <div class="charts-panel">
-<div class="chart"><div class="chart-title">📈 TRADING P&L OVER TIME</div><canvas id="tradeChart"></canvas></div>
-<div class="chart"><div class="chart-title">⚡ AGENT ACTIVITIES</div><canvas id="activityChart"></canvas></div>
+<div class="chart"><div class="chart-title">💰 PROFIT & LOSS</div><canvas id="pnlChart"></canvas></div>
+<div class="chart"><div class="chart-title">🧠 AGENT LEARNING</div><canvas id="learningChart"></canvas></div>
+<div class="chart"><div class="chart-title">⚡ ACTIVITY OVER TIME</div><canvas id="activityChart"></canvas></div>
 </div>
 <div class="chat-panel"><div class="chat-title">☕ AGENT CHAT (BREAK TIME)</div><div id="chatContainer"></div></div>
 <div class="left">
@@ -68,16 +69,29 @@
 <div class="notif" id="nf"></div>
 <script>
 var tradeHistory=[];
+var pnlHistory=[];
+var learningHistory=[];
 var activityHistory={aria:0,sentinel:0,mercury:0,apex:0,dexter:0,time:[]};
+var agentLearning={aria:0,sentinel:0,mercury:0,apex:0,dexter:0};
 var maxHistory=50;
-function updateTradeChart(){
-var c=document.getElementById('tradeChart'),ctx=c.getContext('2d');c.width=c.offsetWidth;c.height=c.offsetHeight;
+function updatePnlChart(){
+var c=document.getElementById('pnlChart'),ctx=c.getContext('2d');c.width=c.offsetWidth;c.height=c.offsetHeight;
 ctx.fillStyle='#0a0a1a';ctx.fillRect(0,0,c.width,c.height);
-if(tradeHistory.length<2)return;
-var min=Math.min(...tradeHistory),max=Math.max(...tradeHistory),range=max-min||1;
-var pts=tradeHistory.map(function(v,i){return{x:i/(tradeHistory.length-1)*(c.width-20)+10,y:c.height-10-((v-min)/range*(c.height-30))}});
+if(pnlHistory.length<2)return;
+var min=Math.min(...pnlHistory),max=Math.max(...pnlHistory),range=max-min||1;
+var pts=pnlHistory.map(function(v,i){return{x:i/(pnlHistory.length-1)*(c.width-20)+10,y:c.height-10-((v-min)/range*(c.height-30))}});
 ctx.strokeStyle='#00ff88';ctx.lineWidth=1.5;ctx.beginPath();
-pts.forEach(function(p,i){i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y);});ctx.stroke();}
+pts.forEach(function(p,i){i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y);});ctx.stroke();
+ctx.fillStyle='#00ff88';pts.forEach(function(p,i){if(i===pts.length-1)ctx.fillRect(p.x-2,p.y-2,4,4)});}
+function updateLearningChart(){
+var c=document.getElementById('learningChart'),ctx=c.getContext('2d');c.width=c.offsetWidth;c.height=c.offsetHeight;
+ctx.fillStyle='#0a0a1a';ctx.fillRect(0,0,c.width,c.height);
+var agents=['aria','sentinel','mercury','apex','dexter'],colors=['#00ff88','#ff4400','#0088ff','#ff8800','#00ffff'];
+var max=Math.max(...Object.values(agentLearning))||1;
+agents.forEach(function(agent,i){
+var barH=(agentLearning[agent]||0)/max*(c.height-20);
+ctx.fillStyle=colors[i];ctx.fillRect(i*((c.width-10)/5)+5,c.height-10-barH,((c.width-10)/5)-8,barH);
+ctx.fillStyle='#666';ctx.font='5px Courier';ctx.fillText(agent.toUpperCase(),i*((c.width-10)/5)+5,c.height-2);});}
 function updateActivityChart(){
 var c=document.getElementById('activityChart'),ctx=c.getContext('2d');c.width=c.offsetWidth;c.height=c.offsetHeight;
 ctx.fillStyle='#0a0a1a';ctx.fillRect(0,0,c.width,c.height);
@@ -97,8 +111,8 @@ setInterval(function(){var d=breakDialogues[Math.floor(Math.random()*breakDialog
 setTimeout(function(){addChatMsg('SYSTEM','☕ Break chat ready...');},3000);
 try{
 var C=document.getElementById('c'),sc=new THREE.Scene();
-sc.fog=new THREE.FogExp2(0x0a0a1a,0.032);
-sc.background=new THREE.Color(0x0a0a1a);
+sc.fog=new THREE.FogExp2(0x1a1a2a,0.025);
+sc.background=new THREE.Color(0x1a1a2a);
 var ca=new THREE.PerspectiveCamera(55,innerWidth/innerHeight,0.1,1000);
 ca.position.set(0,5,12);ca.lookAt(0,1.5,0);
 var re=new THREE.WebGLRenderer({antialias:true});
@@ -119,8 +133,8 @@ var pl=new THREE.PointLight(0x00ff88,0.4,8);pl.position.set(x,11,0);sc.add(pl);}
 // Grid
 var gh=new THREE.GridHelper(30,30,0x00ff88,0x00ff88);gh.position.y=0.01;gh.material.opacity=0.1;gh.material.transparent=true;sc.add(gh);
 // Lighting
-sc.add(new THREE.AmbientLight(0x334466,0.5));
-var dl=new THREE.DirectionalLight(0xffffff,0.35);dl.position.set(5,15,5);sc.add(dl);
+sc.add(new THREE.AmbientLight(0x666688,0.7));
+var dl=new THREE.DirectionalLight(0xffffff,0.6);dl.position.set(5,15,5);sc.add(dl);
 // Accent lights
 var al1=new THREE.PointLight(0xff8800,0.3,10);al1.position.set(-12,3,5);sc.add(al1);
 var al2=new THREE.PointLight(0x0088ff,0.3,10);al2.position.set(12,3,-5);sc.add(al2);
@@ -178,7 +192,7 @@ function clk(){document.getElementById('clk').textContent=new Date().toLocaleTim
 function lg(t,m){var f=document.getElementById('lf');var e=document.createElement('div');e.className='le l'+t;e.innerHTML='<span class="lt">'+new Date().toLocaleTimeString('en-US',{hour12:false})+'</span>'+m;f.appendChild(e);f.scrollTop=f.scrollHeight;if(f.children.length>30)f.removeChild(f.firstChild);}
 function nf(m){var n=document.getElementById('nf');n.textContent=m;n.classList.add('on');setTimeout(function(){n.classList.remove('on')},2000);}
 function upt(k,p){var s=ast[k];s.t++;if(s.t>180+Math.random()*180){s.i=(s.i+1)%atasks[k].length;s.t=0;document.getElementById('t'+p).textContent=atasks[k][s.i];document.getElementById('f'+p).style.width=(s.t/360*100)+'%';}s.s1=!s.s1;s.s2=!s.s2;document.getElementById(p+'1s1').classList.toggle('on',s.s1);document.getElementById(p+'1s2').classList.toggle('on',s.s2);activityHistory[k]=(activityHistory[k]||0)+1;updateActivityChart();}
-function trade(){var s=ast.mercury;var w=Math.random()*100<s.wr;var a=Math.floor(Math.random()*150)+30;s.trades++;s.pnl+=w?a:-a;if(w)s.wins++;var wr=s.trades>0?Math.round(s.wins/s.trades*100):0;document.getElementById('st7').textContent=s.trades;document.getElementById('st8').textContent='$'+(s.pnl>=0?'+':'')+s.pnl;document.getElementById('st9').textContent=wr+'%';document.getElementById('mt').textContent=s.trades;document.getElementById('mp').textContent='$'+(s.pnl>=0?'+':'')+s.pnl;tradeHistory.push(s.pnl);if(tradeHistory.length>maxHistory)tradeHistory.shift();updateTradeChart();lg(w?'ll':'ltx',(w?'✅':'❌')+' MERCURY: '+(w?'WIN':'LOSS')+' $'+a+' | P&L: $'+s.pnl);s.wr=w?Math.min(75,s.wr+0.4):Math.max(35,s.wr-0.6);}
+function trade(){var s=ast.mercury;var w=Math.random()*100<s.wr;var a=Math.floor(Math.random()*150)+30;s.trades++;s.pnl+=w?a:-a;if(w)s.wins++;var wr=s.trades>0?Math.round(s.wins/s.trades*100):0;document.getElementById('st7').textContent=s.trades;document.getElementById('st8').textContent='$'+(s.pnl>=0?'+':'')+s.pnl;document.getElementById('st9').textContent=wr+'%';document.getElementById('mt').textContent=s.trades;document.getElementById('mp').textContent='$'+(s.pnl>=0?'+':'')+s.pnl;pnlHistory.push(s.pnl);if(pnlHistory.length>maxHistory)pnlHistory.shift();updatePnlChart();if(w){agentLearning.mercury=Math.min(100,agentLearning.mercury+2);updateLearningChart();}lg(w?'ll':'ltx',(w?'✅':'❌')+' MERCURY: '+(w?'WIN':'LOSS')+' $'+a+' | P&L: $'+s.pnl);s.wr=w?Math.min(75,s.wr+0.4):Math.max(35,s.wr-0.6);}
 function sec(){var s=ast.sentinel;if(Math.random()>0.92){s.threats++;document.getElementById('st4').textContent=s.threats;lg('ltx','🚨 SENTINEL: Threat #'+s.threats);}if(Math.random()>0.9){s.audits++;s.logs++;document.getElementById('st5').textContent=s.audits;document.getElementById('st6').textContent=s.logs;}}
 function res(){var s=ast.aria;if(Math.random()>0.9){s.tools++;document.getElementById('st1').textContent=s.tools;lg('la','📡 ARIA: Tool #'+s.tools);}if(Math.random()>0.88){s.ideas++;document.getElementById('st2').textContent=s.ideas;}if(Math.random()>0.85){s.res++;document.getElementById('st3').textContent=s.res;document.getElementById('mr').textContent=s.res;}}
 function fin(){var s=ast.dexter;if(Math.random()>0.88){s.payments++;document.getElementById('std1').textContent=s.payments;lg('ld','💳 DEXTER: Payment #'+s.payments);}if(Math.random()>0.92){s.refunds++;document.getElementById('std2').textContent=s.refunds;}if(Math.random()>0.9){s.support++;document.getElementById('std3').textContent=s.support;}}
@@ -191,11 +205,17 @@ setInterval(function(){upt('apex','ap');lg('lx','⚡ APEX: '+atasks.apex[ast.ape
 setInterval(function(){upt('dexter','dx');lg('ld','💳 DEXTER: '+atasks.dexter[ast.dexter.i]);},3400);
 setInterval(trade,4500);setInterval(sec,2800);setInterval(res,2200);setInterval(fin,2600);setInterval(collab,5500);
 setTimeout(function(){lg('la','🔬 ARIA: Online');lg('ls','🛡️ SENTINEL: Online');lg('lm','📈 MERCURY: Online');lg('lx','⚡ APEX: Online');lg('ld','💳 DEXTER: Online');nf('APEX HQ - 5 Agents Ready');},1200);
-var tm=0;function anim(){requestAnimationFrame(anim);tm+=0.016;
+var tm=0;function anim(){requestAnimationFrame(anim);tm+=0.016;var mouseDown=false,mouseX=0,mouseY=0;
+document.addEventListener('mousedown',function(e){mouseDown=true;});
+document.addEventListener('mouseup',function(e){mouseDown=false;});
+document.addEventListener('mousemove',function(e){mouseX=(e.clientX-innerWidth/2)/100;mouseY=(e.clientY-innerHeight/2)/100;});
+document.addEventListener('wheel',function(e){ca.position.z+=e.deltaY*0.01;ca.position.z=Math.max(5,Math.min(25,ca.position.z));});
 desks.forEach(function(d,i){d.orb.position.y=2.7+Math.sin(tm*2+i)*0.08;d.pl.intensity=0.5+Math.sin(tm*3+i)*0.15;});
 // Eyes follow camera
 agentEyes.forEach(function(e){var dx=(ca.position.x-e.g.position.x)*0.02;var dz=(ca.position.z-e.g.position.z)*0.02;e.eyeL.position.x=-0.08+dx;e.eyeR.position.x=0.08+dx;e.eyeL.lookAt(ca.position);e.eyeR.lookAt(ca.position);});
-ca.position.x=Math.sin(tm*0.08)*0.3;ca.lookAt(0,1,0);re.render(sc,ca);}
+// Mouse controls for zoom/rotate
+if(mouseDown){ca.position.x+=(-mouseX*0.01-ca.position.x)*0.02;ca.position.y+=((mouseY*0.01+3)-ca.position.y)*0.02;ca.lookAt(0,1.5,0);}
+ca.position.x+=Math.sin(tm*0.08)*0.3;ca.lookAt(0,1,0);re.render(sc,ca);}
 window.onresize=function(){ca.aspect=innerWidth/innerHeight;ca.updateProjectionMatrix();re.setSize(innerWidth,innerHeight);};anim();
 }catch(e){console.error(e);document.getElementById('ta').textContent='Error';}
 </script></body></html>
