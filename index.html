@@ -1,151 +1,177 @@
 <!DOCTYPE html>
-<html><head><meta charset="UTF-8"><title>APEX HQ - Trading Command Center</title>
+<html><head><meta charset="UTF-8"><title>APEX HQ v3.0 - Trading Intelligence</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Courier New',monospace;background:#050508;color:#fff;overflow:hidden}
 #c{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0}
-.top{position:fixed;top:0;left:0;right:0;height:50px;background:linear-gradient(180deg,#0a0a12,#060608);border-bottom:1px solid #00ff88;display:flex;align-items:center;justify-content:space-between;padding:0 20px;z-index:100}
-.logo{font-size:18px;font-weight:bold;letter-spacing:3px;color:#00ff88}
-.logo span{color:#ff8800}
-.p{padding:5px 12px;border-radius:12px;font-size:9px;margin-left:5px;background:rgba(0,255,136,0.1);color:#00ff88;border:1px solid rgba(0,255,136,0.3)}
-.charts-btn{position:fixed;top:55px;left:50%;transform:translateX(-50%);padding:8px 16px;background:#1a1a2a;border:1px solid #00ff88;border-radius:6px;color:#00ff88;font-size:11px;cursor:pointer;z-index:90}
-.charts-panel{position:fixed;top:90px;left:50%;transform:translateX(-50%);width:650px;height:200px;background:rgba(5,5,10,0.98);border:1px solid #00ff88;border-radius:10px;padding:12px;z-index:85;display:none;gap:12px}
+.top{position:fixed;top:0;left:0;right:0;height:55px;background:linear-gradient(90deg,#0a0a12,#12121a);border-bottom:2px solid #00ffd1;display:flex;align-items:center;justify-content:space-between;padding:0 20px;z-index:100}
+.logo{font-size:20px;font-weight:bold;letter-spacing:4px;color:#00ffd1;text-shadow:0 0 15px #00ffd1}
+.logo span{color:#ffd700}
+.kpi{display:flex;gap:25px;font-size:11px;color:#888}
+.kpi span{color:#00ffd1}
+.kpi .pnl{color:#00ff88;font-weight:bold}
+.kpi .pnl.neg{color:#ff4444}
+.charts-btn{position:fixed;top:60px;left:50%;transform:translateX(-50%);padding:10px 20px;background:#1a1a2a;border:1px solid #00ffd1;border-radius:6px;color:#00ffd1;font-size:11px;cursor:pointer;z-index:90;font-weight:bold;letter-spacing:1px}
+.charts-panel{position:fixed;top:100px;left:50%;transform:translateX(-50%);width:700px;height:200px;background:rgba(5,5,15,0.98);border:1px solid #00ffd1;border-radius:10px;padding:15px;z-index:85;display:none;gap:15px}
 .charts-panel.show{display:flex}
-.chart{flex:1;background:rgba(0,0,0,0.5);border-radius:6px;padding:8px}
-.chart-title{font-size:10px;color:#00ff88;margin-bottom:6px}
-.chart canvas{width:100%;height:70px;border-radius:4px;background:#0a0a10}
-.left{position:fixed;left:10px;top:60px;width:200px;bottom:10px;display:flex;flex-direction:column;gap:8px;z-index:50;overflow-y:auto}
-.card{background:linear-gradient(180deg,#12121a,#0a0a10);border:1px solid rgba(0,255,136,0.2);border-radius:8px;padding:10px}
-.ca{color:#00ff88}.cs{color:#ff4400}.cm{color:#0088ff}.cx{color:#ff8800}.cd{color:#00ffff}
-.hdr{display:flex;align-items:center;gap:8px;margin-bottom:6px}
-.av{width:26px;height:26px;border-radius:50%;background:#1a1a2a;border:2px solid currentColor;display:flex;align-items:center;justify-content:center;font-size:11px}
-.if h3{font-size:11px;margin:0}.if p{font-size:8px;color:#666;margin:0}
-.task{font-size:9px;color:#888;margin:4px 0}
-.progress{height:3px;background:#1a1a2a;border-radius:2px;margin-bottom:6px}
-.progress-bar{height:100%;background:currentColor;border-radius:2px;width:0%;transition:width 0.5s}
-.stats{display:flex;justify-content:space-between;margin-top:6px}
+.chart{flex:1;background:rgba(0,0,0,0.5);border-radius:8px;padding:10px}
+.chart canvas{width:100%;height:80px;background:#0a0a10;border-radius:4px}
+.left{position:fixed;left:10px;top:65px;width:210px;bottom:10px;display:flex;flex-direction:column;gap:8px;z-index:50;overflow-y:auto}
+.card{background:linear-gradient(180deg,#0d0d15,#080810);border:1px solid #1a1a2a;border-radius:10px;padding:12px}
+.card.apex{border-color:#ffd700;background:linear-gradient(180deg,#1a1510,#0d0a05)}
+.card.aria{color:#00d4ff}.card.botling{color:#ff8c00}.card.aegis{color:#9b59b6}.card.oppe{color:#00ff88}.card.argent{color:#c0c0c0}
+.hdr{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.av{width:30px;height:30px;border-radius:50%;background:#1a1a2a;border:2px solid currentColor;display:flex;align-items:center;justify-content:center;font-size:13px}
+.status{width:10px;height:10px;border-radius:50%;background:#00ff88;box-shadow:0 0 12px currentColor}
+.status.idle{background:#ffd700}.status.error{background:#ff4444}
+.task{font-size:9px;color:#888;margin:6px 0;min-height:14px}
+.stats{display:flex;justify-content:space-between;margin-top:8px}
 .stat{text-align:center}.sv{font-size:11px;font-weight:bold}.sl{font-size:8px;color:#555}
-.right{position:fixed;right:10px;top:60px;bottom:10px;width:250px;background:linear-gradient(180deg,#12121a,#0a0a10);border:1px solid rgba(0,255,136,0.2);border-radius:8px;padding:10px;display:flex;flex-direction:column}
-.logt{font-size:11px;color:#00ff88;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid rgba(0,255,136,0.2)}
+.trade-panel{position:fixed;bottom:10px;left:230px;right:240px;height:130px;background:rgba(5,5,15,0.95);border:1px solid #00ffd1;border-radius:10px;padding:12px;overflow-y:auto;z-index:80}
+.trade-title{font-size:11px;color:#00ffd1;margin-bottom:8px;letter-spacing:1px;border-bottom:1px solid #1a1a2a;padding-bottom:6px}
+.trade-entry{font-size:9px;padding:8px;margin-bottom:6px;background:rgba(0,0,0,0.5);border-radius:6px;border-left:3px solid #00ffd1}
+.trade-entry.buy{border-left-color:#00ff88}.trade-entry.sell{border-left-color:#ff4444}
+.symbol{color:#00d4ff;font-weight:bold}.direction{color:#ff8c00}.pnl{color:#00ff88}.pnl.neg{color:#ff4444}
+.right{position:fixed;right:10px;top:65px;bottom:10px;width:220px;background:rgba(10,10,18,0.95);border:1px solid #1a1a2a;border-radius:10px;padding:12px;display:flex;flex-direction:column}
+.logt{font-size:11px;color:#00ffd1;margin-bottom:10px;border-bottom:1px solid #1a1a2a;padding-bottom:8px;letter-spacing:1px}
 .logf{flex:1;overflow-y:auto}
-.le{font-size:9px;margin-bottom:4px;padding:4px;background:rgba(0,0,0,0.3);border-radius:4px;border-left:2px solid #333}
-.le.green{border-left-color:#0f0}.le.red{border-left-color:#f00}.le.blue{border-left-color:#08f}.le.yellow{border-left-color:#ff0}
-.time{color:#555;margin-right:6px;font-size:8px}
-.bot{position:fixed;bottom:10px;left:220px;right:270px;height:50px;background:linear-gradient(180deg,#12121a,#0a0a10);border:1px solid rgba(0,255,136,0.2);border-radius:8px;display:flex;align-items:center;justify-content:space-around;padding:0 20px}
-.m{text-align:center}.mv{font-size:15px;font-weight:bold}.ml{font-size:9px;color:#555}
-.md{width:1px;height:25px;background:rgba(255,255,255,0.1)}
-.trade-panel{position:fixed;bottom:70px;left:220px;right:270px;height:140px;background:rgba(5,5,10,0.95);border:1px solid rgba(0,255,136,0.2);border-radius:8px;padding:10px;overflow-y:auto;z-index:80}
-.trade-title{font-size:10px;color:#00ff88;margin-bottom:6px}
-.trade-entry{font-size:8px;padding:5px;margin-bottom:4px;background:rgba(0,0,0,0.4);border-radius:4px;border-left:2px solid #00ff88}
-.trade-entry .asset{color:#00ffff;font-weight:bold}
-.trade-entry .direction{color:#ff8800}
-.trade-entry .pnl{color:#0f0}
-.trade-entry .pnl.neg{color:#f00}
+.le{font-size:9px;margin-bottom:6px;padding:6px;background:rgba(0,0,0,0.4);border-radius:4px;border-left:2px solid #333}
+.le.trade{border-left-color:#00ff88}.le.signal{border-left-color:#00d4ff}.le.alert{border-left-color:#ffd700}.le.system{border-left-color:#9b59b6}.le.decision{border-left-color:#ff8c00}
+.bot{position:fixed;bottom:10px;right:10px;width:220px;height:50px;background:rgba(10,10,18,0.95);border:1px solid #1a1a2a;border-radius:10px;display:flex;align-items:center;justify-content:space-around}
+.m{text-align:center}.mv{font-size:14px;font-weight:bold;color:#00ffd1}.ml{font-size:9px;color:#555}
+.md{width:1px;height:20px;background:rgba(255,255,255,0.1)}
+.floor-flash{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1;opacity:0;transition:opacity 0.15s}
 </style></head>
 <body>
 <div id="c"></div>
-<div class="top"><div class="logo">APEX <span>HQ</span></div><div><span class="p pa">ARIA</span><span class="p ps">SENTINEL</span><span class="p pm">MERCURY</span><span class="p px">APEX</span><span class="p pd">DEXTER</span></div></div>
+<div class="floor-flash" id="floorFlash"></div>
+<div class="top"><div class="logo">APEX <span>HQ</span></div><div class="kpi"><span>P&L: <span class="pnl" id="kpiPnl">$0</span></span><span>Trades: <span id="kpiTrades">0</span></span><span>W: <span id="kpiW">0</span> L: <span id="kpiL">0</span></span><span>Win: <span id="kpiWin">0%</span></span><span>Capital: $500,000</span></div></div>
 <button class="charts-btn" onclick="document.querySelector('.charts-panel').classList.toggle('show')">📊 TRADING DASHBOARD</button>
-<div class="charts-panel"><div class="chart"><div class="chart-title">💰 P&L OVER TIME</div><canvas id="pnlChart"></canvas></div><div class="chart"><div class="chart-title">📊 ASSET ALLOCATION</div><canvas id="assetChart"></canvas></div><div class="chart"><div class="chart-title">⚡ ACTIVITIES</div><canvas id="activityChart"></canvas></div></div>
+<div class="charts-panel"><div class="chart"><canvas id="pnlChart"></canvas></div><div class="chart"><canvas id="actChart"></canvas></div></div>
 <div class="left">
-<div class="card ca"><div class="hdr"><div class="av">🔬</div><div class="if"><h3>ARIA</h3><p>Research Lead</p></div></div><div class="task" id="ta">Initializing...</div><div class="progress"><div class="progress-bar" id="pa"></div></div><div class="stats"><div class="stat"><div class="sv" id="st1">0</div><div class="sl">Models</div></div><div class="stat"><div class="sv" id="st2">0</div><div class="sl">Insights</div></div><div class="stat"><div class="sv" id="st3">0</div><div class="sl">Papers</div></div></div></div>
-<div class="card cs"><div class="hdr"><div class="av">🛡️</div><div class="if"><h3>SENTINEL</h3><p>Security</p></div></div><div class="task" id="ts">Initializing...</div><div class="progress"><div class="progress-bar" id="ps"></div></div><div class="stats"><div class="stat"><div class="sv" id="st4">0</div><div class="sl">Threats</div></div><div class="stat"><div class="sv" id="st5">0</div><div class="sl">Audits</div></div><div class="stat"><div class="sv" id="st6">0</div><div class="sl">Alerts</div></div></div></div>
-<div class="card cm"><div class="hdr"><div class="av">📈</div><div class="if"><h3>MERCURY</h3><p>Head Trader</p></div></div><div class="task" id="tm">Initializing...</div><div class="progress"><div class="progress-bar" id="pm"></div></div><div class="stats"><div class="stat"><div class="sv" id="st7">0</div><div class="sl">Trades</div></div><div class="stat"><div class="sv" id="st8">$0</div><div class="sl">P&L</div></div><div class="stat"><div class="sv" id="st9">0%</div><div class="sl">Win</div></div></div></div>
-<div class="card cx"><div class="hdr"><div class="av">⚡</div><div class="if"><h3>APEX</h3><p>Coordinator</p></div></div><div class="task" id="tap">Initializing...</div><div class="progress"><div class="progress-bar" id="pap"></div></div><div class="stats"><div class="stat"><div class="sv" id="st10">0</div><div class="sl">Tasks</div></div><div class="stat"><div class="sv" id="st11">0</div><div class="sl">Collab</div></div><div class="stat"><div class="sv" id="st12">0</div><div class="sl">Rating</div></div></div></div>
-<div class="card cd"><div class="hdr"><div class="av">💳</div><div class="if"><h3>DEXTER</h3><p>Quant Analyst</p></div></div><div class="task" id="tdx">Initializing...</div><div class="progress"><div class="progress-bar" id="pdx"></div></div><div class="stats"><div class="stat"><div class="sv" id="std1">0</div><div class="sl">Models</div></div><div class="stat"><div class="sv" id="std2">0</div><div class="sl">Alpha</div></div><div class="stat"><div class="sv" id="std3">0</div><div class="sl">Reports</div></div></div></div></div>
+<div class="card apex"><div class="hdr"><div class="av">👑</div><div><h3 style="font-size:12px">APEX</h3><p style="font-size:8px;color:#666">Chief Orchestrator</p></div><div class="status"></div></div><div class="task" id="tApex">Initializing...</div><div class="stats"><div class="stat"><div class="sv" id="stA1">0</div><div class="sl">Decisions</div></div><div class="stat"><div class="sv" id="stA2">0/6</div><div class="sl">Agents</div></div><div class="stat"><div class="sv" id="stA3">0</div><div class="sl">Pending</div></div></div></div>
+<div class="card aria"><div class="hdr"><div class="av">🔬</div><div><h3 style="font-size:12px">ARIA</h3><p style="font-size:8px;color:#666">Market Analyst</p></div><div class="status"></div></div><div class="task" id="tAria">Initializing...</div><div class="stats"><div class="stat"><div class="sv" id="stAr1">0</div><div class="sl">Scans</div></div><div class="stat"><div class="sv" id="stAr2">0</div><div class="sl">Signals</div></div><div class="stat"><div class="sv" id="stAr3">0%</div><div class="sl">Accuracy</div></div></div></div>
+<div class="card botling"><div class="hdr"><div class="av">🤖</div><div><h3 style="font-size:12px">BOTLING</h3><p style="font-size:8px;color:#666">Execution Engine</p></div><div class="status"></div></div><div class="task" id="tBotling">Initializing...</div><div class="stats"><div class="stat"><div class="sv" id="stB1">0</div><div class="sl">Trades</div></div><div class="stat"><div class="sv" id="stB2">0ms</div><div class="sl">Latency</div></div><div class="stat"><div class="sv" id="stB3">$0</div><div class="sl">Slippage</div></div></div></div>
+<div class="card aegis"><div class="hdr"><div class="av">🛡️</div><div><h3 style="font-size:12px">AEGIS</h3><p style="font-size:8px;color:#666">Risk Manager</p></div><div class="status"></div></div><div class="task" id="tAegis">Initializing...</div><div class="stats"><div class="stat"><div class="sv" id="stE1">0%</div><div class="sl">Drawdown</div></div><div class="stat"><div class="sv" id="stE2">0%</div><div class="sl">VaR</div></div><div class="stat"><div class="sv" id="stE3">ARMED</div><div class="sl">KillSwitch</div></div></div></div>
+<div class="card oppe"><div class="hdr"><div class="av">📈</div><div><h3 style="font-size:12px">OPPE</h3><p style="font-size:8px;color:#666">Strategy Engineer</p></div><div class="status"></div></div><div class="task" id="tOppe">Initializing...</div><div class="stats"><div class="stat"><div class="sv" id="stO1">0</div><div class="sl">Backtests</div></div><div class="stat"><div class="sv" id="stO2">0</div><div class="sl">Sharpe</div></div><div class="stat"><div class="sv" id="stO3">v1.0</div><div class="sl">Version</div></div></div></div>
+<div class="card argent"><div class="hdr"><div class="av">📚</div><div><h3 style="font-size:12px">ARGENT</h3><p style="font-size:8px;color:#666">Memory Librarian</p></div><div class="status"></div></div><div class="task" id="tArgent">Initializing...</div><div class="stats"><div class="stat"><div class="sv" id="stG1">0</div><div class="sl">Memories</div></div><div class="stat"><div class="sv" id="stG2">0%</div><div class="sl">Hit Rate</div></div><div class="stat"><div class="sv" id="stG3">0</div><div class="sl">Retrievals</div></div></div></div></div>
 <div class="trade-panel"><div class="trade-title">📋 TRADE JOURNAL</div><div id="tradeLog"></div></div>
 <div class="right"><div class="logt">◈ ACTIVITY LOG</div><div class="logf" id="lf"></div></div>
 <div class="bot"><div class="m"><div class="mv" id="mp">$0</div><div class="ml">TOTAL P&L</div></div><div class="md"></div><div class="m"><div class="mv" id="mt">0</div><div class="ml">TRADES</div></div><div class="md"></div><div class="m"><div class="mv" id="mw">0%</div><div class="ml">WIN RATE</div></div><div class="md"></div><div class="m"><div class="mv" id="mu">00:00</div><div class="ml">UPTIME</div></div></div>
 <script>
-var TD={pnl:0,trades:0,wins:0,pnlHistory:[],assetAlloc:{},activities:{},start:Date.now()};
-var strategies=["Momentum","RSI Div","MACD Cross","Bollinger","Support/Res","Trend","Mean Rev","Breakout"];
-var assets=["BTC","ETH","XRP","SOL","AVAX","MATIC","LINK","DOT"];
+var TD={pnl:0,trades:0,wins:0,losses:0,pnlHistory:[],activities:{},start:Date.now()};
+var strategies=["Momentum","RSI Divergence","MACD Cross","Bollinger Bounce","Support/Resistance","Trend Following","Mean Reversion","Breakout"];
+var assets=["BTC","ETH","XRP","SOL","AVAX","MATIC","LINK","DOT","NIFTY","SPY"];
 var platforms=["Polymarket","Coinbase","Binance","Kraken"];
+var timeframes=["1M","5M","15M","1H","4H","1D"];
 function trade(){
-var a=strategies[Math.floor(Math.random()*strategies.length)];
-var b=assets[Math.floor(Math.random()*assets.length)];
-var c=platforms[Math.floor(Math.random()*platforms.length)];
-var d=Math.random()>0.5?"LONG":"SHORT";
-var e=Math.random()*100+10;
-var f=(Math.random()>0.55)?Math.random()*80+20:-(Math.random()*60+10);
-TD.trades++;TD.pnl+=f;if(f>0)TD.wins++;
+var asset=assets[Math.floor(Math.random()*assets.length)];
+var strat=strategies[Math.floor(Math.random()*strategies.length)];
+var plat=platforms[Math.floor(Math.random()*platforms.length)];
+var tf=timeframes[Math.floor(Math.random()*timeframes.length)];
+var dir=Math.random()>0.5?"LONG":"SHORT";
+var entry=Math.random()*1000+50;
+var pnl=(Math.random()>0.55)?Math.random()*200+50:-(Math.random()*150+20);
+TD.trades++;if(pnl>0){TD.wins++;}else{TD.losses++;}
+TD.pnl+=pnl;
 TD.pnlHistory.push({pnl:TD.pnl,t:Date.now()});
-if(TD.pnlHistory.length>40)TD.pnlHistory.shift();
-if(!TD.assetAlloc[b])TD.assetAlloc[b]=0;TD.assetAlloc[b]++;
-var L=document.getElementById("tradeLog");
-var E=document.createElement("div");E.className="trade-entry";
-E.innerHTML='<span class="time">'+new Date().toLocaleTimeString()+'</span> <span class="asset">'+b+'</span> <span class="direction">'+d+'</span> @ $'+e.toFixed(2)+' | <span class="strategy">'+a+'</span> | '+c+' | <span class="pnl '+(f>0?'pos':'neg')+'">$'+(f>0?'+':'')+f.toFixed(2)+'</span>';
-L.insertBefore(E,L.firstChild);if(L.children.length>12)L.removeChild(L.lastChild);
-document.getElementById("st7").textContent=TD.trades;
-document.getElementById("st8").textContent="$"+(TD.pnl>=0?"+":"")+TD.pnl.toFixed(0);
-document.getElementById("st9").textContent=Math.round(TD.wins/TD.trades*100)+"%";
+if(TD.pnlHistory.length>50)TD.pnlHistory.shift();
+var log=document.getElementById("tradeLog");
+var e=document.createElement("div");
+e.className="trade-entry "+(pnl>0?"buy":"sell");
+e.innerHTML='<span class="symbol">'+asset+'</span> <span class="direction">'+dir+'</span> @ $'+entry.toFixed(2)+' | <span class="pnl '+(pnl>0?'':'neg')+'">$'+(pnl>0?'+':'')+pnl.toFixed(2)+'</span><br><small style="color:#666">'+strat+' | '+tf+' | '+plat+' | Latency: '+Math.floor(Math.random()*150+50)+'ms</small>';
+log.insertBefore(e,log.firstChild);if(log.children.length>8)log.removeChild(log.lastChild);
+document.getElementById("stB1").textContent=TD.trades;
+document.getElementById("stB2").textContent=Math.floor(Math.random()*150+50)+"ms";
+document.getElementById("stB3").textContent="$"+(Math.random()*2).toFixed(2);
 document.getElementById("mp").textContent="$"+(TD.pnl>=0?"+":"")+TD.pnl.toFixed(0);
 document.getElementById("mt").textContent=TD.trades;
 document.getElementById("mw").textContent=Math.round(TD.wins/TD.trades*100)+"%";
-updateCharts();}
+document.getElementById("kpiPnl").textContent="$"+(TD.pnl>=0?"+":"")+TD.pnl.toFixed(0);
+document.getElementById("kpiPnl").className="pnl "+(TD.pnl>=0?"":"neg");
+document.getElementById("kpiTrades").textContent=TD.trades;
+document.getElementById("kpiW").textContent=TD.wins;
+document.getElementById("kpiL").textContent=TD.losses;
+document.getElementById("kpiWin").textContent=Math.round(TD.wins/TD.trades*100)+"%";
+updateCharts();
+flashFloor(pnl>0);
+return {asset,dir,entry,pnl,strat,tf};}
+function flashFloor(buy){
+var ff=document.getElementById("floorFlash");
+ff.style.background=buy?"radial-gradient(circle,rgba(0,255,136,0.4)0%,transparent 70%)":"radial-gradient(circle,rgba(255,68,68,0.4)0%,transparent 70%)";
+ff.style.opacity="1";setTimeout(function(){ff.style.opacity="0";},500);}
 function updateCharts(){
 var C=document.getElementById("pnlChart"),X=C.getContext("2d");C.width=C.offsetWidth;C.height=C.offsetHeight;
-X.fillStyle="#0a0a10";X.fillRect(0,0,C.width,C.height);X.strokeStyle="#00ff88";X.lineWidth=2;X.beginPath();
+X.fillStyle="#0a0a10";X.fillRect(0,0,C.width,C.height);X.strokeStyle="#00ffd1";X.lineWidth=2;X.beginPath();
 if(TD.pnlHistory.length>1){var m=Math.min(...TD.pnlHistory.map(p=>p.pnl)),M=Math.max(...TD.pnlHistory.map(p=>p.pnl)),R=M-m||1;
 TD.pnlHistory.forEach(function(p,i){var x=i/(TD.pnlHistory.length-1)*(C.width-20)+10,y=C.height-10-((p.pnl-m)/R*(C.height-25));i===0?X.moveTo(x,y):X.lineTo(x,y);});X.stroke();}
-var AC=document.getElementById("assetChart"),AX=AC.getContext("2d");AC.width=AC.offsetWidth;AC.height=AC.offsetHeight;AX.fillStyle="#0a0a10";AX.fillRect(0,0,AC.width,AC.height);
-var ks=Object.keys(TD.assetAlloc);var cols=["#ff8800","#00ff88","#0088ff","#ff00ff","#00ffff","#ffff00","#ff4444"];
-ks.forEach(function(k,i){var h=(TD.assetAlloc[k]/TD.trades)*AC.height*0.8;AX.fillStyle=cols[i%cols.length];AX.fillRect(i*(AC.width/ks.length)+2,AC.height-h,AC.width/ks.length-4,h);AX.fillStyle="#666";AX.font="7px monospace";AX.fillText(k,i*(AC.width/ks.length)+5,AC.height-2);});
-var AVC=document.getElementById("activityChart"),AVX=AVC.getContext("2d");AVC.width=AVC.offsetWidth;AVC.height=AVC.offsetHeight;AVX.fillStyle="#0a0a10";AVX.fillRect(0,0,AVC.width,AVC.height);
-var ags=["aria","sentinel","mercury","apex","dexter"];var acts=[TD.activities.aria||0,TD.activities.sentinel||0,TD.activities.mercury||0,TD.activities.apex||0,TD.activities.dexter||0];
-var mA=Math.max(...acts,1);ags.forEach(function(ag,i){var bh=(acts[i]/mA)*AVC.height*0.8;AVX.fillStyle=["#00ff88","#ff4400","#0088ff","#ff8800","#00ffff"][i];AVX.fillRect(i*(AVC.width/5)+2,AVC.height-bh,AVC.width/5-4,bh);});}
-var sc=new THREE.Scene();sc.fog=new THREE.FogExp2(0x050508,0.025);sc.background=new THREE.Color(0x050508);
-var ca=new THREE.PerspectiveCamera(55,innerWidth/innerHeight,0.1,1000);ca.position.set(0,12,20);ca.lookAt(0,2,0);
+var AC=document.getElementById("actChart"),AX=AC.getContext("2d");AC.width=AC.offsetWidth;AC.height=AC.offsetHeight;AX.fillStyle="#0a0a10";AX.fillRect(0,0,AC.width,AC.height);
+var ags=["apex","aria","botling","aegis","oppe","argent"];var acts=[TD.activities.apex||0,TD.activities.aria||0,TD.activities.botling||0,TD.activities.aegis||0,TD.activities.oppe||0,TD.activities.argent||0];
+var mA=Math.max(...acts,1);ags.forEach(function(ag,i){var bh=(acts[i]/mA)*AC.height*0.8;AX.fillStyle=["#ffd700","#00d4ff","#ff8c00","#9b59b6","#00ff88","#c0c0c0"][i];AX.fillRect(i*(AC.width/6)+2,AC.height-bh,AC.width/6-4,bh);});}
+var sc=new THREE.Scene();sc.fog=new THREE.FogExp2(0x050508,0.02);sc.background=new THREE.Color(0x0d0f14);
+var ca=new THREE.PerspectiveCamera(55,innerWidth/innerHeight,0.1,1000);ca.position.set(0,15,25);ca.lookAt(0,3,0);
 var re=new THREE.WebGLRenderer({antialias:true});re.setSize(innerWidth,innerHeight);re.setPixelRatio(Math.min(devicePixelRatio,2));document.getElementById("c").appendChild(re.domElement);
-sc.add(new THREE.Mesh(new THREE.PlaneGeometry(40,40),new THREE.MeshLambertMaterial({color:0x1a1510})).rotateX(-Math.PI/2));
-sc.add(new THREE.Mesh(new THREE.PlaneGeometry(25,25),new THREE.MeshLambertMaterial({color:0x0a1520})).rotateX(-Math.PI/2).translateY(0.01));
-sc.add(new THREE.Mesh(new THREE.PlaneGeometry(40,15),new THREE.MeshLambertMaterial({color:0x101015})).translateZ(-15).translateY(7.5));
-sc.add(new THREE.Mesh(new THREE.PlaneGeometry(30,15),new THREE.MeshLambertMaterial({color:0x101015})).translateX(-20).translateY(7.5).rotateY(Math.PI/2));
-sc.add(new THREE.Mesh(new THREE.PlaneGeometry(30,15),new THREE.MeshLambertMaterial({color:0x101015})).translateX(20).translateY(7.5).rotateY(-Math.PI/2));
-sc.add(new THREE.Mesh(new THREE.PlaneGeometry(40,40),new THREE.MeshLambertMaterial({color:0x080810})).translateY(15).rotateX(Math.PI/2));
-sc.add(new THREE.AmbientLight(0x999999,1.2));
-var dl=new THREE.DirectionalLight(0xffffff,0.8);dl.position.set(5,15,5);sc.add(dl);
-[[-12,0],[0,0],[12,0]].forEach(function(p){var lp=new THREE.Mesh(new THREE.BoxGeometry(2.5,0.15,1),new THREE.MeshLambertMaterial({color:0xffffff,emissive:0xffffff,emissiveIntensity:0.8}));lp.position.set(p[0],14.9,p[1]);sc.add(lp);var pl=new THREE.PointLight(0xffffff,0.8,18);pl.position.set(p[0],14,p[1]);sc.add(pl);});
-sc.add(new THREE.PointLight(0xff6644,0.5,20).position.set(-15,4,-10));
-sc.add(new THREE.PointLight(0x4466ff,0.5,20).position.set(15,4,-10));
-for(var wx=-1;wx<=1;wx+=2){var wp=new THREE.Mesh(new THREE.PlaneGeometry(12,12),new THREE.MeshLambertMaterial({color:0x2a1a10}));wp.position.set(wx*19.9,7,0);wp.rotation.y=wx*Math.PI/2;sc.add(wp);}
-sc.add(new THREE.Mesh(new THREE.BoxGeometry(6,0.5,2.5),new THREE.MeshLambertMaterial({color:0x2a2a3a})).translate(0,0.25,10));
-sc.add(new THREE.Mesh(new THREE.BoxGeometry(6,1.2,0.4),new THREE.MeshLambertMaterial({color:0x3a3a4a})).translate(0,0.85,8.8));
-sc.add(new THREE.Mesh(new THREE.CylinderGeometry(0.9,0.9,0.4,16),new THREE.MeshLambertMaterial({color:0x1a1a1a})).translate(0,0.2,8));
-sc.add(new THREE.Mesh(new THREE.CylinderGeometry(0.5,0.6,0.1,16),new THREE.MeshLambertMaterial({color:0x00ff88,emissive:0x00ff88,emissiveIntensity:0.3})).translate(0,0.42,8));
-sc.add(new THREE.Mesh(new THREE.BoxGeometry(1,1.5,0.6),new THREE.MeshLambertMaterial({color:0x111111})).translate(14,0.75,-10));
-sc.add(new THREE.Mesh(new THREE.PlaneGeometry(0.6,0.4),new THREE.MeshLambertMaterial({color:0x001100,emissive:0x00ff44,emissiveIntensity:0.5})).translate(14,1.3,-9.69));
-function mkP(x,z){var p=new THREE.Group();p.add(new THREE.Mesh(new THREE.CylinderGeometry(0.25,0.3,0.6,8),new THREE.MeshLambertMaterial({color:0x3a2a1a})).translateY(0.3));p.add(new THREE.Mesh(new THREE.SphereGeometry(0.5,8,8),new THREE.MeshLambertMaterial({color:0x1a4a1a})).translateY(1));p.position.set(x,0,z);sc.add(p);}
-[[-16,-10],[16,-10],[-16,10],[16,10]].forEach(function(p){mkP(p[0],p[1]);});
-sc.add(new THREE.Mesh(new THREE.CylinderGeometry(2.5,2.5,0.2,16),new THREE.MeshLambertMaterial({color:0x1a1510})).translate(0,0.75,-6));
-var gh=new THREE.GridHelper(40,40,0x00ff88,0x002211);gh.position.y=0.02;gh.material.opacity=0.1;gh.material.transparent=true;sc.add(gh);
-var cols=[0x00ff88,0xff4400,0x0088ff,0xff8800,0x00ffff],agents=[];var heads=[];
-for(var i=0;i<5;i++){var x=(i-2)*5,col=cols[i],g=new THREE.Group();
-var body=new THREE.Mesh(new THREE.BoxGeometry(0.5,1.2,0.3),new THREE.MeshLambertMaterial({color:0x222233}));body.position.y=1.6;g.add(body);
-var head=new THREE.Mesh(new THREE.BoxGeometry(0.4,0.45,0.35),new THREE.MeshLambertMaterial({color:0x333344}));head.position.set(0,2.5,0.2);g.add(head);heads.push({head,x});
-var eyeL=new THREE.Mesh(new THREE.SphereGeometry(0.05,8,8),new THREE.MeshLambertMaterial({color:0xffffff,emissive:col,emissiveIntensity:1}));eyeL.position.set(-0.08,2.55,0.35);g.add(eyeL);
-var eyeR=new THREE.Mesh(new THREE.SphereGeometry(0.05,8,8),new THREE.MeshLambertMaterial({color:0xffffff,emissive:col,emissiveIntensity:1}));eyeR.position.set(0.08,2.55,0.35);g.add(eyeR);
-g.add(new THREE.Mesh(new THREE.BoxGeometry(3,0.12,1.8),new THREE.MeshLambertMaterial({color:0x1a1a2e})).translateY(1.1));
-g.add(new THREE.Mesh(new THREE.BoxGeometry(0.12,1.2,0.8),new THREE.MeshLambertMaterial({color:col,emissive:col,emissiveIntensity:0.5})).translate(-0.5,1.95,-0.4));
-g.add(new THREE.Mesh(new THREE.BoxGeometry(0.12,1.2,0.8),new THREE.MeshLambertMaterial({color:col,emissive:col,emissiveIntensity:0.5})).translate(0.5,1.95,-0.4));
-g.add(new THREE.Mesh(new THREE.BoxGeometry(0.9,0.08,0.4),new THREE.MeshLambertMaterial({color:0x333344})).translate(0,0.65,0.8));
-g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.25,0.3,0.8,8),new THREE.MeshLambertMaterial({color:0x222233,emissive:col,emissiveIntensity:0.2})).translateY(1.6));
-var orb=new THREE.Mesh(new THREE.SphereGeometry(0.15,16,16),new THREE.MeshLambertMaterial({color:col,emissive:col,emissiveIntensity:1}));orb.position.y=2.9;g.add(orb);
-var pl=new THREE.PointLight(col,0.8,8);pl.position.set(x,4,0);sc.add(pl);
-g.position.x=x;sc.add(g);agents.push({g,orb});}
-var atasks=[["Training AI...","Analyzing data...","Researching...","Building models..."],["Monitoring...","Scanning...","Auditing...","Checking logs..."],["Analyzing markets...","Computing odds...","Scanning...","Calculating..."],["Coordinating...","Planning...","Allocating...","Managing..."],["Building models...","Backtesting...","Generating alpha...","Writing reports..."]];
-var ast=[{i:0,t:0,m:0},{i:0,t:0},{i:0,t:0,wr:65},{i:0,t:0},{i:0,t:0}];
-function lg(cls,m){var f=document.getElementById("lf");var e=document.createElement("div");e.className="le "+cls;e.innerHTML='<span class="time">'+new Date().toLocaleTimeString()+'</span> '+m;f.insertBefore(e,f.firstChild);if(f.children.length>15)f.removeChild(f.lastChild);}
-function upt(ai,id,pid){var s=ast[ai];s.t++;s.m++;if(s.t>200){s.i=(s.i+1)%atasks[ai].length;s.t=0;document.getElementById(id).textContent=atasks[ai][s.i];document.getElementById(pid).style.width=(s.m%100)+"%";}
-TD.activities[ai===0?"aria":ai===1?"sentinel":ai===2?"mercury":ai===3?"apex":"dexter"]++;}
-setInterval(function(){var t=trade();lg(t.pnl>0?"green":"red","📈 MERCURY: "+t.asset+" "+(t.pnl>0?"PROFIT":"LOSS")+" $"+Math.abs(t.pnl).toFixed(2));},10000);
-setInterval(function(){upt(0,"ta","pa");lg("blue","🔬 ARIA: "+atasks[0][ast[0].i]);},3500);
-setInterval(function(){upt(1,"ts","ps");lg("red","🛡️ SENTINEL: "+atasks[1][ast[1].i]);},4000);
-setInterval(function(){upt(2,"tm","pm");lg("green","📈 MERCURY: "+atasks[2][ast[2].i]);},3800);
-setInterval(function(){upt(3,"tap","pap");lg("yellow","⚡ APEX: "+atasks[3][ast[3].i]);},4200);
-setInterval(function(){upt(4,"tdx","pdx");lg("blue","💳 DEXTER: "+atasks[4][ast[4].i]);},3900);
-setTimeout(function(){lg("green","🔬 ARIA: Online");lg("green","🛡️ SENTINEL: Online");lg("green","📈 MERCURY: Online");lg("green","⚡ APEX: Online");lg("green","💳 DEXTER: Online");},1500);
-setInterval(function(){document.getElementById("mu").textContent=Math.floor((Date.now()-TD.start)/60000)+":"+((Math.floor((Date.now()-TD.start)/1000)%60)+"").padStart(2,"0");},1000);
-var tm=0;function anim(){requestAnimationFrame(anim);tm+=0.016;agents.forEach(function(a,i){a.orb.position.y=2.9+Math.sin(tm*2+i)*0.08;});heads.forEach(function(h,i){h.head.position.x=h.x+Math.sin(tm+i)*0.02;});ca.lookAt(0,2,0);re.render(sc,ca);}anim();
+// Floor
+sc.add(new THREE.Mesh(new THREE.PlaneGeometry(50,50),new THREE.MeshStandardMaterial({color:0x0a0a12,metalness:0.8,roughness:0.2})).rotateX(-Math.PI/2));
+var grid=new THREE.GridHelper(50,50,0x00ffd1,0x001a15);grid.position.y=0.01;grid.material.opacity=0.2;grid.material.transparent=true;sc.add(grid);
+// Walls
+sc.add(new THREE.Mesh(new THREE.PlaneGeometry(50,18),new THREE.MeshLambertMaterial({color:0x0d0f14})).translateZ(-20).translateY(9));
+sc.add(new THREE.Mesh(new THREE.PlaneGeometry(40,18),new THREE.MeshLambertMaterial({color:0x0d0f14})).translateX(-25).translateY(9).rotateY(Math.PI/2));
+sc.add(new THREE.Mesh(new THREE.PlaneGeometry(40,18),new THREE.MeshLambertMaterial({color:0x0d0f14})).translateX(25).translateY(9).rotateY(-Math.PI/2));
+// Ceiling
+sc.add(new THREE.Mesh(new THREE.PlaneGeometry(50,50),new THREE.MeshLambertMaterial({color:0x080810})).translateY(18).rotateX(Math.PI/2));
+// RGB strips
+var rgbColors=[0xffd700,0x00d4ff,0xff8c00];rgbColors.forEach(function(c,i){var strip=new THREE.Mesh(new THREE.BoxGeometry(15,0.15,0.4),new THREE.MeshBasicMaterial({color:c}));strip.position.set(-10+i*10,17.9,0);sc.add(strip);var pl=new THREE.PointLight(c,0.4,12);pl.position.set(-10+i*10,17,0);sc.add(pl);});
+// Lighting
+sc.add(new THREE.AmbientLight(0x445566,1.5));var dl=new THREE.DirectionalLight(0xffffff,0.6);dl.position.set(5,15,5);sc.add(dl);
+// Sofa
+sc.add(new THREE.Mesh(new THREE.BoxGeometry(8,0.5,2.5),new THREE.MeshLambertMaterial({color:0x2a2a3a})).translate(0,0.25,12));
+sc.add(new THREE.Mesh(new THREE.BoxGeometry(8,1,0.4),new THREE.MeshLambertMaterial({color:0x3a3a4a})).translate(0,0.75,10.8));
+sc.add(new THREE.Mesh(new THREE.CylinderGeometry(0.9,0.9,0.4,16),new THREE.MeshLambertMaterial({color:0x1a1a1a})).translate(0,0.2,10));
+// Coffee machine
+sc.add(new THREE.Mesh(new THREE.BoxGeometry(1,1.5,0.6),new THREE.MeshLambertMaterial({color:0x111111})).translate(18,0.75,-15));
+var cmGlow=new THREE.PointLight(0x00ff44,0.6,5);cmGlow.position.set(18,2,-15);sc.add(cmGlow);
+// Plants
+function mkPlant(x,z){var p=new THREE.Group();p.add(new THREE.Mesh(new THREE.CylinderGeometry(0.3,0.4,0.7,8),new THREE.MeshLambertMaterial({color:0x3a2a1a})).translateY(0.35));p.add(new THREE.Mesh(new THREE.SphereGeometry(0.5,8,8),new THREE.MeshLambertMaterial({color:0x1a4a1a})).translateY(1));p.position.set(x,0,z);sc.add(p);}
+[[-20,-15],[20,-15],[-20,15],[20,15]].forEach(function(p){mkPlant(p[0],p[1]);});
+// ===== 6 AGENTS =====
+var agentGroups=[];var heads=[];
+// APEX - Gold, center, elevated on platform
+var apexGroup=new THREE.Group();
+apexGroup.add(new THREE.Mesh(new THREE.CylinderGeometry(2,2,0.5,16),new THREE.MeshLambertMaterial({color:0x2a2a1a})).translateY(0.25));
+apexGroup.add(new THREE.Mesh(new THREE.BoxGeometry(0.5,1.2,0.35),new THREE.MeshLambertMaterial({color:0x1a1a2a})).translateY(1.6));
+var apexHead=new THREE.Mesh(new THREE.OctahedronGeometry(0.3),new THREE.MeshLambertMaterial({color:0xffd700,emissive:0xffd700,emissiveIntensity:0.5}));apexHead.position.y=2.5;apexGroup.add(apexHead);heads.push({head:apexHead,color:0xffd700});
+var apexRing=new THREE.Mesh(new THREE.TorusGeometry(0.7,0.04,8,32),new THREE.MeshBasicMaterial({color:0xffd700}));apexRing.position.y=1.3;apexGroup.add(apexRing);
+var apexPl=new THREE.PointLight(0xffd700,1,12);apexPl.position.set(0,4,0);sc.add(apexPl);apexGroup.position.set(0,3,10);sc.add(apexGroup);agentGroups.push({g:apexGroup,ring:apexRing,name:"apex"});
+// Other 5 agents
+var agentData=[{name:"aria",x:-12,col:0x00d4ff},{name:"botling",x:-6,col:0xff8c00},{name:"aegis",x:0,col:0x9b59b6},{name:"oppe",x:6,col:0x00ff88},{name:"argent",x:12,col:0xc0c0c0}];
+agentData.forEach(function(ad){var g=new THREE.Group();
+g.add(new THREE.Mesh(new THREE.BoxGeometry(2.5,0.1,1.4),new THREE.MeshLambertMaterial({color:0x1a1a2a})).translateY(1));
+g.add(new THREE.Mesh(new THREE.BoxGeometry(0.1,0.9,0.7),new THREE.MeshLambertMaterial({color:ad.col,emissive:ad.col,emissiveIntensity:0.5})).translate(0,1.7,-0.35));
+g.add(new THREE.Mesh(new THREE.BoxGeometry(0.8,0.5,0.05),new THREE.MeshLambertMaterial({color:0x222233})).translate(0,1.4,0.65));
+g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.22,0.28,0.8,8),new THREE.MeshLambertMaterial({color:0x222233})).translateY(1.6));
+var head=new THREE.Mesh(new THREE.SphereGeometry(0.25,16,16),new THREE.MeshLambertMaterial({color:ad.col,emissive:ad.col,emissiveIntensity:0.5}));head.position.set(0,2.5,0.2);g.add(head);heads.push({head,color:ad.col});
+var orb=new THREE.Mesh(new THREE.SphereGeometry(0.12,12,12),new THREE.MeshLambertMaterial({color:ad.col,emissive:ad.col,emissiveIntensity:0.8}));orb.position.y=2.9;g.add(orb);
+var pl=new THREE.PointLight(ad.col,0.7,8);pl.position.set(ad.x,4,0);sc.add(pl);g.position.x=ad.x;sc.add(g);agentGroups.push({g,orb,name:ad.name});});
+// Tasks
+var atasks=[["Orchestrating team...","Surveying markets...","Making decisions..."],["Scanning markets...","Analyzing patterns...","Generating signals..."],["Executing trades...","Monitoring fills...","Processing orders..."],["Checking risk...","Calculating VaR...","Monitoring positions..."],["Backtesting strategies...","Optimizing parameters...","Running simulations..."],["Storing memories...","Retrieving context...","Indexing knowledge..."]];
+var ast=[{i:0,t:0,decisions:0},{i:0,t:0,scans:0,signals:0},{i:0,t:0,execs:0},{i:0,t:0,checks:0},{i:0,t:0,tests:0},{i:0,t:0,mems:0}];
+function lg(cls,m){var f=document.getElementById("lf");var e=document.createElement("div");e.className="le "+cls;e.innerHTML='<span style="color:#444;font-size:8px">'+new Date().toLocaleTimeString()+'</span> '+m;f.insertBefore(e,f.firstChild);if(f.children.length>15)f.removeChild(f.lastChild);}
+setInterval(function(){var t=trade();lg("trade",(t.pnl>0?"✅":"❌")+" BOTLING: "+t.asset+" "+t.dir+" $"+(t.pnl>0?"+":"")+t.pnl.toFixed(2));},12000);
+setInterval(function(){var i=Math.floor(Math.random()*6);ast[i].t++;if(ast[i].t>200){ast[i].i=(ast[i].i+1)%atasks[i].length;ast[i].t=0;}
+TD.activities[["apex","aria","botling","aegis","oppe","argent"][i]]++;
+var names=["tApex","tAria","tBotling","tAegis","tOppe","tArgent"];document.getElementById(names[i]).textContent=atasks[i][ast[i].i];
+if(i===0){ast[0].decisions++;document.getElementById("stA1").textContent=ast[0].decisions;lg("decision","⚡ APEX: Decision #"+ast[0].decisions);}
+if(i===1){ast[1].scans++;document.getElementById("stAr1").textContent=ast[1].scans;lg("signal","🔬 ARIA: Scan #"+ast[1].scans);}
+if(i===3){ast[3].checks++;document.getElementById("stE1").textContent=(ast[3].checks*0.1).toFixed(1)+"%";lg("alert","🛡️ AEGIS: Risk check #"+ast[3].checks);}
+if(i===4){ast[4].tests++;document.getElementById("stO1").textContent=ast[4].tests;lg("system","📈 OPPE: Backtest #"+ast[4].tests);}
+if(i===5){ast[5].mems++;document.getElementById("stG1").textContent=ast[5].mems;lg("system","📚 ARGENT: Memory #"+ast[5].mems);}
+updateCharts();},4000);
+setTimeout(function(){lg("system","👑 APEX: System online - 6 agents active");lg("signal","🔬 ARIA: Market scanner ready");lg("trade","🤖 BOTLING: Execution engine ready");lg("alert","🛡️ AEGIS: Risk monitoring active");lg("system","📈 OPPE: Strategy engine loaded");lg("system","📚 ARGENT: Memory index ready");},2000);
+setInterval(function(){document.getElementById("mu").textContent=Math.floor((Date.now()-TD.start)/60000)+":"+((Math.floor((Date.now()-TD.start)/1000)%60+"").padStart(2,"0");},1000);
+var tm=0;function anim(){requestAnimationFrame(anim);tm+=0.016;
+agentGroups.forEach(function(a,i){if(a.orb)a.orb.position.y=2.9+Math.sin(tm*2+i)*0.08;if(a.ring)a.ring.rotation.y+=0.02;});
+heads.forEach(function(h,i){h.head.position.y=2.5+Math.sin(tm*2+i)*0.03;});
+ca.lookAt(0,3,0);re.render(sc,ca);}anim();
 </script></body></html>
