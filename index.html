@@ -34,6 +34,7 @@ body{font-family:'Courier New',monospace;background:#050508;color:#fff;overflow:
 .le.signal{border-color:#00ffd1}
 .le.alert{border-color:#ff4444}
 .le.decision{border-color:#ffd700}
+.le.system{border-color:#8888ff}
 .bottom{position:fixed;bottom:10px;left:240px;right:240px;height:60px;background:rgba(10,10,20,0.95);border:1px solid #333;border-radius:8px;display:flex;align-items:center;justify-content:space-around;z-index:50}
 .stat-box{text-align:center;padding:10px}
 .stat-box .val{font-size:18px;color:#00ffd1;font-weight:bold}
@@ -53,152 +54,182 @@ body{font-family:'Courier New',monospace;background:#050508;color:#fff;overflow:
 </div>
 <div class="right"><div class="log">◈ ACTIVITY LOG</div><div id="lf"></div></div>
 <div class="bottom"><div class="stat-box"><div class="val" id="sBank">$100</div><div class="lbl">BANK</div></div><div class="stat-box"><div class="val" id="sTrades">0</div><div class="lbl">TRADES</div></div><div class="stat-box"><div class="val" id="sWins">0%</div><div class="lbl">WIN RATE</div></div><div class="stat-box"><div class="val" id="sTarget">$3000</div><div class="lbl">TARGET</div></div></div>
-<div class="tip">📡 Fetching Polymarket data... Strategy: EMA Crossover + Candle Patterns</div>
+<div class="tip">📡 EMA 9/21 Strategy | Max Risk: 10% per trade</div>
 <script>
 try{
 // ============ THREE.JS SCENE ============
 var sc=new THREE.Scene();
 sc.background=new THREE.Color(0x050508);
 var ca=new THREE.PerspectiveCamera(60,innerWidth/innerHeight,0.1,1000);
-ca.position.set(0,12,25);
+ca.position.set(0,10,22);
 var re=new THREE.WebGLRenderer({canvas:document.getElementById('c'),antialias:true});
 re.setSize(innerWidth,innerHeight);
 re.setPixelRatio(Math.min(devicePixelRatio,2));
 
 // Floor
-var floor=new THREE.Mesh(new THREE.PlaneGeometry(40,40),new THREE.MeshStandardMaterial({color:0x111118}));
+var floor=new THREE.Mesh(new THREE.PlaneGeometry(50,50),new THREE.MeshStandardMaterial({color:0x111118}));
 floor.rotation.x=-Math.PI/2;
-floor.position.y=0;
 sc.add(floor);
 
 // Grid
-sc.add(new THREE.GridHelper(40,40,0x00ffd1,0x0a1a15));
+sc.add(new THREE.GridHelper(50,50,0x00ffd1,0x0a1a15));
 
 // Lighting
-var ambient=new THREE.AmbientLight(0x444466,0.6);
+var ambient=new THREE.AmbientLight(0x444466,0.8);
 sc.add(ambient);
-var spot=new THREE.SpotLight(0xffffff,1);
-spot.position.set(10,20,10);
+var spot=new THREE.SpotLight(0xffffff,1.2);
+spot.position.set(0,25,10);
 spot.castShadow=true;
 sc.add(spot);
-var spot2=new THREE.SpotLight(0x00ffd1,0.5);
-spot2.position.set(-10,15,-10);
+var spot2=new THREE.SpotLight(0x00ffd1,0.6);
+spot2.position.set(-15,20,-10);
 sc.add(spot2);
+var spot3=new THREE.SpotLight(0xffd700,0.3);
+spot3.position.set(15,20,10);
+sc.add(spot3);
 
-// ============ FURNITURE & DECOR ============
-// Pool Table (center-right)
+// ============ FURNITURE ============
+// Pool Table
 var pt=new THREE.Group();
-var ptf=new THREE.Mesh(new THREE.BoxGeometry(6,0.3,3),new THREE.MeshStandardMaterial({color:0x1a472a}));
-ptf.position.y=1.5;pt.add(ptf);
+var ptf=new THREE.Mesh(new THREE.BoxGeometry(5,0.25,2.5),new THREE.MeshStandardMaterial({color:0x1a472a}));
+ptf.position.y=1.4;pt.add(ptf);
+// Rails
+for(var rx of[-2.3,2.3]){
+pt.add(new THREE.Mesh(new THREE.BoxGeometry(0.3,0.15,2.5),new THREE.MeshStandardMaterial({color:0x2d5a3d})).translateX(rx).translateY(1.52));
+}
+for(var rz of[-1.1,1.1]){
+pt.add(new THREE.Mesh(new THREE.BoxGeometry(4.6,0.15,0.3),new THREE.MeshStandardMaterial({color:0x2d5a3d})).translateZ(rz).translateY(1.52));
+}
 // Pockets
-for(var px of[[-2.5,-1.2],[0,-1.2],[2.5,-1.2],[-2.5,1.2],[0,1.2],[2.5,1.2]]){
-pt.add(new THREE.Mesh(new THREE.CylinderGeometry(0.15,0.15,0.1,8),new THREE.MeshBasicMaterial({color:0x000000})).translateY(1.65).translateX(px[0]).translateZ(px[1]));
+for(var px of[[-2,-1],[0,-1],[2,-1],[-2,1],[0,1],[2,1]]){
+pt.add(new THREE.Mesh(new THREE.CylinderGeometry(0.12,0.12,0.1,8),new THREE.MeshBasicMaterial({color:0x000000})).translateY(1.53).translateX(px[0]).translateZ(px[1]));
 }
 // Legs
-for(var lx of[[-2.5,-1.2],[2.5,-1.2],[-2.5,1.2],[2.5,1.2]]){
-pt.add(new THREE.Mesh(new THREE.CylinderGeometry(0.1,0.1,1.5,8),new THREE.MeshStandardMaterial({color:0x3d2817})).translateY(0.75).translateX(lx[0]).translateZ(lx[1]));
+for(var lx of[[-2,-1],[2,-1],[-2,1],[2,1]]){
+pt.add(new THREE.Mesh(new THREE.CylinderGeometry(0.1,0.12,1.4,8),new THREE.MeshStandardMaterial({color:0x3d2817})).translateY(0.7).translateX(lx[0]).translateZ(lx[1]));
 }
-pt.position.set(8,0,0);
+pt.position.set(12,0,-3);
 sc.add(pt);
 
-// Plants (corners)
-function makePlant(x,z){
+// Plants
+function makePlant(x,z,scale){
 var g=new THREE.Group();
-var pot=new THREE.Mesh(new THREE.CylinderGeometry(0.3,0.25,0.5,8),new THREE.MeshStandardMaterial({color:0x8b4513}));
-pot.position.y=0.25;g.add(pot);
-var stem=new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.05,1,6),new THREE.MeshStandardMaterial({color:0x228b22}));
-stem.position.y=0.8;g.add(stem);
-for(var i=0;i<5;i++){
-var leaf=new THREE.Mesh(new THREE.SphereGeometry(0.25,6,4),new THREE.MeshStandardMaterial({color:0x32cd32}));
+var pot=new THREE.Mesh(new THREE.CylinderGeometry(0.4*scale,0.3*scale,0.6*scale,8),new THREE.MeshStandardMaterial({color:0x8b4513}));
+pot.position.y=0.3*scale;g.add(pot);
+var stem=new THREE.Mesh(new THREE.CylinderGeometry(0.06*scale,0.06*scale,1.5*scale,6),new THREE.MeshStandardMaterial({color:0x228b22}));
+stem.position.y=1.2*scale;g.add(stem);
+for(var i=0;i<6;i++){
+var leaf=new THREE.Mesh(new THREE.SphereGeometry(0.3*scale,6,4),new THREE.MeshStandardMaterial({color:0x32cd32}));
 leaf.scale.set(1,0.3,1);
-leaf.position.set(Math.cos(i*1.2)*0.3,1.2,Math.sin(i*1.2)*0.3);
+leaf.position.set(Math.cos(i*1)*0.35*scale,1.5*scale,Math.sin(i*1)*0.35*scale);
 g.add(leaf);
 }
 g.position.set(x,0,z);return g;
 }
-sc.add(makePlant(-12,-8));
-sc.add(makePlant(12,-8));
-sc.add(makePlant(-12,8));
-sc.add(makePlant(12,8));
+sc.add(makePlant(-15,-10,1.2));
+sc.add(makePlant(15,-10,1));
+sc.add(makePlant(-15,10,1));
+sc.add(makePlant(15,10,1.3));
 
-// Desks with dual monitors
-function makeDesk(x,z,rot){
+// Coffee Machine
+var cf=new THREE.Group();
+cf.add(new THREE.Mesh(new THREE.BoxGeometry(0.8,1.2,0.6),new THREE.MeshStandardMaterial({color:0x222222})).translateY(0.6));
+cf.add(new THREE.Mesh(new THREE.BoxGeometry(0.6,0.15,0.4),new THREE.MeshStandardMaterial({color:0x111111})).translateY(1.25));
+cf.add(new THREE.Mesh(new THREE.CylinderGeometry(0.08,0.08,0.3,8),new THREE.MeshStandardMaterial({color:0xcccccc})).translateY(1.4).translateZ(0.2));
+cf.add(new THREE.Mesh(new THREE.BoxGeometry(0.3,0.4,0.05),new THREE.MeshStandardMaterial({color:0x003300,emissive:0x00ff00,emissiveIntensity:0.3})).translateY(1.1).translateZ(0.3));
+cf.position.set(-14,0,5);
+sc.add(cf);
+
+// Sofa
+var sf=new THREE.Group();
+sf.add(new THREE.Mesh(new THREE.BoxGeometry(4,0.4,1.2),new THREE.MeshStandardMaterial({color:0x2a2a3a})).translateY(0.5));
+sf.add(new THREE.Mesh(new THREE.BoxGeometry(4,0.8,0.3),new THREE.MeshStandardMaterial({color:0x333344})).translateY(0.9).translateZ(-0.45));
+sf.add(new THREE.Mesh(new THREE.BoxGeometry(0.4,0.5,1.2),new THREE.MeshStandardMaterial({color:0x222233})).translateX(-1.8).translateY(0.65));
+sf.add(new THREE.Mesh(new THREE.BoxGeometry(0.4,0.5,1.2),new THREE.MeshStandardMaterial({color:0x222233})).translateX(1.8).translateY(0.65));
+sf.position.set(0,0,10);
+sc.add(sf);
+
+// Chairs around room
+function makeChair(x,z,rot){
 var g=new THREE.Group();
-g.add(new THREE.Mesh(new THREE.BoxGeometry(3,0.1,1.5),new THREE.MeshStandardMaterial({color:0x2a2a2a})).translateY(1.5));
-g.add(new THREE.Mesh(new THREE.BoxGeometry(0.1,1.5,1.5),new THREE.MeshStandardMaterial({color:0x222222})).translateY(0.75).translateX(-1.4));
-g.add(new THREE.Mesh(new THREE.BoxGeometry(0.1,1.5,1.5),new THREE.MeshStandardMaterial({color:0x222222})).translateY(0.75).translateX(1.4));
-// Dual monitors
-for(var mx of[-0.5,0.5]){
-var mon=new THREE.Mesh(new THREE.BoxGeometry(0.8,0.5,0.05),new THREE.MeshStandardMaterial({color:0x111111}));
-mon.position.set(mx,2.2,0);
-g.add(mon);
-var screen=new THREE.Mesh(new THREE.PlaneGeometry(0.7,0.4),new THREE.MeshBasicMaterial({color:0x001a1a}));
-screen.position.set(mx,2.2,0.03);
-g.add(screen);
+g.add(new THREE.Mesh(new THREE.BoxGeometry(0.6,0.1,0.6),new THREE.MeshStandardMaterial({color:0x4a3728})).translateY(0.8));
+g.add(new THREE.Mesh(new THREE.BoxGeometry(0.5,0.8,0.08),new THREE.MeshStandardMaterial({color:0x4a3728})).translateY(1.2).translateZ(-0.26));
+for(var lx of[[-0.2,-0.2],[0.2,-0.2],[-0.2,0.2],[0.2,0.2]]){
+g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.04,0.04,0.8,6),new THREE.MeshStandardMaterial({color:0x333333})).translateX(lx[0]).translateY(0.4).translateZ(lx[1]));
 }
 g.position.set(x,0,z);
 g.rotation.y=rot||0;
 return g;
 }
-sc.add(makeDesk(-10,0,0));
-sc.add(makeDesk(-5,0,0));
-sc.add(makeDesk(0,0,0));
-sc.add(makeDesk(5,0,0));
+sc.add(makeChair(6,5,Math.PI));
+sc.add(makeChair(6,-5,Math.PI));
+sc.add(makeChair(-6,5,0));
+sc.add(makeChair(-6,-5,0));
+sc.add(makeChair(16,0,Math.PI/2));
+sc.add(makeChair(-16,0,-Math.PI/2));
 
-// ============ AGENTS ============
+// ============ AGENTS (Standing + Walking) ============
 var agentData=[
-{name:"APEX",color:0xffd700,x:-8,height:2.2},
-{name:"ARIA",color:0x00ffff,x:-4,height:1.8},
-{name:"BOTLING",color:0xff8800,x:0,height:1.8},
-{name:"AEGIS",color:0xff00ff,x:4,height:1.8},
-{name:"OPPE",color:0x00ff00,x:8,height:1.8},
-{name:"ARGENT",color:0xcccccc,x:12,height:1.8}
+{name:"APEX",color:0xffd700,x:-10,y:0,height:2.8},
+{name:"ARIA",color:0x00ffff,x:-6,y:0,height:2.4},
+{name:"BOTLING",color:0xff8800,x:-2,y:0,height:2.4},
+{name:"AEGIS",color:0xff00ff,x:2,y:0,height:2.4},
+{name:"OPPE",color:0x00ff00,x:6,y:0,height:2.4},
+{name:"ARGENT",color:0xcccccc,x:10,y:0,height:2.4}
 ];
 var agents=[],heads=[];
-// Platform
-agents.push(new THREE.Mesh(new THREE.CylinderGeometry(1.2,1.3,0.2,32),new THREE.MeshStandardMaterial({color:0x333333,metalness:0.8,roughness:0.2})));
-for(var i=0;i<6;i++){
-var d=agentData[i];
+agentData.forEach(function(d,idx){
 var g=new THREE.Group();
-// Base ring
-var ring=new THREE.Mesh(new THREE.TorusGeometry(0.6,0.05,8,32),new THREE.MeshBasicMaterial({color:d.color}));
+// Standing platform
+var plat=new THREE.Mesh(new THREE.CylinderGeometry(0.8,0.9,0.15,32),new THREE.MeshStandardMaterial({color:0x333333,metalness:0.7,roughness:0.3}));
+plat.position.y=0.075;g.add(plat);
+// Base ring glow
+var ring=new THREE.Mesh(new THREE.TorusGeometry(0.7,0.04,8,32),new THREE.MeshBasicMaterial({color:d.color}));
 ring.rotation.x=Math.PI/2;
-ring.position.y=0.1;
-g.add(ring);
+ring.position.y=0.2;g.add(ring);
 // Body
-var body=new THREE.Mesh(new THREE.CylinderGeometry(0.3,0.4,d.height*0.6,16),new THREE.MeshStandardMaterial({color:d.color,emissive:d.color,emissiveIntensity:0.2}));
-body.position.y=d.height*0.3+0.2;
+var body=new THREE.Mesh(new THREE.CylinderGeometry(0.35,0.45,d.height*0.55,16),new THREE.MeshStandardMaterial({color:d.color,emissive:d.color,emissiveIntensity:0.15}));
+body.position.y=d.height*0.28+0.2;
 g.add(body);
-// Head (eyes follow camera)
+// Shoulders
+var sh=new THREE.Mesh(new THREE.BoxGeometry(0.9,0.2,0.3),new THREE.MeshStandardMaterial({color:d.color,emissive:d.color,emissiveIntensity:0.2}));
+sh.position.y=d.height*0.5+0.2;g.add(sh);
+// Head
 var head=new THREE.Group();
-var face=new THREE.Mesh(new THREE.SphereGeometry(0.35,16,16),new THREE.MeshStandardMaterial({color:d.color,emissive:d.color,emissiveIntensity:0.5}));
-face.position.y=0;head.add(face);
+var face=new THREE.Mesh(new THREE.SphereGeometry(0.4,20,20),new THREE.MeshStandardMaterial({color:d.color,emissive:d.color,emissiveIntensity:0.4}));
+head.add(face);
 // Eyes
-var eyeMat=new THREE.MeshBasicMaterial({color:0xffffff});
-var pupilMat=new THREE.MeshBasicMaterial({color:0x000000});
-var leye=new THREE.Mesh(new THREE.SphereGeometry(0.1,8,8),eyeMat);leye.position.set(-0.12,0.1,0.28);
-var lpupil=new THREE.Mesh(new THREE.SphereGeometry(0.05,6,6),pupilMat);lpupil.position.set(-0.12,0.1,0.33);
-head.add(leye);head.add(lpupil);
-var reye=new THREE.Mesh(new THREE.SphereGeometry(0.1,8,8),eyeMat);reye.position.set(0.12,0.1,0.28);
-var rpupil=new THREE.Mesh(new THREE.SphereGeometry(0.05,6,6),pupilMat);rpupil.position.set(0.12,0.1,0.33);
-head.add(reye);head.add(rpupil);
-head.position.y=d.height;
-g.add(head);
-// Orb
-var orb=new THREE.Mesh(new THREE.SphereGeometry(0.15,12,12),new THREE.MeshBasicMaterial({color:d.color}));
-orb.position.y=d.height+0.4;
-g.add(orb);
-g.position.set(d.x,0,0);
-sc.add(g);
-agents.push({g,orb,ring,head,name:d.name});
-heads.push({head,g,d});
+var eyeW=0.14,eyeH=0.08;
+for(var side of[-1,1]){
+var eye=new THREE.Mesh(new THREE.SphereGeometry(0.1,8,8),new THREE.MeshBasicMaterial({color:0xffffff}));
+eye.position.set(side*0.15,0.12,0.32);head.add(eye);
+var pupil=new THREE.Mesh(new THREE.SphereGeometry(0.05,6,6),new THREE.MeshBasicMaterial({color:0x000000}));
+pupil.position.set(side*0.15,0.12,0.36);head.add(pupil);
 }
+head.position.y=d.height+0.2;
+g.add(head);
+// Orb (above head)
+var orb=new THREE.Mesh(new THREE.SphereGeometry(0.12,12,12),new THREE.MeshBasicMaterial({color:d.color}));
+orb.position.y=d.height+0.7;
+g.add(orb);
+g.position.set(d.x,d.y,0);
+sc.add(g);
+agents.push({g,orb,ring,head,name:d.name,origX:d.x,idx:idx,walking:false,walkTarget:null});
+heads.push({head,g,d});
+});
+
+// ============ CHAIR SITTING POSITIONS ============
+var chairPositions=[
+{x:6,z:5,rot:Math.PI},
+{x:6,z:-5,rot:Math.PI},
+{x:-6,z:5,rot:0},
+{x:-6,z:-5,rot:0}
+];
 
 // ============ TRADING STATE ============
 var TD={bank:100,trades:0,wins:0,start:Date.now(),pnl:0};
-var pollyData={price:67000,change:0,volume:0};
 
-// ============ UI FUNCTIONS ============
+// ============ UI ============
 function lg(cls,m){
 var f=document.getElementById("lf");
 var e=document.createElement("div");
@@ -207,7 +238,6 @@ e.innerHTML='<span style="color:#444;font-size:8px">'+new Date().toLocaleTimeStr
 f.insertBefore(e,f.firstChild);
 if(f.children.length>15)f.removeChild(f.lastChild);
 }
-
 function updateStats(){
 document.getElementById("bank").textContent="$"+TD.bank;
 document.getElementById("pnl").textContent=(TD.pnl>=0?"+$":"-$")+Math.abs(TD.pnl).toFixed(0);
@@ -217,8 +247,55 @@ document.getElementById("sTrades").textContent=TD.trades;
 document.getElementById("sWins").textContent=(TD.trades>0?Math.round(TD.wins/TD.trades*100):0)+"%";
 }
 
-// ============ EMA STRATEGY ============
-var ema9=[],ema21=[],candles=[];
+// ============ AGENT WALKING ============
+function walkToChair(agentIdx){
+var a=agents[agentIdx];
+if(a.walking)return;
+var chair=chairPositions[Math.floor(Math.random()*chairPositions.length)];
+a.walkTarget={x:chair.x,z:chair.z,rot:chair.rot};
+a.walking=true;
+lg("system","🚶 "+a.name+" walking to chair...");
+}
+function updateWalking(){
+agents.forEach(function(a,i){
+if(a.walking && a.walkTarget){
+var dx=a.walkTarget.x-a.g.position.x;
+var dz=a.walkTarget.z-a.g.position.z;
+var dist=Math.sqrt(dx*dx+dz*dz);
+if(dist>0.2){
+a.g.position.x+=dx*0.03;
+a.g.position.z+=dz*0.03;
+// Bob while walking
+a.g.position.y=Math.sin(Date.now()*0.01)*0.1;
+}else{
+a.walking=false;
+a.walkTarget=null;
+a.g.position.y=0;
+if(a.d&&a.d.height)a.g.position.y=a.d.height*0.28+0.2;
+lg("system","🪑 "+a.name+" sitting");
+}
+}
+});
+}
+
+// Random agent goes to chair every 20 seconds
+setInterval(function(){
+if(Math.random()>0.6){
+var idx=Math.floor(Math.random()*6);
+walkToChair(idx);
+}
+},20000);
+
+// ============ TRADING SIMULATION ============
+var ema9=[],ema21=[],candles=[],pollyPrice=67000;
+function genCandle(){
+var o=pollyPrice;
+var h=o+Math.random()*300-150;
+var l=o-Math.random()*300+150;
+var c=o+Math.random()*500-250;
+pollyPrice=c;
+return {o:o,h:Math.max(h,c),l:Math.min(l,c),c:c,v:Math.random()*100};
+}
 function calcEMA(data,period){
 if(data.length<period)return null;
 var k=2/(period+1);
@@ -226,73 +303,46 @@ var ema=data[0];
 for(var i=1;i<data.length;i++)ema=data[i]*k+ema*(1-k);
 return ema;
 }
-
-// Simple candle generator (simulating 5min candles)
-function genCandle(){
-var o=pollyData.price;
-var h=o+Math.random()*200-100;
-var l=o-Math.random()*200+100;
-var c=Math.random()*400-200;
-return {o:o,h:Math.max(h,c),l:Math.min(l,c),c:o+c,v:Math.random()*100};
-}
-
-// Strategy: EMA 9/21 crossover + candle patterns
 function strategySignal(){
 if(candles.length<25)return null;
-var c=candles[candles.length-1];
-var prev=candles[candles.length-2];
-// EMA cross
 var cross=ema9[ema9.length-1]-ema21[ema9.length-1];
 var prevCross=ema9[ema9.length-2]-ema21[ema9.length-2];
-// Bullish: 9 crosses above 21
 if(prevCross<=0 && cross>0)return "BUY";
-// Bearish: 9 crosses below 21
 if(prevCross>=0 && cross<0)return "SELL";
-// Hammer (bullish reversal)
-if(c.l-c.o>c.c-c.l && c.o-c.l>c.c-c.o && c.c-c.o>c.l-c.o)return "BUY";
-// Shooting star (bearish reversal)
-if(c.c-c.o>c.o-c.l && c.c-o>c.o-c.l)return "SELL";
-// Strong green candle
-if(c.c>c.o*1.005 && c.v>50)return "BUY";
-// Strong red candle
-if(c.c<c.o*0.995 && c.v>50)return "SELL";
+var c=candles[candles.length-1];
+if(c.c>c.o*1.008 && c.v>60)return "BUY";
+if(c.c<c.o*0.992 && c.v>60)return "SELL";
 return null;
 }
-
-// ============ SIMULATE POLYMARKET DATA ============
 setInterval(function(){
-// Simulate BTC price movement
-pollyData.price+=Math.random()*400-200;
-pollyData.volume+=Math.random()*10;
 var candle=genCandle();
 candles.push(candle);
 if(candles.length>50)candles.shift();
-ema9.push(calcEMA(candles.map(c=>c.c),9)||pollyData.price);
-ema21.push(calcEMA(candles.map(c=>c.c),21)||pollyData.price);
+ema9.push(calcEMA(candles.map(c=>c.c),9)||pollyPrice);
+ema21.push(calcEMA(candles.map(c=>c.c),21)||pollyPrice);
 if(ema9.length>50)ema9.shift();
 if(ema21.length>50)ema21.shift();
 },5000);
 
-// ============ TRADE LOOP ============
 setInterval(function(){
 var sig=strategySignal();
 if(sig){
 var stake=Math.min(TD.bank*0.1,50);
 TD.trades++;
-var outcome=Math.random()>0.55; // Slight edge
-var profit=outcome?stake*0.9:-stake;
+var outcome=Math.random()>0.45;
+var profit=outcome?stake*0.95:-stake;
 TD.bank+=profit;
 TD.pnl+=profit;
 if(outcome)TD.wins++;
 document.getElementById("st3").textContent=TD.trades;
 document.getElementById("st4").textContent=(TD.pnl>=0?"+$":"-$")+Math.abs(TD.pnl).toFixed(0);
 updateStats();
-lg("trade",(outcome?"✅":"❌")+" BOTLING: "+sig+" $"+stake.toFixed(0)+" → "+(outcome?"+$"+(stake*0.9).toFixed(2):"-$"+stake.toFixed(2)));
-lg("signal","📊 ARIA: Signal="+sig+" Price="+pollyData.price.toFixed(0));
+lg("trade",(outcome?"✅":"❌")+" BOTLING: "+sig+" $"+stake.toFixed(0)+" → "+(outcome?"+$"+(stake*0.95).toFixed(2):"-$"+stake.toFixed(2)));
+lg("signal","📊 ARIA: Signal="+sig+" Price="+pollyPrice.toFixed(0));
 }
-},15000);
+},12000);
 
-// ============ ACTIVITY LOOP ============
+// ============ ACTIVITY ============
 setInterval(function(){
 var i=Math.floor(Math.random()*6);
 var names=["tap","ta","tb","te","to","tg"];
@@ -302,64 +352,66 @@ var tasks={
 2:["Executing trades...","Monitoring fills...","Processing orders..."],
 3:["Checking risk...","Calculating VaR...","Alerting..."],
 4:["Backtesting...","Optimizing...","Running sims..."],
-5:["Storing memory...","Retrieving context...","Indexing..."]
+5:{"Storing memory...","Retrieving context...","Indexing..."}
 };
-document.getElementById(names[i]).textContent=tasks[i][Math.floor(Math.random()*tasks[i].length)];
+document.getElementById(names[i]).textContent=tasks[i%5][Math.floor(Math.random()*3)];
 document.getElementById("fap").style.width=(50+Math.random()*50)+"%";
-document.getElementById("fa").style.width=(30+Math.random()*70)+"%";
-if(i===2)document.getElementById("fb").style.width=(10+Math.random()*90)+"%";
 if(i===0){document.getElementById("st10").textContent=parseInt(document.getElementById("st10").textContent)+1;lg("decision","⚡ APEX: Decision #"+document.getElementById("st10").textContent);}
 if(i===1){document.getElementById("st1").textContent=parseInt(document.getElementById("st1").textContent)+1;document.getElementById("st2").textContent=parseInt(document.getElementById("st2").textContent)+1;}
 if(i===3){document.getElementById("st6").textContent=parseInt(document.getElementById("st6").textContent)+1;}
 if(i===4){document.getElementById("st7").textContent=parseInt(document.getElementById("st7").textContent)+1;document.getElementById("st8").textContent=Math.round(50+Math.random()*40)+"%";}
 if(i===5){document.getElementById("st9").textContent=parseInt(document.getElementById("st9").textContent)+1;}
-},4000);
+},3500);
 
-// Agent interactions
+// Agent chat
 setInterval(function(){
-var a=Math.floor(Math.random()*5);
-var b=(a+1+Math.floor(Math.random()*4))%6;
-lg("system","💬 "+agentData[a].name+" → "+agentData[b].name+": Processing...");
-},8000);
+var a=Math.floor(Math.random()*6);
+var b=(a+1+Math.floor(Math.random()*5))%6;
+var msgs=["Analyzing data...","Looking for signals","Risk looks good","Let's execute!","Backtest complete","Memory indexed"];
+lg("system","💬 "+agentData[a].name+" → "+agentData[b].name+": "+msgs[Math.floor(Math.random()*msgs.length)]);
+},7000);
 
-// Init messages
+// Init
 setTimeout(function(){
-lg("system","👑 APEX: System online - 6 agents active");
-lg("system","🎯 Target: $100 → $3000 this month");
+lg("system","👑 APEX: System online - 6 agents ready");
 lg("signal","🔬 ARIA: EMA 9/21 strategy loaded");
-lg("signal","📊 Scanning Polymarket 5min candles...");
-lg("trade","🤖 BOTLING: Ready for signals");
-lg("alert","🛡️ AEGIS: Risk management active - max 10% per trade");
+lg("trade","🤖 BOTLING: Ready");
+lg("alert","🛡️ AEGIS: Risk active");
+lg("system","🏃 Agents will walk to chairs periodically");
 },2000);
 
-// ============ ANIMATION LOOP ============
+// ============ ANIMATION ============
 var tm=0;
 function anim(){
 requestAnimationFrame(anim);
 tm+=0.016;
-// Agent bobbing & eye tracking
+// Agent bobbing & orbs
 agents.forEach(function(a,i){
-if(a.orb)a.orb.position.y=a.d?a.d.height+0.4+Math.sin(tm*2+i)*0.08:0.4+Math.sin(tm*2+i)*0.08;
+if(a.orb){
+var baseY=a.d?a.d.height+0.7:0.7;
+a.orb.position.y=baseY+Math.sin(tm*2+i)*0.08;
+}
 if(a.ring)a.ring.rotation.y+=0.02;
 });
-// Eye tracking camera
+// Eye tracking
 heads.forEach(function(h){
 var dx=ca.position.x-h.g.position.x;
 var dz=ca.position.z-h.g.position.z;
 var angle=Math.atan2(dx,dz);
-h.head.children[1].position.x=-0.12+Math.sin(angle)*0.05;
-h.head.children[2].position.x=-0.12+Math.sin(angle)*0.08;
-h.head.children[3].position.x=0.12+Math.sin(angle)*0.05;
-h.head.children[4].position.x=0.12+Math.sin(angle)*0.08;
+h.head.children.forEach(function(c,i){
+if(i>0&&i<4){
+c.position.x=(i===1||i===2?-0.15:0.15)+Math.sin(angle)*0.03;
+}
 });
-// Camera gentle orbit
-ca.position.x=Math.sin(tm*0.1)*3;
-ca.lookAt(0,2,0);
+});
+updateWalking();
+// Camera
+ca.position.x=Math.sin(tm*0.08)*4;
+ca.lookAt(0,3,0);
 re.render(sc,ca);
 }
 anim();
 
-// Resize handler
 window.addEventListener('resize',function(){
 ca.aspect=innerWidth/innerHeight;
 ca.updateProjectionMatrix();
