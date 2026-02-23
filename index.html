@@ -45,8 +45,20 @@ re.setSize(innerWidth,innerHeight);document.getElementById('c').appendChild(re.d
 // Floor
 sc.add(new THREE.Mesh(new THREE.PlaneGeometry(30,30),new THREE.MeshLambertMaterial({color:0x222233})).rotateX(-Math.PI/2));
 // Lights
-sc.add(new THREE.AmbientLight(0x666688,0.8));
-var dl=new THREE.DirectionalLight(0xffffff,0.5);dl.position.set(5,10,5);sc.add(dl);
+sc.add(new THREE.AmbientLight(0x999999,1.0));
+var dl=new THREE.DirectionalLight(0xffffff,0.8);dl.position.set(5,10,5);sc.add(dl);
+sc.add(new THREE.PointLight(0xff8844,0.3,15).translate(-10,3,0));
+sc.add(new THREE.PointLight(0x4488ff,0.3,15).translate(10,3,0));
+// Coffee machine
+sc.add(new THREE.Mesh(new THREE.BoxGeometry(0.8,1.2,0.5),new THREE.MeshLambertMaterial({color:0x111111})).translate(12,0.6,-8));
+sc.add(new THREE.Mesh(new THREE.PlaneGeometry(0.4,0.25),new THREE.MeshLambertMaterial({color:0x002200,emissive:0x00ff44,emissiveIntensity:0.5})).translate(12,1.1,-7.74));
+
+// Sofa
+sc.add(new THREE.Mesh(new THREE.BoxGeometry(4,0.4,1.5),new THREE.MeshLambertMaterial({color:0x333355})).translate(0,0.2,7));
+sc.add(new THREE.Mesh(new THREE.BoxGeometry(4,0.8,0.3),new THREE.MeshLambertMaterial({color:0x444466})).translate(0,0.6,6.2));
+// Plants
+for(var px=-1;px<=1;px+=2){for(var pz=-1;pz<=1;pz+=2){sc.add(new THREE.Mesh(new THREE.CylinderGeometry(0.15,0.2,0.5,8),new THREE.MeshLambertMaterial({color:0x3a2a1a})).translate(px*10,0.25,pz*8));sc.add(new THREE.Mesh(new THREE.SphereGeometry(0.3,8,8),new THREE.MeshLambertMaterial({color:0x1a4a1a})).translate(px*10,0.8,pz*8));}}
+
 // Agents
 var cols=[0x00ff88,0xff4400,0x0088ff,0xff8800,0x00ffff];
 var desks=[];
@@ -56,6 +68,10 @@ var g=new THREE.Group();
 g.add(new THREE.Mesh(new THREE.BoxGeometry(2,0.1,1.2),new THREE.MeshLambertMaterial({color:0x333355})).translateY(1));
 g.add(new THREE.Mesh(new THREE.BoxGeometry(0.1,0.8,0.6),new THREE.MeshLambertMaterial({color:cols[i],emissive:cols[i],emissiveIntensity:0.5})).translate(0,1.6,-0.3));
 g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.2,0.25,0.6,8),new THREE.MeshLambertMaterial({color:0x222244})).translateY(1.5));
+// Head with eyes
+var head=new THREE.Mesh(new THREE.BoxGeometry(0.25,0.3,0.2),new THREE.MeshLambertMaterial({color:0x333355}));head.position.set(0,2,0.5);g.add(head);
+var eyeL=new THREE.Mesh(new THREE.SphereGeometry(0.025,8,8),new THREE.MeshLambertMaterial({color:0xfff,emissive:cols[i],emissiveIntensity:0.8}));eyeL.position.set(-0.05,2.05,0.58);g.add(eyeL);
+var eyeR=new THREE.Mesh(new THREE.SphereGeometry(0.025,8,8),new THREE.MeshLambertMaterial({color:0xfff,emissive:cols[i],emissiveIntensity:0.8}));eyeR.position.set(0.05,2.05,0.58);g.add(eyeR);
 var orb=new THREE.Mesh(new THREE.SphereGeometry(0.08,12,12),new THREE.MeshLambertMaterial({color:cols[i],emissive:cols[i],emissiveIntensity:0.8}));
 orb.translateY(2.3);g.add(orb);
 var pl=new THREE.PointLight(cols[i],0.5,5);pl.position.set(x,3,0);sc.add(pl);
