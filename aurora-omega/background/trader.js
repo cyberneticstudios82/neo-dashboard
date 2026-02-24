@@ -4,8 +4,8 @@ const https = require('https');
 
 class BackgroundTrader {
     constructor() {
-        this.bank = 10000;
-        this.initialBank = 10000;
+        this.bank = 100;
+        this.initialBank = 100;
         this.trades = [];
         this.pnl = 0;
         this.wins = 0;
