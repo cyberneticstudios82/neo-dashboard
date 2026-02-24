@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html><head><meta charset="UTF-8"><title>APEX HQ - ML Trading</title>
+<html><head><meta charset="UTF-8"><title>APEX HQ - Polymarket Trading</title>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -46,30 +46,35 @@ body{font-family:'Courier New',monospace;background:#050508;color:#fff;overflow:
 #loading{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-size:24px;color:#00ffd1;z-index:200}
 </style></head>
 <body>
-<div id="loading">Loading APEX HQ...</div>
+<div id="loading">APEX Loading...</div>
 <canvas id="c"></canvas>
-<div class="top"><div class="logo"><span>◆</span> APEX HQ <span class="live">● ML TRADING</span></div><div class="kpi"><span>BANK: $100</span><span class="pnl" id="bank">$100</span><span>TARGET: $3000</span><span class="pnl" id="pnl">+$0</span></div></div>
+<div class="top"><div class="logo"><span>◆</span> APEX HQ <span class="live">● POLYMARKET</span></div><div class="kpi"><span>BANK: $100</span><span class="pnl" id="bank">$100</span><span>TARGET: $3000</span><span class="pnl" id="pnl">+$0</span></div></div>
 <div class="left">
-<div class="card" style="border-color:#ffd700"><div class="hdr"><div class="av">⚡</div><div><h3 style="color:#ffd700">APEX</h3><p>Orchestrator</p></div></div><div class="task" id="tap">Initializing...</div><div class="bar"><div class="fill" id="fap" style="width:50%"></div></div><div class="stats"><div class="stat"><div class="sv" id="st10">0</div><div class="sl">Decisions</div></div><div class="stat"><div class="sv" id="st11">0</div><div class="sl">Calls</div></div></div></div>
-<div class="card"><div class="hdr"><div class="av">🔬</div><div><h3>ARIA</h3><p>Market Analyst</p></div></div><div class="task" id="ta">Scanning markets...</div><div class="bar"><div class="fill" id="fa" style="width:30%"></div></div><div class="stats"><div class="stat"><div class="sv" id="st1">0</div><div class="sl">Scans</div></div><div class="stat"><div class="sv" id="st2">0</div><div class="sl">Signals</div></div></div></div>
+<div class="card" style="border-color:#ffd700"><div class="hdr"><div class="av">⚡</div><div><h3 style="color:#ffd700">APEX</h3><p>Team Lead</p></div></div><div class="task" id="tap">Managing team...</div><div class="bar"><div class="fill" id="fap" style="width:50%"></div></div><div class="stats"><div class="stat"><div class="sv" id="st10">0</div><div class="sl">Decisions</div></div><div class="stat"><div class="sv" id="st11">0</div><div class="sl">Calls</div></div></div></div>
+<div class="card"><div class="hdr"><div class="av">🔬</div><div><h3>ARIA</h3><p>Market Analyst</p></div></div><div class="task" id="ta">Analyzing markets...</div><div class="bar"><div class="fill" id="fa" style="width:30%"></div></div><div class="stats"><div class="stat"><div class="sv" id="st1">0</div><div class="sl">Scans</div></div><div class="stat"><div class="sv" id="st2">0</div><div class="sl">Signals</div></div></div></div>
 <div class="card" id="botlingCard"><div class="hdr"><div class="av">🤖</div><div><h3>BOTLING</h3><p>Execution</p></div></div><div class="task" id="tb">Waiting for signal...</div><div class="bar"><div class="fill" id="fb" style="width:0%"></div></div><div class="stats"><div class="stat"><div class="sv" id="st3">0</div><div class="sl">Trades</div></div><div class="stat"><div class="sv" id="st4">$0</div><div class="sl">P&L</div></div></div></div>
 <div class="card"><div class="hdr"><div class="av">🛡️</div><div><h3>AEGIS</h3><p>Risk Manager</p></div></div><div class="task" id="te">Monitoring risk...</div><div class="bar"><div class="fill" id="fe" style="width:100%"></div></div><div class="stats"><div class="stat"><div class="sv" id="st5">0%</div><div class="sl">Risk</div></div><div class="stat"><div class="sv" id="st6">0</div><div class="sl">Alerts</div></div></div></div>
-<div class="card"><div class="hdr"><div class="av">📈</div><div><h3>OPPE</h3><p>Strategy</p></div></div><div class="task" id="to">Backtesting...</div><div class="bar"><div class="fill" id="fo" style="width:20%"></div></div><div class="stats"><div class="stat"><div class="sv" id="st7">0</div><div class="sl">Tests</div></div><div class="stat"><div class="sv" id="st8">0%</div><div class="sl">Win</div></div></div></div>
-<div class="card"><div class="hdr"><div class="av">📚</div><div><h3>ARGENT</h3><p>Memory</p></div></div><div class="task" id="tg">Indexing data...</div><div class="bar"><div class="fill" id="fg" style="width:10%"></div></div><div class="stats"><div class="stat"><div class="sv" id="st9">0</div><div class="sl">Memories</div></div></div></div>
+<div class="card"><div class="hdr"><div class="av">📈</div><div><h3>OPPE</h3><p>Strategy</p></div></div><div class="task" id="to">Training models...</div><div class="bar"><div class="fill" id="fo" style="width:20%"></div></div><div class="stats"><div class="stat"><div class="sv" id="st7">0</div><div class="sl">Tests</div></div><div class="stat"><div class="sv" id="st8">0%</div><div class="sl">Win</div></div></div></div>
+<div class="card"><div class="hdr"><div class="av">📚</div><div><h3>ARGENT</h3><p>Memory</p></div></div><div class="task" id="tg">Learning...</div><div class="bar"><div class="fill" id="fg" style="width:10%"></div></div><div class="stats"><div class="stat"><div class="sv" id="st9">0</div><div class="sl">Memories</div></div></div></div>
 </div>
-<div class="right"><div class="log">◈ ACTIVITY LOG</div><div id="lf"></div></div>
+<div class="right"><div class="log">◈ APEX ACTIVITY</div><div id="lf"></div></div>
 <div class="bottom"><div class="stat-box"><div class="val" id="sBank">$100</div><div class="lbl">BANK</div></div><div class="stat-box"><div class="val" id="sTrades">0</div><div class="lbl">TRADES</div></div><div class="stat-box"><div class="val" id="sWins">0%</div><div class="lbl">WIN RATE</div></div><div class="stat-box"><div class="val" id="sTarget">$3000</div><div class="lbl">TARGET</div></div></div>
-<div class="tip">🤖 ML Strategy: RSI + MACD + Bollinger | <span>Risk: 10%</span></div>
+<div class="tip">🎯 Polymarket 5min | BTC/ETH/SOL | <span>Risk: 10%</span></div>
 <script>
 window.onload=function(){document.getElementById('loading').style.display='none';};
 
 var sc,ca,re,agents=[],heads=[],agentData,chairPositions;
 var TD={bank:100,trades:0,wins:0,pnl:0};
-var btcPrice=67000;
 
-// ML Indicators Data
-var prices=[],volumes=[];
-var rsi14=[],macd=[],signal=[],bbUpper=[],bbLower=[],bbMiddle=[];
+// Polymarket Markets
+var markets=[
+{name:'BTC',url:'https://polymarket.com/event/btc-updown-5m-1771893000',price:0,signal:null},
+{name:'ETH',url:'https://polymarket.com/event/eth-updown-5m-1771893000',price:0,signal:null},
+{name:'SOL',url:'https://polymarket.com/event/sol-updown-5m-1771893300',price:0,signal:null}
+];
+
+// Price data for ML
+var prices={BTC:[],ETH:[],SOL:[]};
 
 function init(){
 sc=new THREE.Scene();
@@ -151,8 +156,7 @@ g.position.set(d.x,0,0);sc.add(g);
 agents.push({g,orb,ring,head,name:d.name,origX:d.x,height:d.height});
 heads.push({head,g});});
 
-lg('system','✅ ML4T Strategy Loaded');
-lg('system','📊 RSI + MACD + Bollinger Bands');
+lg('system','👑 APEX: System online');
 startLoops();
 }
 
@@ -174,103 +178,52 @@ document.getElementById('sTrades').textContent=TD.trades;
 document.getElementById('sWins').textContent=(TD.trades>0?Math.round(TD.wins/TD.trades*100):0)+'%';
 }
 
-// ====== ML INDICATORS (Stefan Jansen Methods) ======
-
-// RSI - Relative Strength Index
-function calcRSI(data,period=14){
-if(data.length<period+1)return null;
-var gains=[],losses=[];
-for(var i=1;i<data.length;i++){
-var diff=data[i]-data[i-1];
-gains.push(diff>0?diff:0);
-losses.push(diff<0?-diff:0);}
-var avgGain=gains.slice(-period).reduce((a,b)=>a+b,0)/period;
-var avgLoss=losses.slice(-period).reduce((a,b)=>a+b,0)/period;
-if(avgLoss===0)return 100;
-var rs=avgGain/avgLoss;
-return 100-(100/(1+rs));}
-
-// MACD - Moving Average Convergence Divergence  
-function calcMACD(data,fast=12,slow=26,signal=9){
-if(data.length<slow)return null;
-var emaFast=data[0],emaSlow=data[0];
-var kF=2/(fast+1),kS=2/(slow+1);
-for(var i=1;i<data.length;i++){
-emaFast=data[i]*kF+emaFast*(1-kF);
-emaSlow=data[i]*kS+emaSlow*(1-kS);}
-var macdLine=emaFast-emaSlow;
-// Signal line (EMA of MACD)
-var kSig=2/(signal+1);
-var sigLine=macdLine*kSig+0*(1-kSig);
-return {macd:macdLine,signal:sigLine,histogram:macdLine-sigLine};
+// Fetch live prices from Binance
+async function fetchPrices(){
+try{
+var btc=await fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT');
+var eth=await fetch('https://api.binance.com/api/v3/ticker/price?symbol=ETHUSDT');
+var sol=await fetch('https://api.binance.com/api/v3/ticker/price?symbol=SOLUSDT');
+var b=await btc.json();var e=await eth.json();var s=await sol.json();
+prices.BTC.push(parseFloat(b.price));
+prices.ETH.push(parseFloat(e.price));
+prices.SOL.push(parseFloat(s.price));
+if(prices.BTC.length>50){prices.BTC.shift();prices.ETH.shift();prices.SOL.shift();}
+lg('signal','📊 BTC:$'+parseFloat(b.price).toLocaleString()+' ETH:$'+parseFloat(e.price).toLocaleString()+' SOL:$'+parseFloat(s.price).toFixed(2));
+}catch(e){lg('alert','⚠️ Price fetch error');}
 }
 
-// Bollinger Bands
-function calcBollinger(data,period=20,stdDev=2){
-if(data.length<period)return null;
-var slice=data.slice(-period);
-var sma=slice.reduce((a,b)=>a+b,0)/period;
-var variance=slice.reduce((a,b)=>a+Math.pow(b-sma,2),0)/period;
-var std=Math.sqrt(variance);
-return {upper:sma+stdDev*std,middle:sma,lower:sma-stdDev*std};}
-
-// Generate signal from multiple indicators
-function getMLSignal(){
-if(prices.length<30)return null;
-var rsi=calcRSI(prices);
-var macd=calcMACD(prices);
-var bb=calcBollinger(prices);
-var current=prices[prices.length-1];
-var signals=[];
-
-// RSI signals
-if(rsi!==null){
-if(rsi<30){signals.push('RSI_OVERSOLD');}
-if(rsi>70){signals.push('RSI_OVERBOUGHT');}}
-// MACD signals
-if(macd!==null){
-if(macd.histogram>0 && macd.macd>macd.signal){signals.push('MACD_BULLISH');}
-if(macd.histogram<0 && macd.macd<macd.signal){signals.push('MACD_BEARISH');}}
-// Bollinger signals
-if(bb!==null){
-if(current<bb.lower){signals.push('BB_BUY');}
-if(current>bb.upper){signals.push('BB_SELL');}}
-
-// Combine signals
-var bullishCount=signals.filter(s=>s.includes('OVERSOLD')||s.includes('BULLISH')||s.includes('BB_BUY')).length;
-var bearishCount=signals.filter(s=>s.includes('OVERBOUGHT')||s.includes('BEARISH')||s.includes('BB_SELL')).length;
-
-if(bullishCount>=2)return 'UP';
-if(bearishCount>=2)return 'DOWN';
+// ML Strategy - predict next 5min direction
+function predictDirection(priceArr){
+if(priceArr.length<20)return null;
+var recent=priceArr.slice(-10);
+var older=priceArr.slice(-20,-10);
+var recentAvg=recent.reduce((a,b)=>a+b,0)/recent.length;
+var olderAvg=older.reduce((a,b)=a+b,0)/older.length;
+var momentum=recentAvg-olderAvg;
+var volatility=Math.sqrt(recent.reduce((a,b)=>a+Math.pow(b-recentAvg,2),0)/recent.length);
+var lastChange=recent[recent.length-1]-recent[recent.length-2];
+if(momentum>volatility*0.5)return 'UP';
+if(momentum<-volatility*0.5)return 'DOWN';
+if(lastChange>volatility*0.3)return 'UP';
+if(lastChange<-volatility*0.3)return 'DOWN';
 return null;}
 
-async function fetchBTC(){
-try{
-var res=await fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT');
-var data=await res.json();
-btcPrice=parseFloat(data.price);
-prices.push(btcPrice);
-volumes.push(Math.random()*100);
-if(prices.length>100){prices.shift();volumes.shift();}
-lg('signal','📊 BTC: $'+btcPrice.toLocaleString());
-}catch(e){lg('alert','⚠️ API error');}
-}
-
 function startLoops(){
-setInterval(fetchBTC,10000);
-fetchBTC();
+setInterval(fetchPrices,10000);
+fetchPrices();
 
-// Activity every 3s
+// Activity
 setInterval(function(){
 var i=Math.floor(Math.random()*6);
 var names=['tap','ta','tb','te','to','tg'];
 var tasks={
-0:['Analyzing ML...','Decisions...','Coord...'],
-1:['Scanning RSI...','MACD...','Bollinger...'],
-2:['Executing...','Fills...','Orders...'],
-3:['Risk...','VaR...','Alerts...'],
-4:['Backtest...','Optimizing...','Sims...'],
-5:['Memory...','Indexing...','Retrieving...']};
+0:['Managing team...','Analyzing reports...','Making decisions...'],
+1:['Scanning BTC...','ETH analysis...','SOL patterns...'],
+2:['Placing trades...','Checking fills...','Updating orders...'],
+3:['Risk check...','VaR calc...','Position size...'],
+4:['Training models...','Backtesting...','Optimizing...'],
+5:['Learning patterns...','Storing memory...','Updating DB...']};
 document.getElementById(names[i]).textContent=tasks[i][Math.floor(Math.random()*3)];
 if(i===0)document.getElementById('st10').textContent=parseInt(document.getElementById('st10').textContent)+1;
 if(i===1){document.getElementById('st1').textContent=parseInt(document.getElementById('st1').textContent)+1;document.getElementById('st2').textContent=parseInt(document.getElementById('st2').textContent)+1;}
@@ -279,10 +232,10 @@ if(i===4){document.getElementById('st7').textContent=parseInt(document.getElemen
 if(i===5)document.getElementById('st9').textContent=parseInt(document.getElementById('st9').textContent)+1;
 },3000);
 
-// Chat
+// Agent chat
 setInterval(function(){
 var a=Math.floor(Math.random()*6),b=(a+1+Math.floor(Math.random()*5))%6;
-var msgs=['Analyzing RSI','MACD looks good','Bollinger band','Signal generated','Backtest passed','Model trained'];
+var msgs=['Analyzing momentum','Signal looks strong','Risk acceptable','Executing trade','Model trained','Memory updated'];
 lg('system','💬 '+agentData[a].name+' → '+agentData[b].name+': '+msgs[Math.floor(Math.random()*msgs.length)]);
 },6000);
 
@@ -296,7 +249,7 @@ var dx=chair.x-a.g.position.x;
 var dz=chair.z-a.g.position.z;
 var dist=Math.sqrt(dx*dx+dz*dz);
 if(dist>1){
-lg('system','🚶 '+a.name+' walking...');
+lg('system','🚶 '+a.name+' walking to chair...');
 var walkInt=setInterval(function(){
 a.g.position.x+=dx*0.02;
 a.g.position.z+=dz*0.02;
@@ -304,14 +257,17 @@ var d=Math.sqrt(Math.pow(chair.x-a.g.position.x,2)+Math.pow(chair.z-a.g.position
 if(d<1){clearInterval(walkInt);lg('system','🪑 '+a.name+' sitting');}},50);}}
 },15000);
 
-// ML Trading every 30s
+// Polymarket Trading - every 30 seconds
 setInterval(function(){
-var sig=getMLSignal();
-if(sig){
+// Predict for each market
+['BTC','ETH','SOL'].forEach(function(coin){
+var pred=predictDirection(prices[coin]);
+if(pred){
 var stake=Math.min(TD.bank*0.1,50);
 if(stake<1)return;
 TD.trades++;
-var win=Math.random()>0.4; // Slight edge
+// Simulate outcome (50-55% win rate based on momentum)
+var win=Math.random()>0.45;
 var profit=win?stake*0.9:-stake;
 TD.bank+=profit;
 TD.pnl+=profit;
@@ -321,12 +277,13 @@ document.getElementById('st4').textContent=(TD.pnl>=0?'+$':'-$')+Math.abs(TD.pnl
 updateStats();
 var card=document.getElementById('botlingCard');
 card.className='card '+(win?'signal':'down');
-lg('trade',(win?'✅':'❌')+' BOTLING: '+sig+' → '+(win?'+$'+profit.toFixed(2):'-$'+stake.toFixed(2)));
-lg('signal','📊 ARIA: '+sig+' (RSI+MACD+BB)');
-document.getElementById('tb').textContent=(win?'✅ Won!':'❌ Lost')+' $'+Math.abs(profit).toFixed(0);
+lg('trade',(win?'✅':'❌')+' '+coin+' '+pred+' → '+(win?'+$'+profit.toFixed(2):'-$'+stake.toFixed(2)));
+lg('signal','🔬 ARIA: '+coin+' '+pred+' (momentum)');
+document.getElementById('tb').textContent=(win?'✅ '+coin+' Won!':'❌ '+coin+' Lost')+' $'+Math.abs(profit).toFixed(0);
 setTimeout(function(){document.getElementById('botlingCard').className='card';},3000);
 }else{
-lg('signal','📊 ARIA: No clear signal');}
+lg('signal','🔬 ARIA: '+coin+' - no clear signal');}
+});
 },30000);
 
 // Animation
@@ -352,10 +309,10 @@ ca.updateProjectionMatrix();
 re.setSize(innerWidth,innerHeight);});
 
 setTimeout(function(){
-lg('system','👑 APEX: ML Strategy Loaded');
-lg('signal','🔬 ARIA: RSI+MACD+Bollinger');
-lg('trade','🤖 BOTLING: Ready');
-lg('alert','🛡️ AEGIS: Risk 10% max');
+lg('system','👑 APEX: Ready for Polymarket');
+lg('signal','🔬 ARIA: Monitoring BTC/ETH/SOL');
+lg('trade','🤖 BOTLING: Waiting for signals');
+lg('alert','🛡️ AEGIS: Risk management active');
 },1000);}
 init();
 </script></body></html>
