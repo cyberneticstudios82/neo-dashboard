@@ -187,27 +187,31 @@ async function fetchTradingState() {
         if (!res.ok) throw new Error();
         var data = await res.json();
         var state = data.aurora;
-    document.getElementById('bank').textContent = '$' + state.bank.toFixed(2);
-    document.getElementById('total-pnl').textContent = (state.pnl >= 0 ? '+' : '') + '$' + state.pnl.toFixed(2);
-    document.getElementById('total-pnl').style.color = state.pnl >= 0 ? '#00ff88' : '#ff3366';
-    document.getElementById('total-trades').textContent = state.trades;
-    var winRate = state.trades > 0 ? ((state.wins / state.trades) * 100).toFixed(0) : 0;
-    document.getElementById('win-rate').textContent = winRate + '%';
-    document.getElementById('wins-losses').textContent = state.wins + '/' + state.losses;
-    var pnlPct = ((state.bank - 100) / 100 * 100).toFixed(2);
-    document.getElementById('pnl').textContent = (pnlPct >= 0 ? '+' : '') + pnlPct + '%';
-    document.getElementById('pnl').style.color = pnlPct >= 0 ? '#00ff88' : '#ff3366';
-    
-    // Also update HFT display
-    if (data.hft) {
-        document.getElementById('hft-bank').textContent = '$' + data.hft.bank.toFixed(2);
-        document.getElementById('hft-trades').textContent = data.hft.trades;
+        
+        document.getElementById('bank').textContent = '$' + state.bank.toFixed(2);
+        document.getElementById('total-pnl').textContent = (state.pnl >= 0 ? '+' : '') + '$' + state.pnl.toFixed(2);
+        document.getElementById('total-pnl').style.color = state.pnl >= 0 ? '#00ff88' : '#ff3366';
+        document.getElementById('total-trades').textContent = state.trades;
+        var winRate = state.trades > 0 ? ((state.wins / state.trades) * 100).toFixed(0) : 0;
+        document.getElementById('win-rate').textContent = winRate + '%';
+        document.getElementById('wins-losses').textContent = state.wins + '/' + state.losses;
+        var pnlPct = ((state.bank - 100) / 100 * 100).toFixed(2);
+        document.getElementById('pnl').textContent = (pnlPct >= 0 ? '+' : '') + pnlPct + '%';
+        document.getElementById('pnl').style.color = pnlPct >= 0 ? '#00ff88' : '#ff3366';
+        
+        // Also update HFT display
+        if (data.hft) {
+            document.getElementById('hft-bank').textContent = '$' + data.hft.bank.toFixed(2);
+            document.getElementById('hft-trades').textContent = data.hft.trades;
+        }
+        
+        // Update chart
+        pnlHistory.push(state.bank);
+        if (pnlHistory.length > 30) pnlHistory.shift();
+        drawChart();
+    } catch(e) {
+        console.log('Error fetching state:', e);
     }
-    
-    // Update chart
-    pnlHistory.push(state.bank);
-    if (pnlHistory.length > 30) pnlHistory.shift();
-    drawChart();
 }
 function addActivity(msg, type) {
     var list = document.getElementById('trades-list');
