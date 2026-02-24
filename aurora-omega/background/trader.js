@@ -1,4 +1,6 @@
-// Aurora Background Trader - Uses REAL Bankr Signals
+// Aurora Background Trader - Uses REAL Bankr Signals + Learning Patterns
+// Based on patterns from Manus, Devin AI, Cursor
+
 const fs = require('fs');
 const https = require('https');
 
@@ -14,6 +16,66 @@ class BackgroundTrader {
         this.lastReport = Date.now();
         this.lastSignalFetch = 0;
         this.cachedSignals = [];
+        this.consecutiveLosses = 0;
+        this.maxConsecutiveLosses = 3;
+        this.learnings = [];  // Track learnings
+    }
+
+    // THINK: Reflect before acting (Devin AI pattern)
+    think(context) {
+        const thoughts = {
+            context,
+            time: new Date().toISOString(),
+            bank: this.bank,
+            pnl: this.pnl,
+            winRate: this.trades.length > 0 ? (this.wins / this.trades.length * 100).toFixed(1) : 0,
+            risk: this.checkRisk()
+        };
+        this.learnings.push(thoughts);
+        
+        // Keep only last 100 learnings
+        if (this.learnings.length > 100) {
+            this.learnings = this.learnings.slice(-100);
+        }
+        
+        return thoughts;
+    }
+
+    // VERIFY: Check before executing (Cursor pattern)
+    verify(signal) {
+        // Check 1: Risk limits
+        if (this.checkRisk().alert) {
+            console.log(`[VERIFY] ❌ Blocked by risk: ${this.checkRisk().alert}`);
+            return false;
+        }
+
+        // Check 2: Confidence threshold
+        if (signal.confidence && signal.confidence < 0.5) {
+            console.log(`[VERIFY] ❌ Low confidence: ${signal.confidence}`);
+            return false;
+        }
+
+        // Check 3: Consecutive losses
+        if (this.consecutiveLosses >= this.maxConsecutiveLosses) {
+            console.log(`[VERIFY] ❌ Cooldown after ${this.consecutiveLosses} losses`);
+            return false;
+        }
+
+        console.log(`[VERIFY] ✅ Signal approved`);
+        return true;
+    }
+
+    checkRisk() {
+        const dailyLoss = (this.bank - 100) / 100;
+        
+        if (dailyLoss < -0.10) {
+            return { alert: 'DAILY_LOSS_LIMIT', safe: false };
+        }
+        if (this.bank < 80) {
+            return { alert: 'STOP_TRADING', safe: false };
+        }
+        
+        return { alert: null, safe: true };
     }
 
     fetchJSON(url) {
@@ -30,7 +92,8 @@ class BackgroundTrader {
 
     async fetchSignals() {
         // Fetch real signals from Bankr Signals API
-        const signals = await this.fetchJSON('https://bankrsignals.com/api/signals?limit=50');
+        const data = await this.fetchJSON('https://bankrsignals.com/api/signals?limit=50');
+        const signals = Array.isArray(data) ? data : [];
         return signals.filter(s => s.status === 'open' || !s.exitPrice);
     }
 
@@ -75,7 +138,13 @@ class BackgroundTrader {
     async executeTrade(signal, price) {
         if (signal.action === 'HOLD') return null;
         
-        // Calculate position size based on confidence
+        // THINK: Reflect before acting
+        this.think(`Executing ${signal.action} ${signal.token}`);
+        
+        // VERIFY: Check if trade is safe
+        if (!this.verify(signal)) {
+            return null;
+        }
         const confidence = signal.confidence || 0.5;
         const leverage = signal.leverage || 1;
         const stake = Math.min(this.bank * 0.02 * confidence, 500);
@@ -104,7 +173,13 @@ class BackgroundTrader {
         this.trades.push(trade);
         this.bank += profit;
         this.pnl += profit;
-        if (win) this.wins++; else this.losses++;
+        if (win) {
+            this.wins++;
+            this.consecutiveLosses = 0;  // Reset on win
+        } else {
+            this.losses++;
+            this.consecutiveLosses++;
+        }
         
         this.saveTrade(trade);
         
