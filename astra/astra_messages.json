@@ -1,0 +1,56 @@
+{
+  "schedule": {
+    "07:00": {
+      "messages": [
+        "Good morning Pankaj! 🌅 Your body is ready. Today is a great day for progress.",
+        "🏋️ Today's Workout:\n• Treadmill: 20 min incline walk @ 3mph\n• Goblet Squats: 4x12\n• Resistance Band Rows: 4x15\n• Plank: 3x45 sec"
+      ]
+    },
+    "09:00": {
+      "messages": [
+        "💡 Health Tip: Drink 3L water today. Hydration = performance."
+      ]
+    },
+    "13:00": {
+      "messages": [
+        "💊 Time for Glimepiride!"
+      ]
+    },
+    "15:00": {
+      "messages": [
+        "Hey Pankaj! How's your day? Stay consistent!"
+      ]
+    },
+    "18:00": {
+      "messages": [
+        "🏋️ Evening Workout:\n• Dumbbell Bench: 4x10\n• Bent Over Rows: 4x10\n• Shoulder Press: 3x10"
+      ]
+    },
+    "21:00": {
+      "messages": [
+        "💊 Time for Rosuvastatin!"
+      ]
+    },
+    "21:30": {
+      "messages": [
+        "💡 Health Tip: Sleep before midnight for optimal recovery."
+      ]
+    },
+    "22:00": {
+      "messages": [
+        "✨ Astro Insight: Tuesday - Mental clarity peaks. Good for learning new exercises."
+      ]
+    }
+  },
+  "30min_checkin": [
+    "Hey Pankaj! Stay focused! 💪",
+    "How's your day going?",
+    "Remember: consistency beats intensity!",
+    "Small steps = big changes!",
+    "You got this! 🚀"
+  ],
+  "medicines": {
+    "Glimepiride": "13:00",
+    "Rosuvastatin": "21:00"
+  }
+}
