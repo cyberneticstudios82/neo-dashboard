@@ -104,6 +104,17 @@ body {
     box-shadow: 0 0 20px rgba(0,245,255,0.2);
 }
 
+.agent-dot {
+    display: flex; flex-direction: column; align-items: center;
+    padding: 8px 12px; border-radius: 8px;
+    background: rgba(0,0,0,0.4); border: 1px solid var(--border);
+    font-size: 9px; color: #6a7a8a; transition: all 0.3s;
+    min-width: 60px;
+}
+.agent-dot span { margin-top: 4px; font-size: 8px; }
+.agent-dot.active { border-color: var(--green); color: var(--green); background: rgba(0,255,136,0.1); }
+.agent-dot .pulse { animation: pulse 1.5s infinite; }
+
 .agent-card.active { border-color: var(--green); }
 .agent-card.active::before { background: linear-gradient(90deg, transparent, var(--green), transparent); }
 
@@ -454,6 +465,11 @@ body {
         </div>
 
         <div class="skills-section">
+            <div class="section-title">🎯 RECENT TRADES</div>
+            <div class="activity-list" id="trades-list" style="max-height:200px;overflow-y:auto;"></div>
+        </div>
+
+        <div class="skills-section">
             <div class="section-title">⚡ INSTALLED SKILLS</div>
             <div class="skills-grid">
                 <span class="skill-badge">📺 bankr</span>
@@ -486,6 +502,18 @@ body {
         <div class="activity-card">
             <div class="section-title">◈ MARKET SIGNALS</div>
             <div class="activity-list" id="signals"></div>
+        </div>
+
+        <div class="activity-card">
+            <div class="section-title">🤖 AGENTS</div>
+            <div id="agents-panel" style="display:flex;flex-wrap:wrap;gap:8px;">
+                <div class="agent-dot" id="agent-aurora">🌙<span>AURORA</span></div>
+                <div class="agent-dot" id="agent-market">🌐<span>MARKET</span></div>
+                <div class="agent-dot" id="agent-risk">⚖️<span>RISK</span></div>
+                <div class="agent-dot" id="agent-sentiment">📰<span>SENTIMENT</span></div>
+                <div class="agent-dot" id="agent-portfolio">💼<span>PORTFOLIO</span></div>
+                <div class="agent-dot" id="agent-research">🔍<span>RESEARCH</span></div>
+            </div>
         </div>
     </div>
 </div>
@@ -786,10 +814,76 @@ async function updateChart() {
     } catch(e) {}
 }
 
+async function updateChart() {
+    try {
+        var res = await fetch('/root/.openclaw/workspace/aurora-omega/logs/trades.json');
+        if (!res.ok) return;
+        var trades = await res.json();
+        
+        if (trades.length > tradeHistory.length) {
+            var newTrades = trades.slice(tradeHistory.length);
+            newTrades.forEach(function(t) {
+                pnlHistory.push(t.bank);
+            });
+            tradeHistory = trades;
+            
+            // Keep only last 50 points
+            if (pnlHistory.length > 50) {
+                pnlHistory = pnlHistory.slice(-50);
+            }
+            
+            drawChart();
+        }
+    } catch(e) {}
+}
+
+function updateTrades() {
+    fetch('/root/.openclaw/workspace/aurora-omega/logs/trades.json')
+    .then(function(r) { return r.json(); })
+    .then(function(trades) {
+        var list = document.getElementById('trades-list');
+        if (!list) return;
+        
+        // Show last 10 trades
+        var recent = trades.slice(-10).reverse();
+        
+        if (list.children.length !== recent.length) {
+            list.innerHTML = '';
+            recent.forEach(function(t) {
+                var item = document.createElement('div');
+                item.className = 'activity-item ' + (t.result === 'WIN' ? 'trade' : '');
+                var profit = t.profit >= 0 ? '+$' + t.profit.toFixed(2) : '-$' + Math.abs(t.profit).toFixed(2);
+                item.innerHTML = '<span class="activity-time">' + new Date(t.time).toLocaleTimeString() + '</span>' +
+                    (t.token || t.signal) + ' @ $' + t.price.toFixed(0) + ' → ' + t.result + ' (' + profit + ')';
+                list.appendChild(item);
+            });
+        }
+    });
+}
+
+function updateAgents() {
+    // Simulate agent activity - check if processes are running
+    var agents = ['aurora', 'market', 'risk', 'sentiment', 'portfolio', 'research'];
+    var active = ['aurora']; // Aurora is confirmed running
+    
+    agents.forEach(function(a) {
+        var el = document.getElementById('agent-' + a);
+        if (el) {
+            if (active.indexOf(a) >= 0) {
+                el.classList.add('active');
+            }
+        }
+    });
+}
+
 // Start chart
 setTimeout(function() {
     updateChart();
+    updateTrades();
+    updateAgents();
     setInterval(updateChart, 5000);
+    setInterval(updateTrades, 3000);
+    setInterval(updateAgents, 10000);
 }, 1000);
 </script>
 </body>
