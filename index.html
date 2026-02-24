@@ -647,7 +647,11 @@ async function fetchPrices() {
 
 async function fetchTradingState() {
     try {
-        var res = await fetch('/root/.openclaw/workspace/aurora-omega/logs/state.json');
+        // Try API first, fallback to local file
+        var apiBase = ''; // Will work on Vercel with API routes
+        
+        // Fetch Aurora state
+        var res = await fetch('/api/aurora');
         if (!res.ok) throw new Error();
         var state = await res.json();
         
@@ -817,11 +821,10 @@ async function updateChart() {
             drawChart();
         }
     } catch(e) {}
-}
 
 async function updateChart() {
     try {
-        var res = await fetch('/root/.openclaw/workspace/aurora-omega/logs/trades.json');
+        var res = await fetch('/api/trades');
         if (!res.ok) return;
         var trades = await res.json();
         
@@ -843,7 +846,7 @@ async function updateChart() {
 }
 
 function updateTrades() {
-    fetch('/root/.openclaw/workspace/aurora-omega/logs/trades.json')
+    fetch('/api/trades')
     .then(function(r) { return r.json(); })
     .then(function(trades) {
         var list = document.getElementById('trades-list');
