@@ -80,7 +80,7 @@ function an(){requestAnimationFrame(an);t+=0.001;pt3.rotation.y=t*0.1;ca.positio
 
 async function fetchBotData(){
   try{
-    var res = await fetch('https://aurora-9.loca.lt/api/combined');
+    var res = await fetch('https://aurora-autobot.loca.lt/api/combined');
     var data = await res.json();
     aurora = data.aurora || aurora;
     hft = data.hft || hft;
