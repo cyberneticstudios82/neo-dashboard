@@ -466,7 +466,13 @@ body {
                 <span class="skill-badge">🤖 erc-8004</span>
                 <span class="skill-badge">🔲 qrcoin</span>
                 <span class="skill-badge">🔒 veil</span>
+                <span class="skill-badge">🎯 Polymarket</span>
             </div>
+        </div>
+
+        <div class="skills-section">
+            <div class="section-title">📈 P&L CHART</div>
+            <canvas id="pnlChart" width="400" height="150" style="width:100%;height:150px;border-radius:8px;background:rgba(0,0,0,0.3);"></canvas>
         </div>
     </div>
 
@@ -693,6 +699,98 @@ window.onresize = function() {
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
 };
+
+// P&L CHART
+var pnlHistory = [100];
+var tradeHistory = [];
+
+function drawChart() {
+    var canvas = document.getElementById('pnlChart');
+    if (!canvas) return;
+    var ctx = canvas.getContext('2d');
+    var w = canvas.width;
+    var h = canvas.height;
+    
+    // Clear
+    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+    ctx.fillRect(0, 0, w, h);
+    
+    if (pnlHistory.length < 2) return;
+    
+    // Find min/max
+    var min = Math.min(...pnlHistory);
+    var max = Math.max(...pnlHistory);
+    var range = max - min || 1;
+    
+    // Draw grid
+    ctx.strokeStyle = 'rgba(0,245,255,0.1)';
+    ctx.lineWidth = 1;
+    for (var i = 0; i <= 4; i++) {
+        var y = (h / 4) * i;
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(w, y);
+        ctx.stroke();
+    }
+    
+    // Draw line
+    ctx.strokeStyle = '#00ff88';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    
+    pnlHistory.forEach(function(val, i) {
+        var x = (i / (pnlHistory.length - 1)) * w;
+        var y = h - ((val - min) / range) * (h - 20) - 10;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+    
+    // Fill area
+    ctx.lineTo(w, h);
+    ctx.lineTo(0, h);
+    ctx.closePath();
+    var gradient = ctx.createLinearGradient(0, 0, 0, h);
+    gradient.addColorStop(0, 'rgba(0,255,136,0.3)');
+    gradient.addColorStop(1, 'rgba(0,255,136,0)');
+    ctx.fillStyle = gradient;
+    ctx.fill();
+    
+    // Draw current value
+    var current = pnlHistory[pnlHistory.length - 1];
+    ctx.fillStyle = '#00ff88';
+    ctx.font = 'bold 16px Orbitron';
+    ctx.fillText('$' + current.toFixed(2), w - 80, 25);
+}
+
+async function updateChart() {
+    try {
+        var res = await fetch('/root/.openclaw/workspace/aurora-omega/logs/trades.json');
+        if (!res.ok) return;
+        var trades = await res.json();
+        
+        if (trades.length > tradeHistory.length) {
+            var newTrades = trades.slice(tradeHistory.length);
+            newTrades.forEach(function(t) {
+                pnlHistory.push(t.bank);
+            });
+            tradeHistory = trades;
+            
+            // Keep only last 50 points
+            if (pnlHistory.length > 50) {
+                pnlHistory = pnlHistory.slice(-50);
+            }
+            
+            drawChart();
+        }
+    } catch(e) {}
+}
+
+// Start chart
+setTimeout(function() {
+    updateChart();
+    setInterval(updateChart, 5000);
+}, 1000);
 </script>
 </body>
 </html>
