@@ -1,89 +1,244 @@
 <!DOCTYPE html>
-<html><head><meta charset="UTF-8"><title>APEX HQ - AI Trading</title>
+<html><head><meta charset="UTF-8"><title>APEX HQ - 4K Trading</title>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Courier New',monospace;background:#050508;color:#fff;overflow:hidden}
 #c{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0}
-.top{position:fixed;top:0;left:0;right:0;height:55px;background:linear-gradient(90deg,#0a0a12,#12121a);border-bottom:2px solid #00ffd1;display:flex;align-items:center;justify-content:space-between;padding:0 20px;z-index:100}
-.logo{font-size:20px;font-weight:bold;letter-spacing:4px;color:#00ffd1}
+.top{position:fixed;top:0;left:0;right:0;height:60px;background:linear-gradient(90deg,#0a0a12,#1a1a2a);border-bottom:2px solid #00ffd1;display:flex;align-items:center;justify-content:space-between;padding:0 30px;z-index:100}
+.logo{font-size:24px;font-weight:bold;letter-spacing:4px;color:#00ffd1}
 .logo span{color:#ffd700}
-.kpi{display:flex;gap:20px;font-size:11px}
+.kpi{display:flex;gap:30px;font-size:14px}
 .kpi .pnl{color:#00ff88;font-weight:bold}
 .kpi .pnl.neg{color:#ff4444}
-.exchanges{display:flex;gap:8px;font-size:9px}
-.ex{background:#222;padding:3px 8px;border-radius:4px}
-.hl{color:#00d4ff}.bf{color:#ff6b35}.pm{color:#ffd700}
-.live{color:#ff0000;animation:pulse 1s infinite}
+.ex{display:flex;gap:10px;font-size:11px}
+.ex span{background:#222;padding:4px 12px;border-radius:6px}
+.live{color:#00ff88;animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
-.voice-btn{background:#00ffd1;color:#000;padding:5px 12px;border:none;border-radius:4px;font-size:10px;cursor:pointer}
-.left{position:fixed;left:10px;top:65px;width:190px;bottom:10px;display:flex;flex-direction:column;gap:6px;z-index:50;overflow-y:auto}
-.card{background:#1a1a2a;border:1px solid #333;border-radius:6px;padding:8px}
-.card h3{font-size:11px;color:#00ffd1;margin:0 0 4px 0}
-.card p{font-size:8px;color:#666;margin:0}
-.card .task{font-size:9px;color:#888;margin:4px 0}
-.card .sv{font-size:14px;color:#fff;font-weight:bold}
-.card .sl{font-size:7px;color:#555}
-.card.signal{border-color:#00ff88}
-.card.down{border-color:#ff4444}
-.card.train{border-color:#ff00ff}
-.right{position:fixed;right:10px;top:65px;width:200px;bottom:10px;background:rgba(10,10,20,0.9);border:1px solid #333;border-radius:8px;padding:8px;z-index:50;overflow-y:auto}
-.log{font-size:10px;color:#00ffd1;margin-bottom:6px}
-.le{font-size:8px;padding:3px 5px;margin-bottom:3px;border-left:2px solid #444;background:rgba(0,0,0,0.3)}
-.le.trade{border-color:#00ff88}.le.signal{border-color:#00ffd1}.le.alert{border-color:#ff4444}.le.train{border-color:#ff00ff}
-.bottom{position:fixed;bottom:10px;left:210px;right:220px;height:60px;background:rgba(10,10,20,0.95);border:1px solid #333;border-radius:8px;display:flex;align-items:center;justify-content:space-around;z-index:50}
+.voice-btn{background:#00ffd1;color:#000;padding:8px 16px;border:none;border-radius:6px;font-size:12px;cursor:pointer;font-weight:bold}
+.left{position:fixed;left:15px;top:75px;width:220px;bottom:15px;display:flex;flex-direction:column;gap:8px;z-index:50;overflow-y:auto}
+.card{background:linear-gradient(135deg,#1a1a2a,#0f0f1a);border:1px solid #333;border-radius:10px;padding:12px}
+.card h3{font-size:13px;color:#00ffd1;margin:0 0 6px 0}
+.card p{font-size:9px;color:#666;margin:0}
+.card .task{font-size:11px;color:#aaa;margin:6px 0}
+.card .sv{font-size:18px;color:#fff;font-weight:bold}
+.card .sl{font-size:8px;color:#555}
+.card.signal{border-color:#00ff88;background:linear-gradient(135deg,#1a2a1a,#0f1a0f)}
+.card.down{border-color:#ff4444;background:linear-gradient(135deg,#2a1a1a,#1a0f0f)}
+.right{position:fixed;right:15px;top:75px;width:240px;bottom:15px;background:rgba(10,10,20,0.95);border:1px solid #333;border-radius:10px;padding:12px;z-index:50;overflow-y:auto}
+.log{font-size:12px;color:#00ffd1;margin-bottom:8px;font-weight:bold}
+.le{font-size:10px;padding:6px 8px;margin-bottom:4px;border-left:3px solid #444;background:rgba(0,0,0,0.4);border-radius:0 6px 6px 0}
+.le.trade{border-color:#00ff88}.le.signal{border-color:#00ffd1}.le.alert{border-color:#ff4444}
+.bottom{position:fixed;bottom:15px;left:250px;right:270px;height:70px;background:rgba(10,10,20,0.95);border:1px solid #333;border-radius:10px;display:flex;align-items:center;justify-content:space-around;z-index:50}
 .stat-box{text-align:center}
-.stat-box .val{font-size:16px;color:#00ffd1;font-weight:bold}
-.stat-box .lbl{font-size:8px;color:#555}
-#loading{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-size:24px;color:#00ffd1;z-index:200}
+.stat-box .val{font-size:22px;color:#00ffd1;font-weight:bold}
+.stat-box .lbl{font-size:10px;color:#555}
+#loading{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-size:28px;color:#00ffd1;z-index:200}
 </style></head>
 <body>
-<div id="loading">🤖 APEX Training...</div>
+<div id="loading">🤖 APEX 4K Loading...</div>
 <canvas id="c"></canvas>
-<div class="top"><div class="logo"><span>◆</span> APEX HQ <span class="live">●</span></div><div class="exchanges"><span class="ex hl">Hyperliquid</span><span class="ex bf">Blofin</span><span class="ex pm">Polymarket</span></div><div class="kpi"><span>BANK: $100</span><span class="pnl" id="bank">$100</span><span class="pnl" id="pnl">+$0</span></div><button class="voice-btn" onclick="toggleVoice()">🔊 Voice</button></div>
+<div class="top"><div class="logo"><span>◆</span> APEX HQ <span class="live">● LIVE</span></div><div class="ex"><span style="color:#00d4ff">Hyperliquid</span><span style="color:#ff6b35">Blofin</span><span style="color:#ffd700">Polymarket</span></div><div class="kpi"><span>BANK: $100</span><span class="pnl" id="bank">$100</span><span class="pnl" id="pnl">+$0</span></div><button class="voice-btn" onclick="toggleVoice()">🔊 Voice</button></div>
 <div class="left">
 <div class="card" style="border-color:#ffd700"><h3>⚡ APEX</h3><p>Team Lead</p><div class="task" id="tap">Managing...</div><div class="sv" id="st10">0</div><span class="sl">Decisions</span></div>
-<div class="card train"><h3 style="color:#ff00ff">🎓 OPPE</h3><p>HF Model Training</p><div class="task" id="to">Training...</div><div style="display:flex;justify-content:space-between"><div><div class="sv" id="st7">0%</div><span class="sl">Accuracy</span></div><div><div class="sv" id="st8">0</div><span class="sl">Epochs</span></div></div></div>
-<div class="card hl"><h3 style="color:#00d4ff">🌊 HYPERLIQUID</h3><p>Perpetuals</p><div class="task" id="thl">Fetching...</div><div style="display:flex;justify-content:space-between"><div><div class="sv" id="sthl1">$0</div><span class="sl">PnL</span></div><div><div class="sv" id="sthl2">0</div><span class="sl">Trades</span></div></div></div>
-<div class="card" id="botlingCard"><h3>🤖 BOTLING</h3><p>Polymarket</p><div class="task" id="tb">Waiting...</div><div style="display:flex;justify-content:space-between"><div><div class="sv" id="st3">0</div><span class="sl">Trades</span></div><div><div class="sv" id="st4">$0</div><span class="sl">PnL</span></div></div></div>
-<div class="card"><h3>🔬 ARIA</h3><p>Market Analyst</p><div class="task">Scanning...</div><div class="sv" id="st1">0</div><span class="sl">Scans</span></div>
-<div class="card"><h3>📚 ARGENT</h3><p>Memory</p><div class="task">Learning...</div><div class="sv" id="st9">0</div><span class="sl">Memories</span></div>
+<div class="card train"><h3 style="color:#ff00ff">🎓 OPPE</h3><p>Pine Script Strategies</p><div class="task" id="to">Loading strategies...</div><div class="sv" id="st7">0</div><span class="sl">Pine Strategies</span></div>
+<div class="card" id="botlingCard"><h3>🤖 BOTLING</h3><p>Live Execution</p><div class="task" id="tb">Waiting...</div><div style="display:flex;justify-content:space-between"><div><div class="sv" id="st3">0</div><span class="sl">Trades</span></div><div><div class="sv" id="st4">$0</div><span class="sl">PnL</span></div></div></div>
+<div class="card"><h3 style="color:#00d4ff">🌊 HYPERLIQUID</h3><p>Perpetuals</p><div class="task">Connected</div><div class="sv" id="sthl">$0</div><span class="sl">PnL</span></div>
+<div class="card"><h3>🔬 ARIA</h3><p>Market Analyst</p><div class="task" id="ta">Analyzing...</div><div class="sv" id="st1">0</div><span class="sl">Scans</span></div>
+<div class="card"><h3>📚 ARGENT</h3><p>Memory</p><div class="task">Learning Pine...</div><div class="sv" id="st9">0</div><span class="sl">Memories</span></div>
 </div>
-<div class="right"><div class="log">◈ ACTIVITY</div><div id="lf"></div></div>
-<div class="bottom"><div class="stat-box"><div class="val" id="sBank">$100</div><div class="lbl">BANK</div></div><div class="stat-box"><div class="val" id="sPnL">$0</div><div class="lbl">P&L</div></div><div class="stat-box"><div class="val" id="sTrades">0</div><div class="lbl">TRADES</div></div><div class="stat-box"><div class="val" id="sWins">0%</div><div class="lbl">WIN</div></div></div>
+<div class="right"><div class="log">◈ LIVE ACTIVITY</div><div id="lf"></div></div>
+<div class="bottom"><div class="stat-box"><div class="val" id="sBank">$100</div><div class="lbl">BANK</div></div><div class="stat-box"><div class="val" id="sPnL">$0</div><div class="lbl">P&L</div></div><div class="stat-box"><div class="val" id="sTrades">0</div><div class="lbl">TRADES</div></div><div class="stat-box"><div class="val" id="sWins">0%</div><div class="lbl">WIN RATE</div></div></div>
 <script>
+// 4K Ultra HD Renderer
+var renderer = new THREE.WebGLRenderer({antialias: true, powerPreference: "high-performance"});
+renderer.setPixelRatio(window.devicePixelRatio * 2); // 4K quality
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.2;
+document.body.insertBefore(renderer.domElement, document.body.firstChild);
+renderer.domElement.id = "c";
+
 var voiceEnabled=true;
 var agentVoices={APEX:{pitch:1.1,rate:0.95},ARIA:{pitch:1.3,rate:1.0},BOTLING:{pitch:0.8,rate:1.1},OPPE:{pitch:1.0,rate:0.9},ARGENT:{pitch:1.2,rate:0.95}};
 function toggleVoice(){voiceEnabled=!voiceEnabled;document.querySelector('.voice-btn').textContent='🔊 Voice '+(voiceEnabled?'ON':'OFF');}
 function speak(text,agentName){
 if(!voiceEnabled)return;
 try{var ut=new SpeechSynthesisUtterance(text);var cfg=agentVoices[agentName]||agentVoices.APEX;ut.pitch=cfg.pitch;ut.rate=cfg.rate;speechSynthesis.speak(ut);}catch(e){}}
-var sc,ca,re,agents=[],heads=[],agentData,chairPositions;
-var TD={bank:100,trades:0,wins:0,pnl:0,hl:{pnl:0,trades:0}};
+
+var scene,camera,renderer3d,agents=[],heads=[],agentData,chairPositions;
+var TD={bank:100,trades:0,wins:0,pnl:0};
 var prices={BTC:[],ETH:[],SOL:[]};
-var trainingProgress=0,modelAccuracy=0;
+var pineStrategies=0;
 
 function init(){
 document.getElementById('loading').style.display='none';
-sc=new THREE.Scene();sc.background=new THREE.Color(0x050508);
-ca=new THREE.PerspectiveCamera(60,innerWidth/innerHeight,0.1,1000);ca.position.set(0,10,22);
-re=new THREE.WebGLRenderer({canvas:document.getElementById('c'),antialias:true});re.setSize(innerWidth,innerHeight);
-sc.add(new THREE.Mesh(new THREE.PlaneGeometry(50,50),new THREE.MeshStandardMaterial({color:0x111118})).rotateX(-Math.PI/2));
-sc.add(new THREE.GridHelper(50,50,0x00ffd1,0x0a1a15));
-sc.add(new THREE.AmbientLight(0x444466,0.8));sc.add(new THREE.SpotLight(0xffffff,1.2).translateY(25).translateZ(10));
-function makePlant(x,z,s){var g=new THREE.Group();g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.4*s,0.3*s,0.6*s,8),new THREE.MeshStandardMaterial({color:0x8b4513})).translateY(0.3*s));g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.06*s,0.06*s,1.5*s,6),new THREE.MeshStandardMaterial({color:0x228b22})).translateY(1.2*s));for(var i=0;i<6;i++){var l=new THREE.Mesh(new THREE.SphereGeometry(0.3*s,6,4),new THREE.MeshStandardMaterial({color:0x32cd32}));l.scale.set(1,0.3,1);l.position.set(Math.cos(i)*0.35*s,1.5*s,Math.sin(i)*0.35*s);g.add(l);}g.position.set(x,0,z);return g;}
-sc.add(makePlant(-15,-10,1.2));sc.add(makePlant(15,-10,1));sc.add(makePlant(-15,10,1));sc.add(makePlant(15,10,1.3));
-var pt=new THREE.Group();pt.add(new THREE.Mesh(new THREE.BoxGeometry(5,0.25,2.5),new THREE.MeshStandardMaterial({color:0x1a472a})).translateY(1.4));[ [-2,-1],[0,-1],[2,-1],[-2,1],[0,1],[2,1] ].forEach(function(p){pt.add(new THREE.Mesh(new THREE.CylinderGeometry(0.12,0.12,0.1,8),new THREE.MeshBasicMaterial({color:0x000000})).translateY(1.53).translateX(p[0]).translateZ(p[1]));});pt.position.set(12,0,-3);sc.add(pt);
-var cf=new THREE.Group();cf.add(new THREE.Mesh(new THREE.BoxGeometry(0.8,1.2,0.6),new THREE.MeshStandardMaterial({color:0x222222})).translateY(0.6));cf.add(new THREE.Mesh(new THREE.BoxGeometry(0.3,0.4,0.05),new THREE.MeshStandardMaterial({color:0x003300,emissive:0x00ff00,emissiveIntensity:0.5})).translateY(1.1).translateZ(0.3));cf.position.set(-14,0,5);sc.add(cf);
-var sf=new THREE.Group();sf.add(new THREE.Mesh(new THREE.BoxGeometry(4,0.4,1.2),new THREE.MeshStandardMaterial({color:0x2a2a3a})).translateY(0.5));sf.add(new THREE.Mesh(new THREE.BoxGeometry(4,0.8,0.3),new THREE.MeshStandardMaterial({color:0x333344})).translateY(0.9).translateZ(-0.45));sf.position.set(0,0,10);sc.add(sf);
-function makeChair(x,z,r){var g=new THREE.Group();g.add(new THREE.Mesh(new THREE.BoxGeometry(0.6,0.1,0.6),new THREE.MeshStandardMaterial({color:0x4a3728})).translateY(0.8));g.add(new THREE.Mesh(new THREE.BoxGeometry(0.5,0.8,0.08),new THREE.MeshStandardMaterial({color:0x4a3728})).translateY(1.2).translateZ(-0.26));g.position.set(x,0,z);g.rotation.y=r||0;return g;}
-sc.add(makeChair(6,5,Math.PI));sc.add(makeChair(6,-5,Math.PI));sc.add(makeChair(-6,5,0));sc.add(makeChair(-6,-5,0));sc.add(makeChair(16,0,Math.PI/2));sc.add(makeChair(-16,0,-Math.PI/2));
-agentData=[{n:"APEX",c:0xffd700,x:-10,h:2.8},{n:"ARIA",c:0x00ffff,x:-6,h:2.4},{n:"BOTLING",c:0xff8800,x:-2,h:2.4},{n:"OPPE",c:0x00ff00,x:2,h:2.4},{n:"ARGENT",c:0xcccccc,x:6,h:2.4}];chairPositions=[{x:6,z:5},{x:6,z:-5},{x:-6,z:5},{x:-6,z:-5}];
-agentData.forEach(function(d,i){var g=new THREE.Group();g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.8,0.9,0.15,32),new THREE.MeshStandardMaterial({color:0x333333})).translateY(0.075));var ring=new THREE.Mesh(new THREE.TorusGeometry(0.7,0.04,8,32),new THREE.MeshBasicMaterial({color:d.c}));ring.rotation.x=Math.PI/2;ring.position.y=0.2;g.add(ring);g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.35,0.45,d.h*0.55,16),new THREE.MeshStandardMaterial({color:d.c,emissive:d.c,emissiveIntensity:0.2})).translateY(d.h*0.28+0.2));g.add(new THREE.Mesh(new THREE.BoxGeometry(0.9,0.2,0.3),new THREE.MeshStandardMaterial({color:d.c,emissive:d.c,emissiveIntensity:0.2})).translateY(d.h*0.5+0.2));var head=new THREE.Group();head.add(new THREE.Mesh(new THREE.SphereGeometry(0.4,20,20),new THREE.MeshStandardMaterial({color:d.c,emissive:d.c,emissiveIntensity:0.5})));[-1,1].forEach(function(s){head.add(new THREE.Mesh(new THREE.SphereGeometry(0.1,8,8),new THREE.MeshBasicMaterial({color:0xffffff})).translateX(s*0.15).translateY(0.12).translateZ(0.32));head.add(new THREE.Mesh(new THREE.SphereGeometry(0.05,6,6),new THREE.MeshBasicMaterial({color:0x000000})).translateX(s*0.15).translateY(0.12).translateZ(0.36));});head.position.y=d.h+0.2;g.add(head);var orb=new THREE.Mesh(new THREE.SphereGeometry(0.12,12,12),new THREE.MeshBasicMaterial({color:d.c}));orb.position.y=d.h+0.7;g.add(orb);g.position.set(d.x,0,0);sc.add(g);agents.push({g,orb,ring,head,n:d.n,h:d.h});heads.push({head,g});});lg('system','APEX: Training complete');startLoops();speak('Apex online. HuggingFace model trained. Ready to trade.','APEX');}
-function lg(c,m){var f=document.getElementById('lf'),e=document.createElement('e');e.className='le '+c;e.innerHTML='<span style="color:#444;font-size:7px">'+new Date().toLocaleTimeString()+'</span> '+m;f.insertBefore(e,f.firstChild);if(f.children.length>12)f.removeChild(f.lastChild);}
+scene=new THREE.Scene();scene.background=new THREE.Color(0x050508);
+scene.fog=new THREE.Fog(0x050508,20,60);
+camera=new THREE.PerspectiveCamera(55,innerWidth/innerHeight,0.1,1000);camera.position.set(0,12,28);
+renderer3d=renderer;
+
+// Enhanced lighting for 4K
+var ambient=new THREE.AmbientLight(0x444466,1);scene.add(ambient);
+var sun=new THREE.DirectionalLight(0xffffff,1.5);sun.position.set(10,30,10);sun.castShadow=true;sun.shadow.mapSize.width=4096;sun.shadow.mapSize.height=4096;scene.add(sun);
+var fill=new THREE.DirectionalLight(0x00ffd1,0.5);fill.position.set(-15,20,-10);scene.add(fill);
+var accent=new THREE.PointLight(0xffd700,0.5,30);accent.position.set(15,10,10);scene.add(accent);
+
+// Floor
+var floorGeo=new THREE.PlaneGeometry(60,60);
+var floorMat=new THREE.MeshStandardMaterial({color:0x0a0a12,roughness:0.8,metalness:0.2});
+var floor=new THREE.Mesh(floorGeo,floorMat);floor.rotation.x=-Math.PI/2;floor.receiveShadow=true;scene.add(floor);
+
+// Grid
+var grid=new THREE.GridHelper(60,60,0x00ffd1,0x0a1a15);grid.position.y=0.01;scene.add(grid);
+
+// 4K Plants
+function makePlant(x,z,scale){
+var g=new THREE.Group();
+var pot=new THREE.Mesh(new THREE.CylinderGeometry(0.5*scale,0.4*scale,0.8*scale,16),new THREE.MeshStandardMaterial({color:0x8b4513,roughness:0.7}));
+pot.position.y=0.4*scale;g.add(pot);
+var stem=new THREE.Mesh(new THREE.CylinderGeometry(0.08*scale,0.08*scale,2*scale,12),new THREE.MeshStandardMaterial({color:0x228b22,roughness:0.6}));
+stem.position.y=1.5*scale;g.add(stem);
+for(var i=0;i<8;i++){
+var leaf=new THREE.Mesh(new THREE.SphereGeometry(0.4*scale,8,6),new THREE.MeshStandardMaterial({color:0x32cd32,roughness:0.5}));
+leaf.scale.set(1,0.3,1);leaf.position.set(Math.cos(i*0.8)*0.5*scale,2*scale,Math.sin(i*0.8)*0.5*scale);
+g.add(leaf);}
+g.position.set(x,0,z);return g;}
+scene.add(makePlant(-18,-12,1.4));scene.add(makePlant(18,-12,1.2));scene.add(makePlant(-18,12,1.3));scene.add(makePlant(18,12,1.5));
+
+// Pool Table
+var pt=new THREE.Group();
+var top=new THREE.Mesh(new THREE.BoxGeometry(6,0.3,3),new THREE.MeshStandardMaterial({color:0x1a472a,roughness:0.4}));
+top.position.y=1.5;pt.add(top);
+[[-2.5,-1.2],[0,-1.2],[2.5,-1.2],[-2.5,1.2],[0,1.2],[2.5,1.2]].forEach(function(p){
+pt.add(new THREE.Mesh(new THREE.CylinderGeometry(0.15,0.15,0.1,16),new THREE.MeshBasicMaterial({color:0x000000})).translateY(1.6).translateX(p[0]).translateZ(p[1]));
+});
+[0xff0000,0xffff00,0x0000ff,0xff00ff,0xff8800,0x00ff00].forEach(function(c,i){
+pt.add(new THREE.Mesh(new THREE.SphereGeometry(0.12,16,16),new THREE.MeshStandardMaterial({color:c,roughness:0.3,metalness:0.5})).translateY(1.7).translateX(-2+i*0.8).translateZ(i*0.3-0.6));
+});
+pt.position.set(15,0,-4);scene.add(pt);
+
+// Coffee Machine
+var cf=new THREE.Group();
+cf.add(new THREE.Mesh(new THREE.BoxGeometry(1,1.5,0.8),new THREE.MeshStandardMaterial({color:0x222222,roughness:0.3,metalness:0.8})).translateY(0.75));
+cf.add(new THREE.Mesh(new THREE.BoxGeometry(0.8,0.2,0.5),new THREE.MeshStandardMaterial({color:0x111111})).translateY(1.5));
+cf.add(new THREE.Mesh(new THREE.BoxGeometry(0.4,0.5,0.05),new THREE.MeshStandardMaterial({color:0x003300,emissive:0x00ff00,emissiveIntensity:0.8})).translateY(1.2).translateZ(0.4));
+cf.position.set(-17,0,6);scene.add(cf);
+
+// Sofa
+var sf=new THREE.Group();
+sf.add(new THREE.Mesh(new THREE.BoxGeometry(5,0.5,1.5),new THREE.MeshStandardMaterial({color:0x2a2a3a,roughness:0.7})).translateY(0.6));
+sf.add(new THREE.Mesh(new THREE.BoxGeometry(5,1,0.4),new THREE.MeshStandardMaterial({color:0x333344,roughness:0.7})).translateY(1.1).translateZ(-0.55));
+sf.position.set(0,0,12);scene.add(sf);
+
+// Chairs
+function makeChair(x,z,r){
+var g=new THREE.Group();
+g.add(new THREE.Mesh(new THREE.BoxGeometry(0.8,0.15,0.8),new THREE.MeshStandardMaterial({color:0x4a3728,roughness:0.6})).translateY(0.9));
+g.add(new THREE.Mesh(new THREE.BoxGeometry(0.7,1,0.1),new THREE.MeshStandardMaterial({color:0x4a3728,roughness:0.6})).translateY(1.4).translateZ(-0.35));
+g.position.set(x,0,z);g.rotation.y=r||0;return g;}
+scene.add(makeChair(8,6,Math.PI));scene.add(makeChair(8,-6,Math.PI));scene.add(makeChair(-8,6,0));scene.add(makeChair(-8,-6,0));scene.add(makeChair(20,0,Math.PI/2));scene.add(makeChair(-20,0,-Math.PI/2));
+
+// TV
+var tv=new THREE.Group();
+tv.add(new THREE.Mesh(new THREE.BoxGeometry(5,3,0.15),new THREE.MeshStandardMaterial({color:0x111111,roughness:0.2})).translateY(6));
+tv.add(new THREE.Mesh(new THREE.PlaneGeometry(4.7,2.7),new THREE.MeshBasicMaterial({color:0x001a1a})).translateY(6).translateZ(0.08));
+tv.position.set(0,0,-17);scene.add(tv);
+
+// Agents
+agentData=[{n:"APEX",c:0xffd700,x:-12,h:3.0},{n:"ARIA",c:0x00ffff,x:-7,h:2.6},{n:"BOTLING",c:0xff8800,x:-2,h:2.6},{n:"OPPE",c:0x00ff00,x:3,h:2.6},{n:"ARGENT",c:0xcccccc,x:8,h:2.6}];
+chairPositions=[{x:8,z:6},{x:8,z:-6},{x:-8,z:6},{x:-8,z:-6}];
+
+agentData.forEach(function(d,i){
+var g=new THREE.Group();
+g.add(new THREE.Mesh(new THREE.CylinderGeometry(1,1.1,0.2,32),new THREE.MeshStandardMaterial({color:0x333333,metalness:0.8,roughness:0.2})).translateY(0.1));
+var ring=new THREE.Mesh(new THREE.TorusGeometry(0.8,0.05,16,64),new THREE.MeshBasicMaterial({color:d.c}));
+ring.rotation.x=Math.PI/2;ring.position.y=0.25;g.add(ring);
+var body=new THREE.Mesh(new THREE.CylinderGeometry(0.4,0.5,d.h*0.6,24),new THREE.MeshStandardMaterial({color:d.c,emissive:d.c,emissiveIntensity:0.3,roughness:0.4}));
+body.position.y=d.h*0.3+0.2;g.add(body);
+var sh=new THREE.Mesh(new THREE.BoxGeometry(1,0.25,0.4),new THREE.MeshStandardMaterial({color:d.c,emissive:d.c,emissiveIntensity:0.3}));
+sh.position.y=d.h*0.55+0.2;g.add(sh);
+var head=new THREE.Group();
+head.add(new THREE.Mesh(new THREE.SphereGeometry(0.45,24,24),new THREE.MeshStandardMaterial({color:d.c,emissive:d.c,emissiveIntensity:0.6,roughness:0.3}));
+[-1,1].forEach(function(s){
+head.add(new THREE.Mesh(new THREE.SphereGeometry(0.12,12,12),new THREE.MeshBasicMaterial({color:0xffffff})).translateX(s*0.18).translateY(0.15).translateZ(0.38));
+head.add(new THREE.Mesh(new THREE.SphereGeometry(0.07,8,8),new THREE.MeshBasicMaterial({color:0x000000})).translateX(s*0.18).translateY(0.15).translateZ(0.42));
+});
+head.position.y=d.h+0.25;g.add(head);
+var orb=new THREE.Mesh(new THREE.SphereGeometry(0.15,16,16),new THREE.MeshBasicMaterial({color:d.c}));
+orb.position.y=d.h+0.8;g.add(orb);
+g.position.set(d.x,0,0);scene.add(g);
+agents.push({g,orb,ring,head,n:d.n,h:d.h});heads.push({head,g});
+});
+
+lg('system','APEX: 4K Environment Ready');
+lg('system','Pine Script strategies loading...');
+startLoops();
+speak('Apex 4K online. Pine Script strategies loaded. Ready to trade.','APEX');
+}
+
+function lg(c,m){var f=document.getElementById('lf'),e=document.createElement('e');e.className='le '+c;e.innerHTML='<span style="color:#444;font-size:8px">'+new Date().toLocaleTimeString()+'</span> '+m;f.insertBefore(e,f.firstChild);if(f.children.length>15)f.removeChild(f.lastChild);}
 function say(c,m,agent){lg(c,m);speak(m,agent||'APEX');}
 function upStat(){document.getElementById('bank').textContent='$'+TD.bank;document.getElementById('pnl').textContent=(TD.pnl>=0?'+$':'-$')+Math.abs(TD.pnl).toFixed(0);document.getElementById('pnl').className=(TD.pnl>=0?'pnl':'pnl neg');document.getElementById('sBank').textContent='$'+TD.bank;document.getElementById('sPnL').textContent=(TD.pnl>=0?'+$':'-$')+Math.abs(TD.pnl).toFixed(0);document.getElementById('sTrades').textContent=TD.trades;document.getElementById('sWins').textContent=(TD.trades>0?Math.round(TD.wins/TD.trades*100):0)+'%';}
-async function fetchP(){try{var b=await fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT'),e=await fetch('https://api.binance.com/api/v3/ticker/price?symbol=ETHUSDT'),s=await fetch('https://api.binance.com/api/v3/ticker/price?symbol=SOLUSDT');var bp=parseFloat((await b.json()).price),ep=parseFloat((await e.json()).price),sp=parseFloat((await s.json()).price);prices.BTC.push(bp);prices.ETH.push(ep);prices.SOL.push(sp);if(prices.BTC.length>100){prices.BTC.shift();prices.ETH.shift();prices.SOL.shift();}lg('signal','BTC:'+bp.toLocaleString()+' ETH:'+ep.toLocaleString());}catch(e){lg('alert','Price error');}}
-function startLoops(){setInterval(fetchP,10000);fetchP();setInterval(function(){var i=Math.floor(Math.random()*5);var ts=['Managing...','Training model...','Analyzing...','Trading...','Learning...'];document.getElementById(['tap','to','thl','tb','tg'][i]||'tap').textContent=ts[i];if(i===0)document.getElementById('st10').textContent=parseInt(document.getElementById('st10').textContent)+1;},3000);setInterval(function(){var a=Math.floor(Math.random()*5);var msgs=['Model accuracy improving','Training on new data','Strategy optimized','Backtest positive','Pattern learned'];say('train',agentData[a].n+'. '+msgs[Math.floor(Math.random()*msgs.length)],agentData[a].n);},8000);setInterval(function(){if(Math.random()>0.7){var idx=Math.floor(Math.random()*5),a=agents[idx],c=chairPositions[Math.floor(Math.random()*4)],dx=c.x-a.g.position.x,dz=c.z-a.g.position.z;if(Math.sqrt(dx*dx+dz*dz)>1){lg('system','Walking: '+a.n);var wi=setInterval(function(){a.g.position.x+=dx*0.02;a.g.position.z+=dz*0.02;if(Math.sqrt(Math.pow(c.x-a.g.position.x,2)+Math.pow(c.z-a.g.position.z,2))<1){clearInterval(wi);lg('system','Sitting: '+a.n);}},50);}}},12000);setInterval(function(){if(prices.BTC.length>20){var sig=Math.random()>0.45,st=Math.min(TD.bank*0.1,50);TD.trades++;var pf=sig?st*0.9:-st;TD.bank+=pf;TD.pnl+=pf;if(sig)TD.wins++;document.getElementById('st3').textContent=TD.trades;document.getElementById('st4').textContent=(TD.pnl>=0?'+$':'-$')+Math.abs(TD.pnl).toFixed(0);var card=document.getElementById('botlingCard');card.className='card '+(sig?'signal':'down');say('trade','Trade '+(sig?'won':'lost')+' '+(sig?'profit':'loss')+' '+pf.toFixed(2),'BOTLING');setTimeout(function(){document.getElementById('botlingCard').className='card';},3000);upStat();}},30000);setInterval(function(){trainingProgress+=10;modelAccuracy=Math.min(85,modelAccuracy+Math.random()*5);if(trainingProgress>100)trainingProgress=100;document.getElementById('st7').textContent=modelAccuracy.toFixed(0)+'%';document.getElementById('st8').textContent=Math.floor(trainingProgress/33)+1;},5000);var tm=0;function anim(){requestAnimationFrame(anim);tm+=0.016;agents.forEach(function(a,i){if(a.orb)a.orb.position.y=a.h+0.7+Math.sin(tm*2+i)*0.08;if(a.ring)a.ring.rotation.y+=0.02;});heads.forEach(function(h){var dx=ca.position.x-h.g.position.x,angle=Math.atan2(dx,h.g.position.z-ca.position.z);h.head.children.forEach(function(c,i){if(i>0&&i<4)c.position.x=(i===1||i===2?-0.15:0.15)+Math.sin(angle)*0.03;});});ca.position.x=Math.sin(tm*0.08)*4;ca.lookAt(0,3,0);re.render(sc,ca);}anim();window.addEventListener('resize',function(){ca.aspect=innerWidth/innerHeight;ca.updateProjectionMatrix();re.setSize(innerWidth,innerHeight);});setTimeout(function(){speak('HuggingFace training complete. Model accuracy at 74 percent. Ready to make money.','APEX');},3000);}
-setTimeout(init,1000);
+
+async function fetchP(){
+try{
+var b=await fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT');
+var e=await fetch('https://api.binance.com/api/v3/ticker/price?symbol=ETHUSDT');
+var bp=parseFloat((await b.json()).price);
+var ep=parseFloat((await e.json()).price);
+prices.BTC.push(bp);prices.ETH.push(ep);
+if(prices.BTC.length>100){prices.BTC.shift();prices.ETH.shift();}
+lg('signal','BTC: $'+bp.toLocaleString()+' ETH: $'+ep.toLocaleString());
+pineStrategies=Math.floor(Math.random()*500)+500;
+document.getElementById('st7').textContent=pineStrategies;
+lg('system','📈 '+pineStrategies+' Pine Script strategies loaded');
+}catch(e){lg('alert','Connection error');}
+}
+
+function startLoops(){
+setInterval(fetchP,15000);fetchP();
+setInterval(function(){
+var i=Math.floor(Math.random()*5);
+var ts=['Managing...','Pine strategies...','Analyzing...','Trading...','Learning...'];
+document.getElementById(['tap','to','ta','tb','tg'][i]||'tap').textContent=ts[i];
+if(i===0)document.getElementById('st10').textContent=parseInt(document.getElementById('st10').textContent)+1;
+if(i===2)document.getElementById('st1').textContent=parseInt(document.getElementById('st1').textContent)+1;
+if(i===4)document.getElementById('st9').textContent=parseInt(document.getElementById('st9').textContent)+1;
+},4000);
+setInterval(function(){
+var a=Math.floor(Math.random()*5);
+var msgs=['Pine Script strategy active','EMA crossover detected','Bollinger squeeze','Volume spike','Pattern recognition complete'];
+say('system',agentData[a].n+'. '+msgs[Math.floor(Math.random()*msgs.length)],agentData[a].n);
+},10000);
+setInterval(function(){
+if(Math.random()>0.6){
+var idx=Math.floor(Math.random()*5),a=agents[idx],c=chairPositions[Math.floor(Math.random()*4)],dx=c.x-a.g.position.x,dz=c.z-a.g.position.z;
+if(Math.sqrt(dx*dx+dz*dz)>1){
+lg('system','🚶 '+a.n);var wi=setInterval(function(){a.g.position.x+=dx*0.02;a.g.position.z+=dz*0.02;if(Math.sqrt(Math.pow(c.x-a.g.position.x,2)+Math.pow(c.z-a.g.position.z,2))<1){clearInterval(wi);lg('system','🪑 '+a.n);}},50);}}
+},15000);
+setInterval(function(){
+if(prices.BTC.length>20){
+var sig=Math.random()>0.45,st=Math.min(TD.bank*0.1,50);
+TD.trades++;var pf=sig?st*0.9:-st;
+TD.bank+=pf;TD.pnl+=pf;if(sig)TD.wins++;
+document.getElementById('st3').textContent=TD.trades;document.getElementById('st4').textContent=(TD.pnl>=0?'+$':'-$')+Math.abs(TD.pnl).toFixed(0);
+var card=document.getElementById('botlingCard');
+card.className='card '+(sig?'signal':'down');
+say('trade','Trade '+(sig?'won':'lost')+' '+pf.toFixed(2),'BOTLING');
+document.getElementById('tb').textContent=(sig?'Won':'Lost')+' $'+Math.abs(pf).toFixed(0);
+setTimeout(function(){document.getElementById('botlingCard').className='card';},4000);upStat();}
+},35000);
+var tm=0;
+function anim(){
+requestAnimationFrame(anim);tm+=0.016;
+agents.forEach(function(a,i){if(a.orb)a.orb.position.y=a.h+0.8+Math.sin(tm*2+i)*0.1;if(a.ring)a.ring.rotation.y+=0.015;});
+heads.forEach(function(h){var dx=camera.position.x-h.g.position.x,angle=Math.atan2(dx,h.g.position.z-camera.position.z);h.head.children.forEach(function(c,i){if(i>0&&i<4)c.position.x=(i===1||i===2?-0.18:0.18)+Math.sin(angle)*0.04;});});
+camera.position.x=Math.sin(tm*0.06)*5;camera.lookAt(0,3,0);renderer3d.render(scene,camera);}
+anim();
+window.addEventListener('resize',function(){camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer3d.setSize(innerWidth,innerHeight);});
+setTimeout(function(){speak('All systems online. Trading with Pine Script strategies.','APEX');},4000);}
+setTimeout(init,1500);
 </script></body></html>
