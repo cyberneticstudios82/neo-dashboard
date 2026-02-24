@@ -92,9 +92,24 @@ class BackgroundTrader {
 
     async fetchSignals() {
         // Fetch real signals from Bankr Signals API
-        const data = await this.fetchJSON('https://bankrsignals.com/api/signals?limit=50');
-        const signals = Array.isArray(data) ? data : [];
-        return signals.filter(s => s.status === 'open' || !s.exitPrice);
+        const data = await this.fetchJSON('https://bankrsignals.com/api/signals?limit=20');
+        
+        // Handle API response format: {success: true, data: {signals: [...]}}
+        let signals = [];
+        if (data && data.data && Array.isArray(data.data.signals)) {
+            signals = data.data.signals;
+        } else if (Array.isArray(data)) {
+            signals = data;
+        }
+        
+        // If no open signals, use recent closed ones for demo
+        const openSignals = signals.filter(s => s.status === 'open' || !s.exitPrice);
+        if (openSignals.length > 0) {
+            return openSignals;
+        }
+        
+        // Fallback: use recent signals for paper trading
+        return signals.slice(0, 5);
     }
 
     async fetchPrice(symbol = 'BTCUSDT') {
