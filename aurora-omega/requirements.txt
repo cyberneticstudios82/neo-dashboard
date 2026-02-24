@@ -1,0 +1,16 @@
+freqtrade
+backtrader
+vectorbt
+stable-baselines3
+ray
+torch
+scikit-learn
+ccxt
+flask
+requests
+pandas
+numpy
+ta
+pyyaml
+optuna
+fastapi
