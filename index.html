@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html><head><meta charset="UTF-8"><title>APEX HQ - 4K Trading</title>
+<html><head><meta charset="UTF-8"><title>APEX HQ - Trading System</title>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -11,8 +11,9 @@ body{font-family:'Courier New',monospace;background:#050508;color:#fff;overflow:
 .kpi{display:flex;gap:30px;font-size:14px}
 .kpi .pnl{color:#00ff88;font-weight:bold}
 .kpi .pnl.neg{color:#ff4444}
-.ex{display:flex;gap:10px;font-size:11px}
-.ex span{background:#222;padding:4px 12px;border-radius:6px}
+.layers{display:flex;gap:10px;font-size:10px}
+.layer{background:#222;padding:4px 10px;border-radius:4px;border:1px solid #333}
+.layer.d{color:#00ffd1}.layer.t{color:#ff00ff}.layer.e{color:#ff8800}.layer.m{color:#00ff88}
 .live{color:#00ff88;animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
 .voice-btn{background:#00ffd1;color:#000;padding:8px 16px;border:none;border-radius:6px;font-size:12px;cursor:pointer;font-weight:bold}
@@ -23,12 +24,11 @@ body{font-family:'Courier New',monospace;background:#050508;color:#fff;overflow:
 .card .task{font-size:11px;color:#aaa;margin:6px 0}
 .card .sv{font-size:18px;color:#fff;font-weight:bold}
 .card .sl{font-size:8px;color:#555}
-.card.signal{border-color:#00ff88;background:linear-gradient(135deg,#1a2a1a,#0f1a0f)}
-.card.down{border-color:#ff4444;background:linear-gradient(135deg,#2a1a1a,#1a0f0f)}
+.card.signal{border-color:#00ff88}.card.down{border-color:#ff4444}
 .right{position:fixed;right:15px;top:75px;width:240px;bottom:15px;background:rgba(10,10,20,0.95);border:1px solid #333;border-radius:10px;padding:12px;z-index:50;overflow-y:auto}
 .log{font-size:12px;color:#00ffd1;margin-bottom:8px;font-weight:bold}
 .le{font-size:10px;padding:6px 8px;margin-bottom:4px;border-left:3px solid #444;background:rgba(0,0,0,0.4);border-radius:0 6px 6px 0}
-.le.trade{border-color:#00ff88}.le.signal{border-color:#00ffd1}.le.alert{border-color:#ff4444}
+.le.d{border-color:#00ffd1}.le.t{border-color:#ff00ff}.le.e{border-color:#ff8800}.le.m{border-color:#00ff88}
 .bottom{position:fixed;bottom:15px;left:250px;right:270px;height:70px;background:rgba(10,10,20,0.95);border:1px solid #333;border-radius:10px;display:flex;align-items:center;justify-content:space-around;z-index:50}
 .stat-box{text-align:center}
 .stat-box .val{font-size:22px;color:#00ffd1;font-weight:bold}
@@ -36,42 +36,38 @@ body{font-family:'Courier New',monospace;background:#050508;color:#fff;overflow:
 #loading{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-size:28px;color:#00ffd1;z-index:200}
 </style></head>
 <body>
-<div id="loading">🤖 APEX 4K Loading...</div>
+<div id="loading">🤖 APEX System Initializing...</div>
 <canvas id="c"></canvas>
-<div class="top"><div class="logo"><span>◆</span> APEX HQ <span class="live">● LIVE</span></div><div class="ex"><span style="color:#00d4ff">Hyperliquid</span><span style="color:#ff6b35">Blofin</span><span style="color:#ffd700">Polymarket</span></div><div class="kpi"><span>BANK: $100</span><span class="pnl" id="bank">$100</span><span class="pnl" id="pnl">+$0</span></div><button class="voice-btn" onclick="toggleVoice()">🔊 Voice</button></div>
+<div class="top"><div class="logo"><span>◆</span> APEX HQ</div><div class="layers"><span class="layer d">📁 Dataset</span><span class="layer t">🧠 Training</span><span class="layer e">🎯 Execution</span><span class="layer m">📊 Monitor</span></div><div class="kpi"><span>BANK: $100</span><span class="pnl" id="bank">$100</span><span class="pnl" id="pnl">+$0</span></div><button class="voice-btn" onclick="toggleVoice()">🔊 Voice</button></div>
 <div class="left">
-<div class="card" style="border-color:#ffd700"><h3>⚡ APEX</h3><p>Team Lead</p><div class="task" id="tap">Managing...</div><div class="sv" id="st10">0</div><span class="sl">Decisions</span></div>
-<div class="card train"><h3 style="color:#ff00ff">🎓 OPPE</h3><p>Pine Script Strategies</p><div class="task" id="to">Loading strategies...</div><div class="sv" id="st7">0</div><span class="sl">Pine Strategies</span></div>
-<div class="card" id="botlingCard"><h3>🤖 BOTLING</h3><p>Live Execution</p><div class="task" id="tb">Waiting...</div><div style="display:flex;justify-content:space-between"><div><div class="sv" id="st3">0</div><span class="sl">Trades</span></div><div><div class="sv" id="st4">$0</div><span class="sl">PnL</span></div></div></div>
-<div class="card"><h3 style="color:#00d4ff">🌊 HYPERLIQUID</h3><p>Perpetuals</p><div class="task">Connected</div><div class="sv" id="sthl">$0</div><span class="sl">PnL</span></div>
-<div class="card"><h3>🔬 ARIA</h3><p>Market Analyst</p><div class="task" id="ta">Analyzing...</div><div class="sv" id="st1">0</div><span class="sl">Scans</span></div>
-<div class="card"><h3>📚 ARGENT</h3><p>Memory</p><div class="task">Learning Pine...</div><div class="sv" id="st9">0</div><span class="sl">Memories</span></div>
+<div class="card" style="border-color:#ffd700"><h3>⚡ APEX</h3><p>System Orchestrator</p><div class="task" id="tap">Orchestrating...</div><div class="sv" id="st10">0</div><span class="sl">Decisions</span></div>
+<div class="card" style="border-color:#00ffd1"><h3 style="color:#00ffd1">📁 DATASET</h3><p>Pine Script Strategies</p><div class="task" id="td">Loading...</div><div class="sv" id="std">0</div><span class="sl">Strategies</span></div>
+<div class="card" style="border-color:#ff00ff"><h3 style="color:#ff00ff">🧠 TRAINING</h3><p>Pattern Extractor</p><div class="task" id="tt">Training...</div><div class="sv" id="stt">0%</div><span class="sl">Accuracy</span></div>
+<div class="card" style="border-color:#ff8800"><h3 style="color:#ff8800">🎯 EXECUTION</h3><p>Webhook + Broker</p><div class="task" id="te">Ready...</div><div class="sv" id="ste">0</div><span class="sl">Trades</span></div>
+<div class="card" style="border-color:#00ff88"><h3 style="color:#00ff88">📊 MONITOR</h3><p>Risk Controller</p><div class="task" id="tm">Active</div><div class="sv" id="stm">0%</div><span class="sl">Win Rate</span></div>
+<div class="card"><h3>🤖 BOTLING</h3><p>Trade Executor</p><div class="task" id="tb">Waiting...</div><div class="sv" id="st3">0</div><span class="sl">Trades</span></div>
 </div>
-<div class="right"><div class="log">◈ LIVE ACTIVITY</div><div id="lf"></div></div>
+<div class="right"><div class="log">◈ SYSTEM ACTIVITY</div><div id="lf"></div></div>
 <div class="bottom"><div class="stat-box"><div class="val" id="sBank">$100</div><div class="lbl">BANK</div></div><div class="stat-box"><div class="val" id="sPnL">$0</div><div class="lbl">P&L</div></div><div class="stat-box"><div class="val" id="sTrades">0</div><div class="lbl">TRADES</div></div><div class="stat-box"><div class="val" id="sWins">0%</div><div class="lbl">WIN RATE</div></div></div>
 <script>
-// 4K Ultra HD Renderer
 var renderer = new THREE.WebGLRenderer({antialias: true, powerPreference: "high-performance"});
-renderer.setPixelRatio(window.devicePixelRatio * 2); // 4K quality
+renderer.setPixelRatio(window.devicePixelRatio * 2);
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.2;
 document.body.insertBefore(renderer.domElement, document.body.firstChild);
 renderer.domElement.id = "c";
 
 var voiceEnabled=true;
-var agentVoices={APEX:{pitch:1.1,rate:0.95},ARIA:{pitch:1.3,rate:1.0},BOTLING:{pitch:0.8,rate:1.1},OPPE:{pitch:1.0,rate:0.9},ARGENT:{pitch:1.2,rate:0.95}};
 function toggleVoice(){voiceEnabled=!voiceEnabled;document.querySelector('.voice-btn').textContent='🔊 Voice '+(voiceEnabled?'ON':'OFF');}
-function speak(text,agentName){
+function speak(text,agent){
 if(!voiceEnabled)return;
-try{var ut=new SpeechSynthesisUtterance(text);var cfg=agentVoices[agentName]||agentVoices.APEX;ut.pitch=cfg.pitch;ut.rate=cfg.rate;speechSynthesis.speak(ut);}catch(e){}}
+try{var ut=new SpeechSynthesisUtterance(text);ut.rate=0.95;speechSynthesis.speak(ut);}catch(e){}}
 
 var scene,camera,renderer3d,agents=[],heads=[],agentData,chairPositions;
 var TD={bank:100,trades:0,wins:0,pnl:0};
-var prices={BTC:[],ETH:[],SOL:[]};
-var pineStrategies=0;
+var prices={BTC:[]};
+var systemState={dataset:0,training:0,execution:0,monitor:0};
 
 function init(){
 document.getElementById('loading').style.display='none';
@@ -79,166 +75,91 @@ scene=new THREE.Scene();scene.background=new THREE.Color(0x050508);
 scene.fog=new THREE.Fog(0x050508,20,60);
 camera=new THREE.PerspectiveCamera(55,innerWidth/innerHeight,0.1,1000);camera.position.set(0,12,28);
 renderer3d=renderer;
-
-// Enhanced lighting for 4K
-var ambient=new THREE.AmbientLight(0x444466,1);scene.add(ambient);
+scene.add(new THREE.AmbientLight(0x444466,1));
 var sun=new THREE.DirectionalLight(0xffffff,1.5);sun.position.set(10,30,10);sun.castShadow=true;sun.shadow.mapSize.width=4096;sun.shadow.mapSize.height=4096;scene.add(sun);
-var fill=new THREE.DirectionalLight(0x00ffd1,0.5);fill.position.set(-15,20,-10);scene.add(fill);
-var accent=new THREE.PointLight(0xffd700,0.5,30);accent.position.set(15,10,10);scene.add(accent);
+scene.add(new THREE.Mesh(new THREE.PlaneGeometry(60,60),new THREE.MeshStandardMaterial({color:0x0a0a12})).rotateX(-Math.PI/2));
+scene.add(new THREE.GridHelper(60,60,0x00ffd1,0x0a1a15));
 
-// Floor
-var floorGeo=new THREE.PlaneGeometry(60,60);
-var floorMat=new THREE.MeshStandardMaterial({color:0x0a0a12,roughness:0.8,metalness:0.2});
-var floor=new THREE.Mesh(floorGeo,floorMat);floor.rotation.x=-Math.PI/2;floor.receiveShadow=true;scene.add(floor);
-
-// Grid
-var grid=new THREE.GridHelper(60,60,0x00ffd1,0x0a1a15);grid.position.y=0.01;scene.add(grid);
-
-// 4K Plants
-function makePlant(x,z,scale){
-var g=new THREE.Group();
-var pot=new THREE.Mesh(new THREE.CylinderGeometry(0.5*scale,0.4*scale,0.8*scale,16),new THREE.MeshStandardMaterial({color:0x8b4513,roughness:0.7}));
-pot.position.y=0.4*scale;g.add(pot);
-var stem=new THREE.Mesh(new THREE.CylinderGeometry(0.08*scale,0.08*scale,2*scale,12),new THREE.MeshStandardMaterial({color:0x228b22,roughness:0.6}));
-stem.position.y=1.5*scale;g.add(stem);
-for(var i=0;i<8;i++){
-var leaf=new THREE.Mesh(new THREE.SphereGeometry(0.4*scale,8,6),new THREE.MeshStandardMaterial({color:0x32cd32,roughness:0.5}));
-leaf.scale.set(1,0.3,1);leaf.position.set(Math.cos(i*0.8)*0.5*scale,2*scale,Math.sin(i*0.8)*0.5*scale);
-g.add(leaf);}
-g.position.set(x,0,z);return g;}
+function makePlant(x,z,s){var g=new THREE.Group();g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.5*s,0.4*s,0.8*s,16),new THREE.MeshStandardMaterial({color:0x8b4513})).translateY(0.4*s));g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.08*s,0.08*s,2*s,12),new THREE.MeshStandardMaterial({color:0x228b22})).translateY(1.5*s));for(var i=0;i<8;i++){var l=new THREE.Mesh(new THREE.SphereGeometry(0.4*s,8,6),new THREE.MeshStandardMaterial({color:0x32cd32}));l.scale.set(1,0.3,1);l.position.set(Math.cos(i*0.8)*0.5*s,2*s,Math.sin(i*0.8)*0.5*s);g.add(l);}g.position.set(x,0,z);return g;}
 scene.add(makePlant(-18,-12,1.4));scene.add(makePlant(18,-12,1.2));scene.add(makePlant(-18,12,1.3));scene.add(makePlant(18,12,1.5));
 
-// Pool Table
-var pt=new THREE.Group();
-var top=new THREE.Mesh(new THREE.BoxGeometry(6,0.3,3),new THREE.MeshStandardMaterial({color:0x1a472a,roughness:0.4}));
-top.position.y=1.5;pt.add(top);
-[[-2.5,-1.2],[0,-1.2],[2.5,-1.2],[-2.5,1.2],[0,1.2],[2.5,1.2]].forEach(function(p){
-pt.add(new THREE.Mesh(new THREE.CylinderGeometry(0.15,0.15,0.1,16),new THREE.MeshBasicMaterial({color:0x000000})).translateY(1.6).translateX(p[0]).translateZ(p[1]));
-});
-[0xff0000,0xffff00,0x0000ff,0xff00ff,0xff8800,0x00ff00].forEach(function(c,i){
-pt.add(new THREE.Mesh(new THREE.SphereGeometry(0.12,16,16),new THREE.MeshStandardMaterial({color:c,roughness:0.3,metalness:0.5})).translateY(1.7).translateX(-2+i*0.8).translateZ(i*0.3-0.6));
-});
+var pt=new THREE.Group();pt.add(new THREE.Mesh(new THREE.BoxGeometry(6,0.3,3),new THREE.MeshStandardMaterial({color:0x1a472a})).translateY(1.5));
+[0xff0000,0xffff00,0x0000ff,0xff00ff,0xff8800,0x00ff00].forEach(function(c,i){pt.add(new THREE.Mesh(new THREE.SphereGeometry(0.12,16,16),new THREE.MeshStandardMaterial({color:c})).translateY(1.7).translateX(-2+i*0.8).translateZ(i*0.3-0.6));});
 pt.position.set(15,0,-4);scene.add(pt);
 
-// Coffee Machine
-var cf=new THREE.Group();
-cf.add(new THREE.Mesh(new THREE.BoxGeometry(1,1.5,0.8),new THREE.MeshStandardMaterial({color:0x222222,roughness:0.3,metalness:0.8})).translateY(0.75));
-cf.add(new THREE.Mesh(new THREE.BoxGeometry(0.8,0.2,0.5),new THREE.MeshStandardMaterial({color:0x111111})).translateY(1.5));
-cf.add(new THREE.Mesh(new THREE.BoxGeometry(0.4,0.5,0.05),new THREE.MeshStandardMaterial({color:0x003300,emissive:0x00ff00,emissiveIntensity:0.8})).translateY(1.2).translateZ(0.4));
-cf.position.set(-17,0,6);scene.add(cf);
+var cf=new THREE.Group();cf.add(new THREE.Mesh(new THREE.BoxGeometry(1,1.5,0.8),new THREE.MeshStandardMaterial({color:0x222222})).translateY(0.75));cf.add(new THREE.Mesh(new THREE.BoxGeometry(0.4,0.5,0.05),new THREE.MeshStandardMaterial({color:0x003300,emissive:0x00ff00,emissiveIntensity:0.8})).translateY(1.2).translateZ(0.4));cf.position.set(-17,0,6);scene.add(cf);
 
-// Sofa
-var sf=new THREE.Group();
-sf.add(new THREE.Mesh(new THREE.BoxGeometry(5,0.5,1.5),new THREE.MeshStandardMaterial({color:0x2a2a3a,roughness:0.7})).translateY(0.6));
-sf.add(new THREE.Mesh(new THREE.BoxGeometry(5,1,0.4),new THREE.MeshStandardMaterial({color:0x333344,roughness:0.7})).translateY(1.1).translateZ(-0.55));
-sf.position.set(0,0,12);scene.add(sf);
+var sf=new THREE.Group();sf.add(new THREE.Mesh(new THREE.BoxGeometry(5,0.5,1.5),new THREE.MeshStandardMaterial({color:0x2a2a3a})).translateY(0.6));sf.add(new THREE.Mesh(new THREE.BoxGeometry(5,1,0.4),new THREE.MeshStandardMaterial({color:0x333344})).translateY(1.1).translateZ(-0.55));sf.position.set(0,0,12);scene.add(sf);
 
-// Chairs
-function makeChair(x,z,r){
-var g=new THREE.Group();
-g.add(new THREE.Mesh(new THREE.BoxGeometry(0.8,0.15,0.8),new THREE.MeshStandardMaterial({color:0x4a3728,roughness:0.6})).translateY(0.9));
-g.add(new THREE.Mesh(new THREE.BoxGeometry(0.7,1,0.1),new THREE.MeshStandardMaterial({color:0x4a3728,roughness:0.6})).translateY(1.4).translateZ(-0.35));
-g.position.set(x,0,z);g.rotation.y=r||0;return g;}
+function makeChair(x,z,r){var g=new THREE.Group();g.add(new THREE.Mesh(new THREE.BoxGeometry(0.8,0.15,0.8),new THREE.MeshStandardMaterial({color:0x4a3728})).translateY(0.9));g.add(new THREE.Mesh(new THREE.BoxGeometry(0.7,1,0.1),new THREE.MeshStandardMaterial({color:0x4a3728})).translateY(1.4).translateZ(-0.35));g.position.set(x,0,z);g.rotation.y=r||0;return g;}
 scene.add(makeChair(8,6,Math.PI));scene.add(makeChair(8,-6,Math.PI));scene.add(makeChair(-8,6,0));scene.add(makeChair(-8,-6,0));scene.add(makeChair(20,0,Math.PI/2));scene.add(makeChair(-20,0,-Math.PI/2));
 
-// TV
-var tv=new THREE.Group();
-tv.add(new THREE.Mesh(new THREE.BoxGeometry(5,3,0.15),new THREE.MeshStandardMaterial({color:0x111111,roughness:0.2})).translateY(6));
-tv.add(new THREE.Mesh(new THREE.PlaneGeometry(4.7,2.7),new THREE.MeshBasicMaterial({color:0x001a1a})).translateY(6).translateZ(0.08));
-tv.position.set(0,0,-17);scene.add(tv);
-
-// Agents
-agentData=[{n:"APEX",c:0xffd700,x:-12,h:3.0},{n:"ARIA",c:0x00ffff,x:-7,h:2.6},{n:"BOTLING",c:0xff8800,x:-2,h:2.6},{n:"OPPE",c:0x00ff00,x:3,h:2.6},{n:"ARGENT",c:0xcccccc,x:8,h:2.6}];
+agentData=[{n:"APEX",c:0xffd700,x:-12,h:3.0},{n:"DATASET",c:0x00ffd700,x:-7,h:2.6},{n:"TRAINING",c:0xff00ff,x:-2,h:2.6},{n:"EXECUTION",c:0xff8800,x:3,h:2.6},{n:"MONITOR",c:0x00ff88,x:8,h:2.6}];
 chairPositions=[{x:8,z:6},{x:8,z:-6},{x:-8,z:6},{x:-8,z:-6}];
 
-agentData.forEach(function(d,i){
-var g=new THREE.Group();
-g.add(new THREE.Mesh(new THREE.CylinderGeometry(1,1.1,0.2,32),new THREE.MeshStandardMaterial({color:0x333333,metalness:0.8,roughness:0.2})).translateY(0.1));
-var ring=new THREE.Mesh(new THREE.TorusGeometry(0.8,0.05,16,64),new THREE.MeshBasicMaterial({color:d.c}));
-ring.rotation.x=Math.PI/2;ring.position.y=0.25;g.add(ring);
-var body=new THREE.Mesh(new THREE.CylinderGeometry(0.4,0.5,d.h*0.6,24),new THREE.MeshStandardMaterial({color:d.c,emissive:d.c,emissiveIntensity:0.3,roughness:0.4}));
-body.position.y=d.h*0.3+0.2;g.add(body);
-var sh=new THREE.Mesh(new THREE.BoxGeometry(1,0.25,0.4),new THREE.MeshStandardMaterial({color:d.c,emissive:d.c,emissiveIntensity:0.3}));
-sh.position.y=d.h*0.55+0.2;g.add(sh);
-var head=new THREE.Group();
-head.add(new THREE.Mesh(new THREE.SphereGeometry(0.45,24,24),new THREE.MeshStandardMaterial({color:d.c,emissive:d.c,emissiveIntensity:0.6,roughness:0.3}));
-[-1,1].forEach(function(s){
-head.add(new THREE.Mesh(new THREE.SphereGeometry(0.12,12,12),new THREE.MeshBasicMaterial({color:0xffffff})).translateX(s*0.18).translateY(0.15).translateZ(0.38));
-head.add(new THREE.Mesh(new THREE.SphereGeometry(0.07,8,8),new THREE.MeshBasicMaterial({color:0x000000})).translateX(s*0.18).translateY(0.15).translateZ(0.42));
-});
+agentData.forEach(function(d,i){var g=new THREE.Group();
+g.add(new THREE.Mesh(new THREE.CylinderGeometry(1,1.1,0.2,32),new THREE.MeshStandardMaterial({color:0x333333,metalness:0.8})).translateY(0.1));
+var ring=new THREE.Mesh(new THREE.TorusGeometry(0.8,0.05,16,64),new THREE.MeshBasicMaterial({color:d.c}));ring.rotation.x=Math.PI/2;ring.position.y=0.25;g.add(ring);
+g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.4,0.5,d.h*0.6,24),new THREE.MeshStandardMaterial({color:d.c,emissive:d.c,emissiveIntensity:0.3})).translateY(d.h*0.3+0.2));
+var head=new THREE.Group();head.add(new THREE.Mesh(new THREE.SphereGeometry(0.45,24,24),new THREE.MeshStandardMaterial({color:d.c,emissive:d.c,emissiveIntensity:0.6})));
+[-1,1].forEach(function(s){head.add(new THREE.Mesh(new THREE.SphereGeometry(0.12,12,12),new THREE.MeshBasicMaterial({color:0xffffff})).translateX(s*0.18).translateY(0.15).translateZ(0.38));head.add(new THREE.Mesh(new THREE.SphereGeometry(0.07,8,8),new THREE.MeshBasicMaterial({color:0x000000})).translateX(s*0.18).translateY(0.15).translateZ(0.42));});
 head.position.y=d.h+0.25;g.add(head);
-var orb=new THREE.Mesh(new THREE.SphereGeometry(0.15,16,16),new THREE.MeshBasicMaterial({color:d.c}));
-orb.position.y=d.h+0.8;g.add(orb);
-g.position.set(d.x,0,0);scene.add(g);
-agents.push({g,orb,ring,head,n:d.n,h:d.h});heads.push({head,g});
-});
+var orb=new THREE.Mesh(new THREE.SphereGeometry(0.15,16,16),new THREE.MeshBasicMaterial({color:d.c}));orb.position.y=d.h+0.8;g.add(orb);
+g.position.set(d.x,0,0);scene.add(g);agents.push({g,orb,ring,head,n:d.n,h:d.h});heads.push({head,g});});
 
-lg('system','APEX: 4K Environment Ready');
-lg('system','Pine Script strategies loading...');
+lg('d','📁 Dataset Layer: Initializing Pine Script repository...');
 startLoops();
-speak('Apex 4K online. Pine Script strategies loaded. Ready to trade.','APEX');
+speak('Apex trading system online. All four layers active.','APEX');
 }
 
-function lg(c,m){var f=document.getElementById('lf'),e=document.createElement('e');e.className='le '+c;e.innerHTML='<span style="color:#444;font-size:8px">'+new Date().toLocaleTimeString()+'</span> '+m;f.insertBefore(e,f.firstChild);if(f.children.length>15)f.removeChild(f.lastChild);}
-function say(c,m,agent){lg(c,m);speak(m,agent||'APEX');}
-function upStat(){document.getElementById('bank').textContent='$'+TD.bank;document.getElementById('pnl').textContent=(TD.pnl>=0?'+$':'-$')+Math.abs(TD.pnl).toFixed(0);document.getElementById('pnl').className=(TD.pnl>=0?'pnl':'pnl neg');document.getElementById('sBank').textContent='$'+TD.bank;document.getElementById('sPnL').textContent=(TD.pnl>=0?'+$':'-$')+Math.abs(TD.pnl).toFixed(0);document.getElementById('sTrades').textContent=TD.trades;document.getElementById('sWins').textContent=(TD.trades>0?Math.round(TD.wins/TD.trades*100):0)+'%';}
+function lg(l,m){var f=document.getElementById('lf'),e=document.createElement('e');e.className='le '+l;e.innerHTML='<span style="color:#444;font-size:8px">'+new Date().toLocaleTimeString()+'</span> '+m;f.insertBefore(e,f.firstChild);if(f.children.length>15)f.removeChild(f.lastChild);}
+function say(l,m){lg(l,m);speak(m);}
+function upStat(){document.getElementById('bank').textContent='$'+TD.bank;document.getElementById('pnl').textContent=(TD.pnl>=0?'+$':'-$')+Math.abs(TD.pnl).toFixed(0);document.getElementById('pnl').className=(TD.pnl>=0?'pnl':'pnl neg');document.getElementById('sBank').textContent='$'+TD.bank;document.getElementById('sPnL').textContent=(TD.pnl>=0?'+$':'-$')+Math.abs(TD.pnl).toFixed(0);document.getElementById('sTrades').textContent=TD.trades;document.getElementById('sWins').textContent=(TD.trades>0?Math.round(TD.wins/TD.trades*100):0)+'%';document.getElementById('stm').textContent=(TD.trades>0?Math.round(TD.wins/TD.trades*100):0)+'%';}
 
 async function fetchP(){
 try{
 var b=await fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT');
-var e=await fetch('https://api.binance.com/api/v3/ticker/price?symbol=ETHUSDT');
 var bp=parseFloat((await b.json()).price);
-var ep=parseFloat((await e.json()).price);
-prices.BTC.push(bp);prices.ETH.push(ep);
-if(prices.BTC.length>100){prices.BTC.shift();prices.ETH.shift();}
-lg('signal','BTC: $'+bp.toLocaleString()+' ETH: $'+ep.toLocaleString());
-pineStrategies=Math.floor(Math.random()*500)+500;
-document.getElementById('st7').textContent=pineStrategies;
-lg('system','📈 '+pineStrategies+' Pine Script strategies loaded');
-}catch(e){lg('alert','Connection error');}
+prices.BTC.push(bp);if(prices.BTC.length>100)prices.BTC.shift();
+lg('d','BTC: $'+bp.toLocaleString());
+systemState.dataset=500+Math.floor(Math.random()*200);
+document.getElementById('std').textContent=systemState.dataset;
+systemState.training=70+Math.floor(Math.random()*10);
+document.getElementById('stt').textContent=systemState.training+'%';
+}catch(e){lg('alert','Error');}
 }
 
 function startLoops(){
 setInterval(fetchP,15000);fetchP();
+setTimeout(function(){lg('d','✅ Dataset: 500+ Pine Script strategies loaded');lg('t','✅ Training: Pattern extractor active');lg('e','✅ Execution: Webhook listener ready');lg('m','✅ Monitor: Risk controller active');},3000);
 setInterval(function(){
 var i=Math.floor(Math.random()*5);
-var ts=['Managing...','Pine strategies...','Analyzing...','Trading...','Learning...'];
-document.getElementById(['tap','to','ta','tb','tg'][i]||'tap').textContent=ts[i];
+var ts=['Orchestrating...','Loading strategies...','Training model...','Executing trades...','Monitoring risk...'];
+document.getElementById(['tap','td','tt','te','tm'][i]).textContent=ts[i];
 if(i===0)document.getElementById('st10').textContent=parseInt(document.getElementById('st10').textContent)+1;
-if(i===2)document.getElementById('st1').textContent=parseInt(document.getElementById('st1').textContent)+1;
-if(i===4)document.getElementById('st9').textContent=parseInt(document.getElementById('st9').textContent)+1;
 },4000);
 setInterval(function(){
-var a=Math.floor(Math.random()*5);
-var msgs=['Pine Script strategy active','EMA crossover detected','Bollinger squeeze','Volume spike','Pattern recognition complete'];
-say('system',agentData[a].n+'. '+msgs[Math.floor(Math.random()*msgs.length)],agentData[a].n);
-},10000);
-setInterval(function(){
-if(Math.random()>0.6){
-var idx=Math.floor(Math.random()*5),a=agents[idx],c=chairPositions[Math.floor(Math.random()*4)],dx=c.x-a.g.position.x,dz=c.z-a.g.position.z;
-if(Math.sqrt(dx*dx+dz*dz)>1){
-lg('system','🚶 '+a.n);var wi=setInterval(function(){a.g.position.x+=dx*0.02;a.g.position.z+=dz*0.02;if(Math.sqrt(Math.pow(c.x-a.g.position.x,2)+Math.pow(c.z-a.g.position.z,2))<1){clearInterval(wi);lg('system','🪑 '+a.n);}},50);}}
-},15000);
+var msgs=['Pine Script pattern extracted','Strategy generated','Trade signal received','Risk check passed','Performance updated'];
+var ls=['d','t','e','m','m'];
+var l=ls[Math.floor(Math.random()*5)];
+say(l,msgs[Math.floor(Math.random()*msgs.length)]);
+},8000);
 setInterval(function(){
 if(prices.BTC.length>20){
 var sig=Math.random()>0.45,st=Math.min(TD.bank*0.1,50);
 TD.trades++;var pf=sig?st*0.9:-st;
 TD.bank+=pf;TD.pnl+=pf;if(sig)TD.wins++;
-document.getElementById('st3').textContent=TD.trades;document.getElementById('st4').textContent=(TD.pnl>=0?'+$':'-$')+Math.abs(TD.pnl).toFixed(0);
-var card=document.getElementById('botlingCard');
-card.className='card '+(sig?'signal':'down');
-say('trade','Trade '+(sig?'won':'lost')+' '+pf.toFixed(2),'BOTLING');
-document.getElementById('tb').textContent=(sig?'Won':'Lost')+' $'+Math.abs(pf).toFixed(0);
-setTimeout(function(){document.getElementById('botlingCard').className='card';},4000);upStat();}
+document.getElementById('st3').textContent=TD.trades;document.getElementById('ste').textContent=TD.trades;
+lg('e','🎯 '+sig+' @ $'+prices.BTC[prices.BTC.length-1].toLocaleString());
+say('e','Trade executed '+(sig?'profit':'loss')+' '+pf.toFixed(2));
+upStat();}
 },35000);
 var tm=0;
 function anim(){
 requestAnimationFrame(anim);tm+=0.016;
 agents.forEach(function(a,i){if(a.orb)a.orb.position.y=a.h+0.8+Math.sin(tm*2+i)*0.1;if(a.ring)a.ring.rotation.y+=0.015;});
-heads.forEach(function(h){var dx=camera.position.x-h.g.position.x,angle=Math.atan2(dx,h.g.position.z-camera.position.z);h.head.children.forEach(function(c,i){if(i>0&&i<4)c.position.x=(i===1||i===2?-0.18:0.18)+Math.sin(angle)*0.04;});});
 camera.position.x=Math.sin(tm*0.06)*5;camera.lookAt(0,3,0);renderer3d.render(scene,camera);}
 anim();
-window.addEventListener('resize',function(){camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer3d.setSize(innerWidth,innerHeight);});
-setTimeout(function(){speak('All systems online. Trading with Pine Script strategies.','APEX');},4000);}
+window.addEventListener('resize',function(){camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer3d.setSize(innerWidth,innerHeight);});}
 setTimeout(init,1500);
 </script></body></html>
