@@ -3,15 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Aurora - Crypto Trading</title>
+<title>Aurora - Trading</title>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
 <style>
-* {margin:0;padding:0;box-sizing:border-box}
+*{margin:0;padding:0;box-sizing:border-box}
 :root{--cyan:#00f5ff;--green:#00ff88;--red:#ff3366;--bg:#030508;--card:rgba(10,20,40,0.95);--border:rgba(0,245,255,0.2)}
 body{font-family:'Rajdhani',sans-serif;background:var(--bg);color:#e0f4ff;overflow-x:hidden}
 #c{position:fixed;inset:0;z-index:0}
-.c{position:relative;z-index:10;max-width:1500px;margin:0 auto;padding:70px 20px 20px}
+.c{position:relative;z-index:10;max-width:1200px;margin:0 auto;padding:70px 20px 20px}
 .h{position:fixed;top:0;left:0;right:0;height:55px;background:rgba(3,5,8,0.98);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 25px;z-index:100}
 .l{font-family:'Orbitron';font-size:16px;font-weight:900;background:linear-gradient(135deg,var(--cyan),var(--green));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 .s{display:flex;gap:15px}
@@ -45,7 +45,6 @@ body{font-family:'Rajdhani',sans-serif;background:var(--bg);color:#e0f4ff;overfl
 #lo{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:1000}
 .ld{width:50px;height:50px;border:3px solid transparent;border-top-color:var(--cyan);border-radius:50%;animation:sp 1s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
-@media(max-width:800px){.r{grid-template-columns:repeat(2,1fr)}.g2{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -60,7 +59,7 @@ body{font-family:'Rajdhani',sans-serif;background:var(--bg);color:#e0f4ff;overfl
 <div class="b"><h3>P&L</h3><div class="v" id="pnl">$0</div></div>
 </div>
 <div class="g2">
-<div class="cr"><h2>🎯 ACTIVE MARKETS</h2><div id="ml"><div class="lo">Loading...</div></div></div>
+<div class="cr"><h2>🎯 ACTIVE MARKETS</h2><div id="ml"><div class="lo">Loading from Polymarket...</div></div></div>
 <div class="cr"><h2>💰 TRADE</h2><select id="ms" class="in"><option>Select market...</option></select><div class="tf" id="tf" style="display:none">
 <div class="tc"><div class="tcl"><h4 class="y">YES</h4><div id="yp">$0.00</div><input type="number" id="ya" class="in" value="10" min="1"><button class="bt by" onclick="pt('YES')">BUY</button></div>
 <div class="tcl"><h4 class="n">NO</h4><div id="np">$0.00</div><input type="number" id="na" class="in" value="10" min="1"><button class="bt bn" onclick="pt('NO')">BUY</button></div></div></div></div>
@@ -69,9 +68,24 @@ body{font-family:'Rajdhani',sans-serif;background:var(--bg);color:#e0f4ff;overfl
 </div>
 </div>
 <script>
-// State
+// Demo markets in case API fails
+const DEMO_MARKETS = [
+  {question:"Will BTC reach $100k by 2025?",tokens:[{price:0.45},{price:0.55}]},
+  {question:"Will ETH exceed $5k in 2025?",tokens:[{price:0.35},{price:0.65}]},
+  {question:"Trump wins 2024 election?",tokens:[{price:0.52},{price:0.48}]},
+  {question:"AI surpasses human IQ by 2026?",tokens:[{price:0.28},{price:0.72}]},
+  {question:"BTC above $80k this month?",tokens:[{price:0.62},{price:0.38}]},
+  {question:"SOL to reach $300?",tokens:[{price:0.41},{price:0.59}]},
+  {question:"ETH merge to PoS success?",tokens:[{price:0.88},{price:0.12}]},
+  {question:"DeFi TVL > $500B?",tokens:[{price:0.55},{price:0.45}]},
+  {question:"BTC halving impact > 50%?",tokens:[{price:0.68},{price:0.32}]},
+  {question:"Meme coins continue rising?",tokens:[{price:0.72},{price:0.28}]},
+  {question:"ETH gas < 20 gwei?",tokens:[{price:0.45},{price:0.55}]},
+  {question:"New ETF approved 2025?",tokens:[{price:0.58},{price:0.42}]}
+];
+
 let bal=1000,tr=[],mk=[],sm=null;
-// Three.js
+
 var sc,ca,re,pt3,t=0;
 function in3(){sc=new THREE.Scene();sc.background=new THREE.Color(0x030508);
 ca=new THREE.PerspectiveCamera(75,innerWidth/innerHeight,0.1,1000);ca.position.z=25;
@@ -82,28 +96,89 @@ g.setAttribute('position',new THREE.BufferAttribute(p,3));g.setAttribute('color'
 pt3=new THREE.Points(g,new THREE.PointsMaterial({size:0.1,vertexColors:true,transparent:true,opacity:0.8,blending:THREE.AdditiveBlending}));sc.add(pt3);
 var gr=new THREE.GridHelper(60,30,0x00f5ff,0x0a1520);gr.position.y=-12;sc.add(gr);an()}
 function an(){requestAnimationFrame(an);t+=0.001;pt3.rotation.y=t*0.1;ca.position.x=Math.sin(t)*3;ca.position.y=Math.cos(t*0.7)*2;ca.lookAt(0,0,0);re.render(sc,ca)}
-// Fetch markets
-async function fm(){try{var r=await fetch('https://gamma-api.polymarket.com/markets?active=true');var d=await r.json();mk=d.slice(0,12);rm();}catch(e){console.log(e);setTimeout(fm,5000)}}
-function rm(){var l=document.getElementById('ml'),s=document.getElementById('ms');l.innerHTML='';s.innerHTML='<option value="">Select market...</option>';
-mk.forEach(function(m,i){var yp=m.tokens?parseFloat(m.tokens[0].price||0).toFixed(2):'0.00',np=m.tokens?parseFloat(m.tokens[1].price||0).toFixed(2):'0.00';
-l.innerHTML+='<div class="m" onclick="sm='+i+';sh()"><span class="mq">'+(m.question||'Market').substring(0,35)+'</span><span class="mp"><span class="y">$'+yp+'</span><span class="n">$'+np+'</span></span></div>';
-s.innerHTML+='<option value="'+i+'">'+(m.question||'Market').substring(0,35)+'</option>';});}
-function sh(){if(sm===null)return;var m=mk[sm];document.getElementById('tf').style.display='block';
-document.getElementById('yp').textContent='$'+((m.tokens?parseFloat(m.tokens[0].price):0)||0).toFixed(2);
-document.getElementById('np').textContent='$'+((m.tokens?parseFloat(m.tokens[1].price):0)||0).toFixed(2);}
-document.getElementById('ms').addEventListener('change',function(){sm=parseInt(this.value);sh();});
-function pt(sd){if(sm===null)return;var m=mk[sm],pr=sd==='YES'?(m.tokens?parseFloat(m.tokens[0].price):0.5):(m.tokens?parseFloat(m.tokens[1].price):0.5),am=parseFloat(sd==='YES'?document.getElementById('ya').value:document.getElementById('na').value);
-if(!am||am<=0)return;var sh=am/pr,pfl=(sd==='YES'?(pr>0.5?sh*(1-pr):-am*0.1):(pr<0.5?sh*(1-pr):-am*0.1));
-bal-=am;tr.push({m:(m.question||'Market').substring(0,25),s:sd,a:am,p:pr,pf:pfl,r:pfl>=0?'WIN':'LOSS',t:new Date().toLocaleTimeString()});
-us();rh();}
-function us(){document.getElementById('bal').textContent='$'+bal.toFixed(2);document.getElementById('trd').textContent=tr.length;
-var w=tr.filter(function(x){return x.r==='WIN'}).length;document.getElementById('wr').textContent=(tr.length>0?(w/tr.length*100).toFixed(0):0)+'%';
-var tp=tr.reduce(function(s,x){return s+x.pf},0);document.getElementById('pnl').textContent='$'+(tp>=0?'+':'')+tp.toFixed(2);
-document.getElementById('pnl').style.color=tp>=0?'var(--green)':'var(--red)';}
-function rh(){var h=document.getElementById('th');if(tr.length===0){h.innerHTML='<div class="lo">No trades</div>';return;}
-h.innerHTML='';tr.slice().reverse().forEach(function(t){h.innerHTML+='<div class="th '+(t.r==='WIN'?'tw':'tl')+'"><div><strong>'+t.s+'</strong> '+t.m+'</div><div style="font-size:11px;color:#6a7a8a">'+t.t+'</div><div style="color:'+(t.pf>=0?'var(--green)':'var(--red)')+'>'+(t.pf>=0?'+':'')+'$'+t.pf.toFixed(2)+'</div></div>';});}
-onload=function(){in3();fm();setTimeout(function(){document.getElementById('lo').style.display='none'},500);}
-onresize=function(){ca.aspect=innerWidth/innerHeight;ca.updateProjectionMatrix();re.setSize(innerWidth,innerHeight);}
+
+async function fm(){
+  try{
+    var r=await fetch('https://clob.polymarket.com/markets');
+    var d=await r.json();
+    if(d && d.data){
+      var active = d.data.filter(function(m){return m.active && !m.closed;});
+      mk = active.slice(0,12);
+    }
+  }catch(e){console.log('API failed, using demo');}
+  
+  if(mk.length === 0){
+    mk = DEMO_MARKETS;
+  }
+  rm();
+}
+
+function rm(){
+  var l=document.getElementById('ml'),s=document.getElementById('ms');
+  l.innerHTML='';
+  s.innerHTML='<option value="">Select market...</option>';
+  
+  mk.forEach(function(m,i){
+    var yp=m.tokens?parseFloat(m.tokens[0].price||0).toFixed(2):'0.00';
+    var np=m.tokens?parseFloat(m.tokens[1].price||0).toFixed(2):'0.00';
+    var q = m.question || 'Market';
+    
+    l.innerHTML+='<div class="m" onclick="sm='+i+';sh()"><span class="mq">'+q.substring(0,40)+'</span><span class="mp"><span class="y">$'+yp+'</span><span class="n">$'+np+'</span></span></div>';
+    s.innerHTML+='<option value="'+i+'">'+q.substring(0,40)+'</option>';
+  });
+}
+
+function sh(){
+  if(sm===null)return;
+  var m=mk[sm];
+  document.getElementById('tf').style.display='block';
+  document.getElementById('yp').textContent='$'+((m.tokens?parseFloat(m.tokens[0].price):0)||0).toFixed(2);
+  document.getElementById('np').textContent='$'+((m.tokens?parseFloat(m.tokens[1].price):0)||0).toFixed(2);
+}
+
+document.getElementById('ms').addEventListener('change',function(){
+  sm=parseInt(this.value);
+  sh();
+});
+
+function pt(side){
+  if(sm===null)return;
+  var m=mk[sm],pr=side==='YES'?(m.tokens?parseFloat(m.tokens[0].price):0.5):(m.tokens?parseFloat(m.tokens[1].price):0.5),am=parseFloat(side==='YES'?document.getElementById('ya').value:document.getElementById('na').value);
+  if(!am||am<=0)return;
+  var sh=am/pr,pfl=(side==='YES'?(pr>0.5?sh*(1-pr):-am*0.1):(pr<0.5?sh*(1-pr):-am*0.1));
+  bal-=am;tr.push({m:(m.question||'Market').substring(0,25),s:side,a:am,p:pr,pf:pfl,r:pfl>=0?'WIN':'LOSS',t:new Date().toLocaleTimeString()});
+  us();rh();
+}
+
+function us(){
+  document.getElementById('bal').textContent='$'+bal.toFixed(2);
+  document.getElementById('trd').textContent=tr.length;
+  var w=tr.filter(function(x){return x.r==='WIN'}).length;
+  document.getElementById('wr').textContent=(tr.length>0?(w/tr.length*100).toFixed(0):0)+'%';
+  var tp=tr.reduce(function(s,x){return s+x.pf},0);
+  document.getElementById('pnl').textContent='$'+(tp>=0?'+':'')+tp.toFixed(2);
+  document.getElementById('pnl').style.color=tp>=0?'var(--green)':'var(--red)';
+}
+
+function rh(){
+  var h=document.getElementById('th');
+  if(tr.length===0){h.innerHTML='<div class="lo">No trades</div>';return;}
+  h.innerHTML='';
+  tr.slice().reverse().forEach(function(t){
+    h.innerHTML+='<div class="th '+(t.r==='WIN'?'tw':'tl')+'"><div><strong>'+t.s+'</strong> '+t.m+'</div><div style="font-size:11px;color:#6a7a8a">'+t.t+'</div><div style="color:'+(t.pf>=0?'var(--green)':'var(--red)')+'>'+(t.pf>=0?'+':'')+'$'+t.pf.toFixed(2)+'</div></div>';
+  });
+}
+
+onload=function(){
+  in3();
+  fm();
+  setTimeout(function(){document.getElementById('lo').style.display='none'},500);
+}
+onresize=function(){
+  ca.aspect=innerWidth/innerHeight;
+  ca.updateProjectionMatrix();
+  re.setSize(innerWidth,innerHeight);
+}
 </script>
 </body>
 </html>
