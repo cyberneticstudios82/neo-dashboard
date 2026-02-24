@@ -3,274 +3,241 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AURORA OMEGA | AI Trading Intelligence</title>
+<title>AURORA OMEGA | Live Trading</title>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
 <style>
-:root {
-    --cyan: #00f5ff;
-    --green: #00ff88;
-    --red: #ff3366;
-    --bg-dark: #030508;
-    --bg-card: rgba(10, 20, 40, 0.85);
-    --border: rgba(0, 245, 255, 0.2);
-}
+:root { --cyan: #00f5ff; --green: #00ff88; --red: #ff3366; --bg-dark: #030508; --bg-card: rgba(10, 20, 40, 0.9); --border: rgba(0, 245, 255, 0.2); }
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: 'Rajdhani', sans-serif; background: var(--bg-dark); color: #e0f4ff; overflow: hidden; height: 100vh; }
+body { font-family: 'Rajdhani', sans-serif; background: var(--bg-dark); color: #e0f4ff; overflow-x: hidden; }
 #canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; }
 .header { position: fixed; top: 0; left: 0; right: 0; height: 60px; background: linear-gradient(180deg, rgba(3,5,8,0.98), rgba(3,5,8,0.8)); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 30px; z-index: 100; backdrop-filter: blur(10px); }
-.logo { font-family: 'Orbitron', monospace; font-size: 24px; font-weight: 900; letter-spacing: 6px; background: linear-gradient(135deg, var(--cyan), var(--green)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-.status-bar { display: flex; gap: 25px; align-items: center; }
-.status-item { display: flex; align-items: center; gap: 8px; font-size: 12px; }
-.status-dot { width: 8px; height: 8px; border-radius: 50%; animation: pulse 2s infinite; }
+.logo { font-family: 'Orbitron', monospace; font-size: 22px; font-weight: 900; letter-spacing: 4px; background: linear-gradient(135deg, var(--cyan), var(--green)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.status-dot { width: 10px; height: 10px; border-radius: 50%; animation: pulse 2s infinite; }
 .status-dot.green { background: var(--green); box-shadow: 0 0 10px var(--green); }
-.status-dot.cyan { background: var(--cyan); box-shadow: 0 0 10px var(--cyan); }
+.status-dot.red { background: var(--red); box-shadow: 0 0 10px var(--red); }
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-.container { position: relative; z-index: 10; display: grid; grid-template-columns: 280px 1fr 320px; gap: 20px; padding: 80px 20px 20px; height: 100vh; }
-.left-panel, .center-panel, .right-panel { display: flex; flex-direction: column; gap: 12px; overflow-y: auto; }
-.agent-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; transition: all 0.3s; }
-.agent-card:hover { border-color: var(--cyan); transform: translateX(5px); box-shadow: 0 0 20px rgba(0,245,255,0.2); }
-.agent-card.active { border-color: var(--green); }
-.agent-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-.agent-name { font-family: 'Orbitron', monospace; font-size: 14px; font-weight: 700; color: var(--cyan); }
-.agent-status { font-size: 10px; padding: 3px 8px; border-radius: 10px; background: rgba(0,255,136,0.2); color: var(--green); }
-.agent-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.stat { text-align: center; }
-.stat-value { font-size: 18px; font-weight: 700; font-family: 'Orbitron', monospace; }
-.stat-label { font-size: 9px; color: #6a7a8a; text-transform: uppercase; letter-spacing: 1px; }
-.market-ticker { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-.ticker-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; text-align: center; }
-.ticker-symbol { font-size: 24px; font-family: 'Orbitron', monospace; font-weight: 900; }
-.ticker-price { font-size: 32px; font-weight: 700; margin: 10px 0; }
-.ticker-change { font-size: 14px; font-weight: 500; }
-.ticker-change.up { color: var(--green); }
-.ticker-change.down { color: var(--red); }
-.trading-status { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; flex: 1; }
-.status-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-top: 15px; }
-.status-box { background: rgba(0,0,0,0.3); border-radius: 8px; padding: 15px; text-align: center; border: 1px solid rgba(255,255,255,0.05); }
-.status-box .value { font-size: 28px; font-family: 'Orbitron', monospace; font-weight: 700; }
-.status-box .label { font-size: 10px; color: #6a7a8a; margin-top: 5px; text-transform: uppercase; }
-.status-box.profit .value { color: var(--green); }
-.status-box.loss .value { color: var(--red); }
-.section-title { font-family: 'Orbitron', monospace; font-size: 12px; color: var(--cyan); margin-bottom: 12px; letter-spacing: 2px; }
-.skills-section { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 15px; }
-.skills-grid { display: flex; flex-wrap: wrap; gap: 8px; }
-.skill-badge { font-size: 10px; padding: 6px 12px; border-radius: 20px; background: rgba(0,245,255,0.1); border: 1px solid var(--border); color: #8aa; }
-.activity-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 15px; max-height: 300px; overflow-y: auto; }
-.activity-list { display: flex; flex-direction: column; gap: 8px; }
-.activity-item { font-size: 11px; padding: 8px 10px; background: rgba(0,0,0,0.3); border-radius: 6px; border-left: 3px solid var(--cyan); }
-.activity-item.trade { border-left-color: var(--green); }
-.activity-time { color: #5a6a7a; margin-right: 8px; }
-.agent-dot { display: flex; flex-direction: column; align-items: center; padding: 8px 12px; border-radius: 8px; background: rgba(0,0,0,0.4); border: 1px solid var(--border); font-size: 9px; color: #6a7a8a; min-width: 60px; }
-.agent-dot span { margin-top: 4px; font-size: 8px; }
-.agent-dot.active { border-color: var(--green); color: var(--green); background: rgba(0,255,136,0.1); }
-.attention-gradient { position: fixed; bottom: 0; left: 0; right: 0; height: 100px; background: linear-gradient(to top, rgba(3,5,8,0.9), transparent); pointer-events: none; z-index: 5; }
+.container { position: relative; z-index: 10; max-width: 1400px; margin: 0 auto; padding: 80px 20px 20px; }
+.stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; }
+.stat-box { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; text-align: center; }
+.stat-box h3 { font-family: 'Orbitron', monospace; font-size: 11px; color: #6a7a8a; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+.stat-box .value { font-size: 28px; font-weight: 700; font-family: 'Orbitron', monospace; }
+.stat-box .value.green { color: var(--green); }
+.stat-box .value.red { color: var(--red); }
+.stat-box .value.cyan { color: var(--cyan); }
+.ticker-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 20px; }
+.ticker { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; text-align: center; }
+.ticker .symbol { font-family: 'Orbitron', monospace; font-size: 18px; font-weight: 900; }
+.ticker .price { font-size: 32px; font-weight: 700; margin: 10px 0; }
+.ticker .change { font-size: 14px; }
+.ticker .change.up { color: var(--green); }
+.ticker .change.down { color: var(--red); }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+.card h2 { font-family: 'Orbitron', monospace; font-size: 14px; color: var(--cyan); margin-bottom: 15px; letter-spacing: 2px; }
+.trades-list { max-height: 400px; overflow-y: auto; }
+.trade-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; margin-bottom: 8px; background: rgba(0,0,0,0.3); border-radius: 6px; border-left: 3px solid var(--cyan); }
+.trade-item.win { border-left-color: var(--green); }
+.trade-item.loss { border-left-color: var(--red); }
+.trade-info { flex: 1; }
+.trade-token { font-weight: 700; font-family: 'Orbitron', monospace; }
+.trade-action { font-size: 11px; color: #6a7a8a; }
+.trade-result { text-align: right; }
+.trade-pnl { font-family: 'Orbitron', monospace; font-weight: 700; }
+.trade-pnl.positive { color: var(--green); }
+.trade-pnl.negative { color: var(--red); }
+.chart-container { height: 200px; background: rgba(0,0,0,0.3); border-radius: 8px; position: relative; }
+#pnlChart { width: 100%; height: 100%; }
+.agents-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.agent { padding: 15px; text-align: center; background: rgba(0,0,0,0.3); border-radius: 8px; border: 1px solid var(--border); }
+.agent.active { border-color: var(--green); background: rgba(0,255,136,0.1); }
+.agent-icon { font-size: 24px; }
+.agent-name { font-size: 11px; margin-top: 5px; color: #6a7a8a; }
+.agent.active .agent-name { color: var(--green); }
+.loading { text-align: center; padding: 40px; color: #6a7a8a; }
 #loading { position: fixed; inset: 0; background: var(--bg-dark); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; transition: opacity 0.5s; }
-.loader { width: 80px; height: 80px; border: 3px solid transparent; border-top-color: var(--cyan); border-radius: 50%; animation: spin 1s linear infinite; }
+.loader { width: 60px; height: 60px; border: 3px solid transparent; border-top-color: var(--cyan); border-radius: 50%; animation: spin 1s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
-.loader-text { margin-top: 20px; font-family: 'Orbitron', monospace; font-size: 14px; color: var(--cyan); letter-spacing: 4px; }
-#pnlChart { width: 100%; height: 150px; border-radius: 8px; background: rgba(0,0,0,0.3); }
 </style>
 </head>
 <body>
-<div id="loading"><div class="loader"></div><div class="loader-text">INITIALIZING AURORA</div></div>
+<div id="loading"><div class="loader"></div><div style="margin-top:20px;font-family:'Orbitron';color:var(--cyan)">CONNECTING TO AURORA...</div></div>
 <canvas id="canvas"></canvas>
 <div class="header">
     <div class="logo">◆ AURORA OMEGA</div>
-    <div class="status-bar">
-        <div class="status-item"><div class="status-dot green"></div><span>7 Agents Active</span></div>
-        <div class="status-item"><div class="status-dot cyan"></div><span>Live Trading</span></div>
+    <div style="display:flex;gap:20px;align-items:center">
+        <div style="display:flex;align-items:center;gap:8px"><div class="status-dot green" id="statusDot"></div><span id="statusText">Connecting...</span></div>
     </div>
 </div>
 <div class="container">
-    <div class="left-panel">
-        <div class="agent-card active"><div class="agent-header"><span class="agent-name">🌙 AURORA</span><span class="agent-status">TRADING</span></div><p style="font-size:11px;color:#6a7a8a;margin-bottom:12px">Signal-Based Trading</p><div class="agent-stats"><div class="stat"><div class="stat-value" id="bank" style="color:var(--green)">$100</div><div class="stat-label">Bank</div></div><div class="stat"><div class="stat-value" id="pnl">+0%</div><div class="stat-label">P&L</div></div></div></div>
-        <div class="agent-card"><div class="agent-header"><span class="agent-name">⚡ HFT</span><span class="agent-status">RUNNING</span></div><div class="agent-stats"><div class="stat"><div class="stat-value" id="hft-bank">$100</div><div class="stat-label">HFT Bank</div></div><div class="stat"><div class="stat-value" id="hft-trades">0</div><div class="stat-label">HFT Trades</div></div></div></div>
-        <div class="agent-card"><div class="agent-header"><span class="agent-name">🌐 MARKET</span><span class="agent-status">ANALYZING</span></div><div class="agent-stats"><div class="stat"><div class="stat-value" id="signals-found">0</div><div class="stat-label">Signals</div></div><div class="stat"><div class="stat-value">24/7</div><div class="stat-label">Uptime</div></div></div></div>
-        <div class="agent-card"><div class="agent-header"><span class="agent-name">⚖️ RISK</span><span class="agent-status">MONITORING</span></div><div class="agent-stats"><div class="stat"><div class="stat-value" style="color:var(--green)">SAFE</div><div class="stat-label">Status</div></div><div class="stat"><div class="stat-value">5%</div><div class="stat-label">Max Loss</div></div></div></div>
-        <div class="agent-card"><div class="agent-header"><span class="agent-name">📰 SENTIMENT</span><span class="agent-status">ACTIVE</span></div><div class="agent-stats"><div class="stat"><div class="stat-value" id="sentiment">NEUTRAL</div><div class="stat-label">Market</div></div><div class="stat"><div class="stat-value">50+</div><div class="stat-label">Data</div></div></div></div>
-        <div class="agent-card"><div class="agent-header"><span class="agent-name">💼 ALLOCATION</span><span class="agent-status">OPTIMIZING</span></div><div class="agent-stats"><div class="stat"><div class="stat-value">40/30</div><div class="stat-label">BTC/ETH</div></div><div class="stat"><div class="stat-value">20%</div><div class="stat-label">ALT</div></div></div></div>
-        <div class="agent-card"><div class="agent-header"><span class="agent-name">🔍 RESEARCH</span><span class="agent-status">LEARNING</span></div><div class="agent-stats"><div class="stat"><div class="stat-value">100+</div><div class="stat-label">Learnings</div></div><div class="stat"><div class="stat-value">24/7</div><div class="stat-label">Uptime</div></div></div></div>
+    <div class="ticker-row">
+        <div class="ticker"><div class="symbol">₿ BITCOIN</div><div class="price" id="btcPrice">$0</div><div class="change up" id="btcChange">+0.00%</div></div>
+        <div class="ticker"><div class="symbol">Ξ ETHEREUM</div><div class="price" id="ethPrice">$0</div><div class="change" id="ethChange">+0.00%</div></div>
     </div>
-    <div class="center-panel">
-        <div class="market-ticker">
-            <div class="ticker-card"><div class="ticker-symbol">₿ BITCOIN</div><div class="ticker-price" id="btc-price">$0</div><div class="ticker-change up" id="btc-change">+0.00%</div></div>
-            <div class="ticker-card"><div class="ticker-symbol">Ξ ETHEREUM</div><div class="ticker-price" id="eth-price">$0</div><div class="ticker-change" id="eth-change">+0.00%</div></div>
+    <div class="stats-row">
+        <div class="stat-box"><h3>Total Bank</h3><div class="value cyan" id="totalBank">$0</div></div>
+        <div class="stat-box"><h3>Total P&L</h3><div class="value" id="totalPnl">$0</div></div>
+        <div class="stat-box"><h3>Total Trades</h3><div class="value cyan" id="totalTrades">0</div></div>
+        <div class="stat-box"><h3>Win Rate</h3><div class="value green" id="winRate">0%</div></div>
+    </div>
+    <div class="grid-2">
+        <div class="card">
+            <h2>📊 P&L CHART</h2>
+            <div class="chart-container"><canvas id="pnlChart"></canvas></div>
         </div>
-        <div class="trading-status">
-            <div class="section-title">📊 TRADING PERFORMANCE</div>
-            <div class="status-grid">
-                <div class="status-box profit"><div class="value" id="total-pnl">+$0</div><div class="label">Total P&L</div></div>
-                <div class="status-box"><div class="value" id="total-trades">0</div><div class="label">Trades</div></div>
-                <div class="status-box"><div class="value" id="win-rate">0%</div><div class="label">Win Rate</div></div>
-                <div class="status-box"><div class="value" id="wins-losses">0/0</div><div class="label">W/L</div></div>
+        <div class="card">
+            <h2>🤖 AGENTS</h2>
+            <div class="agents-grid">
+                <div class="agent active" id="agent-aurora"><div class="agent-icon">🌙</div><div class="agent-name">AURORA</div></div>
+                <div class="agent active" id="agent-hft"><div class="agent-icon">⚡</div><div class="agent-name">HFT</div></div>
+                <div class="agent" id="agent-market"><div class="agent-icon">🌐</div><div class="agent-name">MARKET</div></div>
+                <div class="agent" id="agent-risk"><div class="agent-icon">⚖️</div><div class="agent-name">RISK</div></div>
             </div>
-            <canvas id="pnlChart"></canvas>
-        </div>
-        <div class="skills-section">
-            <div class="section-title">⚡ SKILLS & TOOLS</div>
-            <div class="skills-grid">
-                <span class="skill-badge">📺 bankr</span><span class="skill-badge">📈 bankr-signals</span><span class="skill-badge">🎯 Polymarket</span><span class="skill-badge">⚡ Hummingbot</span><span class="skill-badge">🧱 onchainkit</span><span class="skill-badge">🪙 clanker</span><span class="skill-badge">🤖 AI Agents</span><span class="skill-badge">🧠 Memory</span><span class="skill-badge">🔒 veil</span><span class="skill-badge">💬 botchan</span>
+            <div style="margin-top:20px">
+                <h2 style="font-family:'Orbitron';font-size:14px;color:var(--cyan);margin-bottom:10px">🎯 AURORA STATS</h2>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                    <div><span style="color:#6a7a8a">Bank:</span> <span id="auroraBank" class="value green">$0</span></div>
+                    <div><span style="color:#6a7a8a">P&L:</span> <span id="auroraPnl">$0</span></div>
+                    <div><span style="color:#6a7a8a">Trades:</span> <span id="auroraTrades">0</span></div>
+                    <div><span style="color:#6a7a8a">W/L:</span> <span id="auroraWL">0/0</span></div>
+                </div>
+            </div>
+            <div style="margin-top:20px">
+                <h2 style="font-family:'Orbitron';font-size:14px;color:var(--cyan);margin-bottom:10px">⚡ HFT STATS</h2>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                    <div><span style="color:#6a7a8a">Bank:</span> <span id="hftBank" class="value green">$0</span></div>
+                    <div><span style="color:#6a7a8a">P&L:</span> <span id="hftPnl">$0</span></div>
+                    <div><span style="color:#6a7a8a">Trades:</span> <span id="hftTrades">0</span></div>
+                    <div><span style="color:#6a7a8a">W/L:</span> <span id="hftWL">0/0</span></div>
+                </div>
             </div>
         </div>
     </div>
-    <div class="right-panel">
-        <div class="activity-card"><div class="section-title">🎯 RECENT TRADES</div><div class="activity-list" id="trades-list"></div></div>
-        <div class="activity-card"><div class="section-title">◈ MARKET SIGNALS</div><div class="activity-list" id="signals"></div></div>
-        <div class="activity-card"><div class="section-title">🤖 AGENTS</div><div id="agents-panel" style="display:flex;flex-wrap:wrap;gap:8px;">
-            <div class="agent-dot active" id="agent-aurora">🌙<span>AURORA</span></div>
-            <div class="agent-dot active" id="agent-hft">⚡<span>HFT</span></div>
-            <div class="agent-dot" id="agent-market">🌐<span>MARKET</span></div>
-            <div class="agent-dot" id="agent-risk">⚖️<span>RISK</span></div>
-            <div class="agent-dot" id="agent-sentiment">📰<span>SENTIMENT</span></div>
-            <div class="agent-dot" id="agent-portfolio">💼<span>PORTFOLIO</span></div>
-            <div class="agent-dot" id="agent-research">🔍<span>RESEARCH</span></div>
-        </div></div>
+    <div class="card" style="margin-top:20px">
+        <h2>🎯 RECENT TRADES (REAL)</h2>
+        <div class="trades-list" id="tradesList">
+            <div class="loading">Loading trades...</div>
+        </div>
     </div>
 </div>
-<div class="attention-gradient"></div>
 <script>
+const API_BASE = 'https://aurora-realtime.loca.lt';
 var scene, camera, renderer, particles, time = 0;
+var pnlHistory = [];
+
 function init3D() {
-    scene = new THREE.Scene(); scene.background = new THREE.Color(0x030508); scene.fog = new THREE.FogExp2(0x030508, 0.015);
+    scene = new THREE.Scene(); scene.background = new THREE.Color(0x030508); scene.fog = new THREE.FogExp2(0x030508, 0.02);
     camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000); camera.position.z = 30;
-    renderer = new THREE.WebGLRenderer({canvas: document.getElementById('canvas'), antialias: true}); renderer.setSize(window.innerWidth, window.innerHeight);
-    var ambient = new THREE.AmbientLight(0x334455, 0.5); scene.add(ambient);
-    var light1 = new THREE.PointLight(0x00f5ff, 1, 50); light1.position.set(10, 10, 10); scene.add(light1);
-    var light2 = new THREE.PointLight(0x00ff88, 0.5, 50); light2.position.set(-10, -10, 10); scene.add(light2);
-    var geometry = new THREE.BufferGeometry(); var count = 2000; var positions = new Float32Array(count * 3); var colors = new Float32Array(count * 3);
-    for(var i=0; i<count; i++) { positions[i*3] = (Math.random() - 0.5) * 100; positions[i*3+1] = (Math.random() - 0.5) * 100; positions[i*3+2] = (Math.random() - 0.5) * 50; var color = new THREE.Color(); color.setHSL(0.5 + Math.random() * 0.2, 0.8, 0.5); colors[i*3] = color.r; colors[i*3+1] = color.g; colors[i*3+2] = color.b; }
-    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3)); geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-    var material = new THREE.PointsMaterial({size: 0.15, vertexColors: true, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending});
-    particles = new THREE.Points(geometry, material); scene.add(particles);
-    var grid = new THREE.GridHelper(100, 50, 0x00f5ff, 0x0a1520); grid.position.y = -15; scene.add(grid);
+    renderer = new THREE.WebGLRenderer({canvas:document.getElementById('canvas'), antialias:true}); renderer.setSize(window.innerWidth, window.innerHeight);
+    var geometry = new THREE.BufferGeometry(); var count = 1500;
+    var positions = new Float32Array(count * 3), colors = new Float32Array(count * 3);
+    for(var i=0; i<count; i++) { positions[i*3]=(Math.random()-0.5)*80; positions[i*3+1]=(Math.random()-0.5)*80; positions[i*3+2]=(Math.random()-0.5)*40; var c=new THREE.Color(); c.setHSL(0.5+Math.random()*0.2,0.8,0.5); colors[i*3]=c.r; colors[i*3+1]=c.g; colors[i*3+2]=c.b; }
+    geometry.setAttribute('position',new THREE.BufferAttribute(positions,3)); geometry.setAttribute('color',new THREE.BufferAttribute(colors,3));
+    var material = new THREE.PointsMaterial({size:0.12,vertexColors:true,transparent:true,opacity:0.8,blending:THREE.AdditiveBlending});
+    particles = new THREE.Points(geometry,material); scene.add(particles);
+    var grid = new THREE.GridHelper(80,40,0x00f5ff,0x0a1520); grid.position.y=-15; scene.add(grid);
     animate();
 }
-function animate() { requestAnimationFrame(animate); time += 0.001; particles.rotation.y = time * 0.1; particles.rotation.x = Math.sin(time * 0.5) * 0.1; camera.position.x = Math.sin(time) * 5; camera.position.y = Math.cos(time * 0.7) * 3; camera.lookAt(0, 0, 0); renderer.render(scene, camera); }
-var pnlHistory = [100, 100.5, 101, 100.8, 102, 101.5, 103, 102.5, 104, 103.5, 105];
-function drawChart() {
-    var canvas = document.getElementById('pnlChart'); if (!canvas) return;
-    var ctx = canvas.getContext('2d'); var w = canvas.width = canvas.offsetWidth; var h = canvas.height = canvas.offsetHeight;
-    ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.fillRect(0, 0, w, h);
-    if (pnlHistory.length < 2) return;
-    var min = Math.min(...pnlHistory), max = Math.max(...pnlHistory), range = max - min || 1;
-    ctx.strokeStyle = 'rgba(0,245,255,0.1)'; ctx.lineWidth = 1;
-    for (var i = 0; i <= 4; i++) { var y = (h / 4) * i; ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke(); }
-    ctx.strokeStyle = '#00ff88'; ctx.lineWidth = 2; ctx.beginPath();
-    pnlHistory.forEach(function(val, i) { var x = (i / (pnlHistory.length - 1)) * w; var y = h - ((val - min) / range) * (h - 20) - 10; if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y); }); ctx.stroke();
-    ctx.lineTo(w, h); ctx.lineTo(0, h); ctx.closePath();
-    var gradient = ctx.createLinearGradient(0, 0, 0, h); gradient.addColorStop(0, 'rgba(0,255,136,0.3)'); gradient.addColorStop(1, 'rgba(0,255,136,0)');
-    ctx.fillStyle = gradient; ctx.fill();
-    var current = pnlHistory[pnlHistory.length - 1]; ctx.fillStyle = '#00ff88'; ctx.font = 'bold 16px Orbitron'; ctx.fillText('$' + current.toFixed(2), w - 80, 25);
-}
+function animate() { requestAnimationFrame(animate); time+=0.001; particles.rotation.y=time*0.1; camera.position.x=Math.sin(time)*5; camera.position.y=Math.cos(time*0.7)*3; camera.lookAt(0,0,0); renderer.render(scene,camera); }
+
 async function fetchPrices() {
     try {
-        var btcRes = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT');
-        var ethRes = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=ETHUSDT');
-        var btc = await btcRes.json(); var eth = await ethRes.json();
-        var btcPrice = parseFloat(btc.price), ethPrice = parseFloat(eth.price);
-        document.getElementById('btc-price').textContent = '$' + btcPrice.toLocaleString();
-        document.getElementById('eth-price').textContent = '$' + ethPrice.toLocaleString();
-        var btcChange = ((btcPrice - 63000) / 63000 * 100).toFixed(2);
-        var ethChange = ((ethPrice - 1800) / 1800 * 100).toFixed(2);
-        var btcEl = document.getElementById('btc-change'), ethEl = document.getElementById('eth-change');
-        btcEl.textContent = (btcChange >= 0 ? '+' : '') + btcChange + '%'; btcEl.className = 'ticker-change ' + (btcChange >= 0 ? 'up' : 'down');
-        ethEl.textContent = (ethChange >= 0 ? '+' : '') + ethChange + '%'; ethEl.className = 'ticker-change ' + (ethChange >= 0 ? 'up' : 'down');
-    } catch(e) { console.log('Price fetch error'); }
+        var btc = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT').then(r=>r.json());
+        var eth = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=ETHUSDT').then(r=>r.json());
+        document.getElementById('btcPrice').textContent = '$' + parseFloat(btc.price).toLocaleString();
+        document.getElementById('ethPrice').textContent = '$' + parseFloat(eth.price).toLocaleString();
+    } catch(e) { console.log(e); }
 }
-// API Base - Change this to your tunnel URL
-const API_BASE = 'https://aurora-prod.loca.lt';
 
-async function fetchTradingState() {
+async function fetchData() {
     try {
         var res = await fetch(API_BASE + '/api/combined');
-        if (!res.ok) throw new Error();
         var data = await res.json();
-        var state = data.aurora;
         
-        document.getElementById('bank').textContent = '$' + state.bank.toFixed(2);
-        document.getElementById('total-pnl').textContent = (state.pnl >= 0 ? '+' : '') + '$' + state.pnl.toFixed(2);
-        document.getElementById('total-pnl').style.color = state.pnl >= 0 ? '#00ff88' : '#ff3366';
-        document.getElementById('total-trades').textContent = state.trades;
-        var winRate = state.trades > 0 ? ((state.wins / state.trades) * 100).toFixed(0) : 0;
-        document.getElementById('win-rate').textContent = winRate + '%';
-        document.getElementById('wins-losses').textContent = state.wins + '/' + state.losses;
-        var pnlPct = ((state.bank - 100) / 100 * 100).toFixed(2);
-        document.getElementById('pnl').textContent = (pnlPct >= 0 ? '+' : '') + pnlPct + '%';
-        document.getElementById('pnl').style.color = pnlPct >= 0 ? '#00ff88' : '#ff3366';
+        document.getElementById('statusDot').className = 'status-dot green';
+        document.getElementById('statusText').textContent = 'LIVE';
         
-        // Also update HFT display
-        if (data.hft) {
-            document.getElementById('hft-bank').textContent = '$' + data.hft.bank.toFixed(2);
-            document.getElementById('hft-trades').textContent = data.hft.trades;
-        }
+        var aurora = data.aurora || {};
+        var hft = data.hft || {};
+        var trades = data.trades || [];
         
-        // Update chart
-        pnlHistory.push(state.bank);
-        if (pnlHistory.length > 30) pnlHistory.shift();
-        drawChart();
-    } catch(e) {
-        console.log('Error fetching state:', e);
-    }
-}
-function addActivity(msg, type) {
-    var list = document.getElementById('trades-list');
-    var item = document.createElement('div');
-    item.className = 'activity-item' + (type ? ' ' + type : '');
-    var time = new Date().toLocaleTimeString();
-    item.innerHTML = '<span class="activity-time">' + time + '</span>' + msg;
-    list.insertBefore(item, list.firstChild);
-    if(list.children.length > 10) list.removeChild(list.lastChild);
-}
-
-function updateTradesFromAPI() {
-    fetch(API_BASE + '/api/trades')
-    .then(function(r) { return r.json(); })
-    .then(function(trades) {
-        if (!trades || trades.length === 0) return;
-        var list = document.getElementById('trades-list');
-        var recent = trades.slice(0, 10);
+        // Total stats
+        var totalBank = (aurora.bank || 100) + (hft.bank || 100);
+        var totalPnl = (aurora.pnl || 0) + (hft.pnl || 0);
+        var totalTrades = (aurora.trades || 0) + (hft.trades || 0);
+        var totalWins = (aurora.wins || 0) + (hft.wins || 0);
+        var winRate = totalTrades > 0 ? (totalWins/totalTrades*100).toFixed(0) : 0;
         
-        if (list.children.length !== recent.length) {
-            list.innerHTML = '';
-            recent.forEach(function(t) {
-                var profit = t.profit >= 0 ? '+$' + t.profit.toFixed(2) : '-$' + Math.abs(t.profit).toFixed(2);
-                var item = document.createElement('div');
-                item.className = 'activity-item ' + (t.result === 'WIN' ? 'trade' : '');
-                item.textContent = (t.signal || 'N/A') + ' ' + (t.token || '') + ' → ' + t.result + ' (' + profit + ')';
-                list.appendChild(item);
+        document.getElementById('totalBank').textContent = '$' + totalBank.toFixed(2);
+        var pnlEl = document.getElementById('totalPnl');
+        pnlEl.textContent = (totalPnl >= 0 ? '+' : '') + '$' + totalPnl.toFixed(2);
+        pnlEl.className = 'value ' + (totalPnl >= 0 ? 'green' : 'red');
+        document.getElementById('totalTrades').textContent = totalTrades;
+        document.getElementById('winRate').textContent = winRate + '%';
+        
+        // Aurora stats
+        document.getElementById('auroraBank').textContent = '$' + (aurora.bank||100).toFixed(2);
+        var apEl = document.getElementById('auroraPnl');
+        apEl.textContent = (aurora.pnl>=0?'+':'') + '$' + (aurora.pnl||0).toFixed(2);
+        apEl.style.color = aurora.pnl>=0 ? '#00ff88' : '#ff3366';
+        document.getElementById('auroraTrades').textContent = aurora.trades || 0;
+        document.getElementById('auroraWL').textContent = (aurora.wins||0) + '/' + (aurora.losses||0);
+        
+        // HFT stats
+        document.getElementById('hftBank').textContent = '$' + (hft.bank||100).toFixed(2);
+        var hpEl = document.getElementById('hftPnl');
+        hpEl.textContent = (hft.pnl>=0?'+':'') + '$' + (hft.pnl||0).toFixed(2);
+        hpEl.style.color = hft.pnl>=0 ? '#00ff88' : '#ff3366';
+        document.getElementById('hftTrades').textContent = hft.trades || 0;
+        document.getElementById('hftWL').textContent = (hft.wins||0) + '/' + (hft.losses||0);
+        
+        // Trades list
+        var tradesList = document.getElementById('tradesList');
+        if (trades.length > 0) {
+            tradesList.innerHTML = '';
+            trades.slice(0,15).forEach(function(t) {
+                var div = document.createElement('div');
+                div.className = 'trade-item ' + (t.result==='WIN'?'win':'loss');
+                div.innerHTML = '<div class="trade-info"><div class="trade-token">'+(t.signal||'')+' '+(t.token||'')+'</div><div class="trade-action">$'+(t.price||0).toFixed(0)+' | '+(t.reasoning||'').substring(0,40)+'...</div></div><div class="trade-result"><div class="trade-pnl '+(t.profit>=0?'positive':'negative')+'">'+(t.profit>=0?'+':'')+'$'+(t.profit||0).toFixed(2)+'</div><div>'+(t.result||'')+'</div></div>';
+                tradesList.appendChild(div);
             });
         }
-    })
-    .catch(function() {});
-}
-function updateSignals() {
-    var signals = ['LONG BTC - High confidence', 'SHORT ETH - Bearish divergence', 'HOLD - Waiting for entry', 'LONG LINK - Breakout', 'SHORT SOL - Profit take'];
-    var list = document.getElementById('signals');
-    if (list.children.length < 5) {
-        signals.forEach(function(s) {
-            var item = document.createElement('div');
-            item.className = 'activity-item';
-            item.textContent = s;
-            list.appendChild(item);
-        });
+        
+        // Chart
+        pnlHistory.push(totalBank);
+        if (pnlHistory.length > 30) pnlHistory.shift();
+        drawChart();
+        
+    } catch(e) {
+        document.getElementById('statusDot').className = 'status-dot red';
+        document.getElementById('statusText').textContent = 'Error';
+        console.log(e);
     }
 }
+
+function drawChart() {
+    var canvas = document.getElementById('pnlChart');
+    if (!canvas || pnlHistory.length < 2) return;
+    var ctx = canvas.getContext('2d');
+    var w = canvas.width = canvas.offsetWidth;
+    var h = canvas.height = canvas.offsetHeight;
+    ctx.clearRect(0,0,w,h);
+    var min = Math.min(...pnlHistory), max = Math.max(...pnlHistory), range = max-min||1;
+    ctx.strokeStyle = '#00ff88'; ctx.lineWidth = 2; ctx.beginPath();
+    pnlHistory.forEach(function(val,i) { var x=(i/(pnlHistory.length-1))*w, y=h-((val-min)/range)*(h-20)-10; i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); }); ctx.stroke();
+    ctx.lineTo(w,h); ctx.lineTo(0,h); ctx.closePath();
+    var g = ctx.createLinearGradient(0,0,0,h); g.addColorStop(0,'rgba(0,255,136,0.3)'); g.addColorStop(1,'rgba(0,255,136,0)');
+    ctx.fillStyle = g; ctx.fill();
+    ctx.fillStyle = '#00ff88'; ctx.font = 'bold 14px Orbitron'; ctx.fillText('$'+pnlHistory[pnlHistory.length-1].toFixed(2), w-70, 20);
+}
+
 window.onload = function() {
-    init3D(); fetchPrices(); fetchTradingState();
-    setTimeout(function() { document.getElementById('loading').style.opacity = '0'; setTimeout(function() { document.getElementById('loading').style.display = 'none'; }, 500); }, 1500);
-    addActivity('Aurora initialized', '');
+    init3D(); fetchPrices(); fetchData();
+    setTimeout(function() { document.getElementById('loading').style.opacity='0'; setTimeout(function(){document.getElementById('loading').style.display='none'},500); }, 1500);
     setInterval(fetchPrices, 5000);
-    setInterval(fetchTradingState, 3000);
-    setInterval(updateTradesFromAPI, 3000);
-    setInterval(function() {
-        var activities = ['Analyzing market patterns...', 'Fetching Bankr Signals...', 'Evaluating risk...', 'Checking sentiment...', 'Optimizing portfolio...'];
-        addActivity(activities[Math.floor(Math.random() * activities.length)]);
-    }, 4000);
-    updateSignals();
-    drawChart();
+    setInterval(fetchData, 3000);
 };
-window.onresize = function() { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); };
+window.onresize = function() { camera.aspect=window.innerWidth/window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth,window.innerHeight); };
 </script>
 </body>
 </html>
