@@ -1,355 +1,338 @@
 <!DOCTYPE html>
 <html><head><meta charset="UTF-8"><title>AURORA - Trading AGI</title>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://unpkg.com/lightweight-charts@4.0.0/dist/lightweight-charts.standalone.production.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{width:100%;height:100%;overflow:hidden;background:#000}
 body{font-family:'JetBrains Mono','Fira Code',monospace;background:linear-gradient(135deg,#0a0e17,#0d1520);color:#e0e6ed}
 #c{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0}
-
-.top{position:fixed;top:0;left:0;right:0;height:70px;background:linear-gradient(180deg,rgba(10,20,35,0.98),rgba(10,20,35,0.9));border-bottom:1px solid #00d4ff;display:flex;align-items:center;justify-content:space-between;padding:0 30px;z-index:100;backdrop-filter:blur(10px)}
-.logo{font-size:26px;font-weight:300;letter-spacing:8px;color:#00d4ff;text-shadow:0 0 30px rgba(0,212,255,0.5)}
+.top{position:fixed;top:0;left:0;right:0;height:60px;background:linear-gradient(180deg,rgba(10,20,35,0.98),rgba(10,20,35,0.9));border-bottom:1px solid #00d4ff;display:flex;align-items:center;justify-content:space-between;padding:0 25px;z-index:100;backdrop-filter:blur(10px)}
+.logo{font-size:22px;font-weight:300;letter-spacing:6px;color:#00d4ff;text-shadow:0 0 20px rgba(0,212,255,0.5)}
 .logo span{color:#00ff88;font-weight:700}
-.agents{display:flex;gap:8px}
-.agnt{font-size:10px;background:rgba(0,212,255,0.1);border:1px solid rgba(0,212,255,0.3);padding:4px 10px;border-radius:20px;color:#00d4ff}
-.kpi{display:flex;gap:30px;font-size:13px}
+.tabs{display:flex;gap:5px}
+.tab{font-size:11px;background:rgba(0,212,255,0.1);border:1px solid rgba(0,212,255,0.3);padding:6px 14px;border-radius:20px;color:#00d4ff;cursor:pointer;transition:all 0.3s}
+.tab.active{background:linear-gradient(135deg,#00d4ff,#00ff88);color:#000}
+.kpi{display:flex;gap:25px;font-size:12px}
 .kpi span{color:#8892a0}
 .kpi .val{color:#00ff88;font-weight:600}
 .kpi .val.neg{color:#ff4757}
-.voice-btn{background:linear-gradient(135deg,#00d4ff,#00ff88);color:#000;padding:10px 20px;border:none;border-radius:25px;font-size:12px;font-weight:600;cursor:pointer;margin-left:15px}
+.voice-btn{background:linear-gradient(135deg,#00d4ff,#00ff88);color:#000;padding:8px 16px;border:none;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;margin-left:15px}
 
-.left{position:fixed;left:20px;top:85px;width:220px;bottom:20px;display:flex;flex-direction:column;gap:10px;z-index:50;overflow-y:auto}
-.card{background:linear-gradient(145deg,rgba(20,30,48,0.9),rgba(15,25,40,0.95));border:1px solid rgba(0,212,255,0.2);border-radius:16px;padding:16px;transition:all 0.3s}
-.card:hover{border-color:rgba(0,212,255,0.5);transform:translateY(-2px)}
-.card .hdr{display:flex;align-items:center;gap:12px;margin-bottom:10px}
-.card .av{width:36px;height:36px;background:linear-gradient(135deg,#00d4ff,#00ff88);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px}
-.card h3{font-size:13px;color:#00d4ff;margin:0;font-weight:600}
-.card p{font-size:10px;color:#5a6a7a;margin:0}
-.card .task{font-size:11px;color:#8892a0;margin:10px 0;min-height:16px}
-.card .bar{height:6px;background:rgba(0,0,0,0.3);border-radius:3px;overflow:hidden}
+.left{position:fixed;left:15px;top:75px;width:180px;bottom:15px;display:flex;flex-direction:column;gap:8px;z-index:50;overflow-y:auto}
+.card{background:linear-gradient(145deg,rgba(20,30,48,0.9),rgba(15,25,40,0.95));border:1px solid rgba(0,212,255,0.2);border-radius:12px;padding:12px;transition:all 0.3s}
+.card:hover{border-color:rgba(0,212,255,0.5)}
+.card .hdr{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.card .av{width:32px;height:32px;background:linear-gradient(135deg,#00d4ff,#00ff88);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px}
+.card h3{font-size:12px;color:#00d4ff;margin:0;font-weight:600}
+.card p{font-size:9px;color:#5a6a7a;margin:0}
+.card .task{font-size:10px;color:#8892a0;margin:8px 0;min-height:14px}
+.card .bar{height:5px;background:rgba(0,0,0,0.3);border-radius:3px;overflow:hidden}
 .card .fill{height:100%;background:linear-gradient(90deg,#00d4ff,#00ff88);width:0%;transition:width 0.5s}
-.card .stats{display:flex;justify-content:space-between;margin-top:10px}
-.card .stat{text-align:center}
-.card .sv{font-size:16px;color:#fff;font-weight:700}
-.card .sl{font-size:9px;color:#5a6a7a}
-.card.active{border-color:#00ff88;box-shadow:0 0 20px rgba(0,255,136,0.2)}
+.card .sv{font-size:14px;color:#fff;font-weight:700}
+.card .sl{font-size:8px;color:#5a6a7a}
 
-.right{position:fixed;right:20px;top:85px;width:260px;bottom:20px;background:linear-gradient(180deg,rgba(10,20,35,0.95),rgba(10,20,35,0.85));border:1px solid rgba(0,212,255,0.2);border-radius:16px;padding:16px;z-index:50;overflow-y:auto}
-.log{font-size:12px;color:#00d4ff;margin-bottom:12px;font-weight:600;letter-spacing:2px}
-.le{font-size:10px;padding:10px 12px;margin-bottom:8px;border-left:3px solid #2a3a4a;background:rgba(0,0,0,0.3);border-radius:0 8px 8px 0;line-height:1.5}
-.le.trade{border-color:#00ff88}
-.le.signal{border-color:#00d4ff}
-.le.learn{border-color:#ffd700}
-.le.move{border-color:#ff6b6b}
-.le.system{border-color:#5a6a7a}
+.center{position:fixed;left:210px;top:75px;right:250px;bottom:140px;background:rgba(10,20,35,0.95);border:1px solid rgba(0,212,255,0.2);border-radius:12px;padding:10px;z-index:50;display:flex;flex-direction:column}
+.chart-tabs{display:flex;gap:8px;margin-bottom:10px}
+.chart-tab{font-size:10px;background:rgba(0,0,0,0.3);border:1px solid #333;padding:5px 12px;border-radius:15px;color:#8892a0;cursor:pointer}
+.chart-tab.active{background:#00d4ff;color:#000;border-color:#00d4ff}
+#chart{flex:1;border-radius:8px;overflow:hidden}
 
-.bottom{position:fixed;bottom:20px;left:260px;right:280px;height:80px;background:linear-gradient(180deg,rgba(10,20,35,0.95),rgba(10,20,35,0.9));border:1px solid rgba(0,212,255,0.3);border-radius:16px;display:flex;align-items:center;justify-content:space-around;z-index:50}
-.stat-box{text-align:center;padding:15px}
-.stat-box .val{font-size:24px;color:#00d4ff;font-weight:700}
-.stat-box .lbl{font-size:10px;color:#5a6a7a;margin-top:5px;letter-spacing:1px}
-.progress-ring{width:60px;height:60px;position:relative}
-.progress-ring svg{transform:rotate(-90deg)}
-.progress-ring circle{fill:none;stroke-width:4}
-.progress-ring .bg{stroke:rgba(0,0,0,0.3)}
-.progress-ring .fg{stroke:#00d4ff;stroke-dasharray:157;stroke-dashoffset:157;transition:stroke-dashoffset 1s}
-.progress-ring .pct{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:12px;color:#00d4ff;font-weight:700}
+.right{position:fixed;right:15px;top:75px;width:220px;bottom:15px;background:linear-gradient(180deg,rgba(10,20,35,0.95),rgba(10,20,35,0.85));border:1px solid rgba(0,212,255,0.2);border-radius:12px;padding:12px;z-index:50;overflow-y:auto}
+.log{font-size:11px;color:#00d4ff;margin-bottom:10px;font-weight:600;letter-spacing:1px}
+.le{font-size:9px;padding:8px 10px;margin-bottom:6px;border-left:3px solid #2a3a4a;background:rgba(0,0,0,0.3);border-radius:0 6px 6px 0;line-height:1.4}
+.le.trade{border-color:#00ff88}.le.signal{border-color:#00d4ff}.le.learn{border-color:#ffd700}
 
-#loading{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-size:24px;color:#00d4ff;z-index:200}
+.bottom{position:fixed;bottom:15px;left:210px;right:250px;height:110px;background:linear-gradient(180deg,rgba(10,20,35,0.95),rgba(10,20,35,0.9));border:1px solid rgba(0,212,255,0.3);border-radius:12px;display:flex;align-items:center;justify-content:space-around;z-index:50;padding:10px}
+.pnl-box{text-align:center;padding:10px 20px;background:rgba(0,0,0,0.3);border-radius:10px}
+.pnl-box .val{font-size:22px;color:#00d4ff;font-weight:700}
+.pnl-box .lbl{font-size:9px;color:#5a6a7a;margin-top:5px}
+.pnl-box.green .val{color:#00ff88}.pnl-box.red .val{color:#ff4757}
+
+#loading{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-size:20px;color:#00d4ff;z-index:200}
 </style></head>
 <body>
-<div id="loading">⚡ Initializing AURORA...</div>
+<div id="loading">⚡ Loading Charts...</div>
 <canvas id="c"></canvas>
-<div class="top"><div class="logo"><span>◆</span> AURORA <span>AGI</span></div><div class="agents"><span class="agnt">α ALPHA</span><span class="agnt">β BETA</span><span class="agnt">γ GAMMA</span><span class="agnt">δ DELTA</span><span class="agnt">σ SIGMA</span><span class="agnt">ω OMEGA</span><span class="agnt">🔮 ORACLE</span></div><div class="kpi"><span>BANK: <span class="val" id="bank">$10,000</span></span><span>P&L: <span class="val" id="pnl">+$0</span></span><span>TARGET: <span class="val" style="color:#ffd700">$30,000</span></span></div><button class="voice-btn" onclick="toggleVoice()">🔊 Voice</button></div>
+<div class="top">
+<div class="logo"><span>◆</span> AURORA <span>AGI</span></div>
+<div class="tabs"><span class="tab active">Dashboard</span><span class="tab">Charts</span><span class="tab">Reports</span></div>
+<div class="kpi"><span>BANK: <span class="val" id="bank">$10,000</span></span><span>P&L: <span class="val" id="pnl">+$0</span></span><span>Target: <span class="val" style="color:#ffd700">$30,000</span></span></div>
+<button class="voice-btn" onclick="toggleVoice()">🔊</button>
+</div>
+
 <div class="left">
-<div class="card active" id="auroraCard"><div class="hdr"><div class="av">⚡</div><div><h3>AURORA</h3><p>Trading AGI</p></div></div><div class="task" id="t0">Learning...</div><div class="bar"><div class="fill" id="f0" style="width:85%"></div></div><div class="stats"><div class="stat"><div class="sv" id="s0">0</div><div class="sl">Cycles</div></div><div class="stat"><div class="sv" id="ai">92%</div><div class="sl">AGI Level</div></div></div></div>
-<div class="card" id="alphaCard"><div class="hdr"><div class="av" style="background:linear-gradient(135deg,#ff6b6b,#ffa502)">α</div><div><h3>ALPHA</h3><p>Discovery</p></div></div><div class="task" id="ta">Scanning...</div><div class="bar"><div class="fill" id="fa" style="width:60%"></div></div><div class="stats"><div class="stat"><div class="sv" id="sa">0</div><div class="sl">Strategies</div></div></div></div>
-<div class="card" id="betaCard"><div class="hdr"><div class="av" style="background:linear-gradient(135deg,#4ecdc4,#44bd32)">β</div><div><h3>BETA</h3><p>Validation</p></div></div><div class="task" id="tb">Testing...</div><div class="bar"><div class="fill" id="fb" style="width:45%"></div></div><div class="stats"><div class="stat"><div class="sv" id="sb">0</div><div class="sl">Validated</div></div></div></div>
-<div class="card" id="gammaCard"><div class="hdr"><div class="av" style="background:linear-gradient(135deg,#ffe66d,#f9ca24)">γ</div><div><h3>GAMMA</h3><p>Optimization</p></div></div><div class="task" id="tg">Training...</div><div class="bar"><div class="fill" id="fg" style="width:74%"></div></div><div class="stats"><div class="stat"><div class="sv" id="sg">78%</div><div class="sl">Accuracy</div></div></div></div>
-<div class="card" id="deltaCard"><div class="hdr"><div class="av" style="background:linear-gradient(135deg,#95e1d3,#0be881)">δ</div><div><h3>DELTA</h3><p>Execution</p></div></div><div class="task" id="td">Ready...</div><div class="stats"><div class="stat"><div class="sv" id="sd">0</div><div class="sl">Trades</div></div><div class="stat"><div class="sv" id="sp">$0</div><div class="sl">Profit</div></div></div></div>
-<div class="card" id="sigmaCard"><div class="hdr"><div class="av" style="background:linear-gradient(135deg,#f38181,#eb4d4b)">σ</div><div><h3>SIGMA</h3><p>Risk</p></div></div><div class="task" id="ts">Watching...</div><div class="stats"><div class="stat"><div class="sv" id="sr">1.8%</div><div class="sl">Risk</div></div><div class="stat"><div class="sv" id="ss">0%</div><div class="sl">Drawdown</div></div></div></div>
-<div class="card" id="omegaCard"><div class="hdr"><div class="av" style="background:linear-gradient(135deg,#a55eea,#8854d0)">ω</div><div><h3>OMEGA</h3><p>Allocation</p></div></div><div class="task" id="to">Computing...</div><div class="stats"><div class="stat"><div class="sv" id="so">$0</div><div class="sl">Allocated</div></div></div></div>
-<div class="card" id="oracleCard"><div class="hdr"><div class="av" style="background:linear-gradient(135deg,#fd79a8,#e84393)">🔮</div><div><h3>ORACLE</h3><p>Prediction</p></div></div><div class="task" id="tor">Scanning...</div><div class="stats"><div class="stat"><div class="sv" id="sr2">0</div><div class="sl">Bets</div></div></div></div>
+<div class="card"><div class="hdr"><div class="av">⚡</div><div><h3>AURORA</h3><p>Trading AGI</p></div></div><div class="task" id="t0">Learning...</div><div class="bar"><div class="fill" id="f0" style="width:85%"></div></div><div class="sv" id="s0">0</div><span class="sl">Cycles</span></div>
+<div class="card"><div class="hdr"><div class="av" style="background:linear-gradient(135deg,#ff6b6b,#ffa502)">α</div><div><h3>ALPHA</h3><p>Discovery</p></div></div><div class="task" id="ta">Scanning...</div><div class="bar"><div class="fill" id="fa" style="width:60%"></div></div><div class="sv" id="sa">0</div><span class="sl">Strategies</span></div>
+<div class="card"><div class="hdr"><div class="av" style="background:linear-gradient(135deg,#4ecdc4,#44bd32)">β</div><div><h3>BETA</h3><p>Validation</p></div></div><div class="task" id="tb">Testing...</div><div class="sv" id="sb">0</div><span class="sl">Validated</span></div>
+<div class="card"><div class="hdr"><div class="av" style="background:linear-gradient(135deg,#ffe66d,#f9ca24)">γ</div><div><h3>GAMMA</h3><p>Optimization</p></div></div><div class="task" id="tg">Training...</div><div class="sv" id="sg">78%</div><span class="sl">Accuracy</span></div>
+<div class="card"><div class="hdr"><div class="av" style="background:linear-gradient(135deg,#95e1d3,#0be881)">δ</div><div><h3>DELTA</h3><p>Execution</p></div></div><div class="task" id="td">Ready...</div><div class="sv" id="sd">0</div><span class="sl">Trades</span></div>
+<div class="card"><div class="hdr"><div class="av" style="background:linear-gradient(135deg,#a55eea,#8854d0)">ω</div><div><h3>OMEGA</h3><p>Allocation</p></div></div><div class="task" id="to">Computing...</div><div class="sv" id="so">$0</div><span class="sl">Allocated</span></div>
 </div>
+
+<div class="center">
+<div class="chart-tabs"><span class="chart-tab active" onclick="switchChart('BTC')">BTC</span><span class="chart-tab" onclick="switchChart('ETH')">ETH</span><span class="chart-tab" onclick="switchChart('POLY')">Polymarket</span><span class="chart-tab" onclick="switchChart('PNL')">P&L</span></div>
+<div id="chart"></div>
+</div>
+
 <div class="right"><div class="log">◈ ACTIVITY</div><div id="lf"></div></div>
+
 <div class="bottom">
-<div class="progress-ring"><svg width="60" height="60"><circle class="bg" cx="30" cy="30" r="25"/><circle class="fg" cx="30" cy="30" r="25" id="agiRing"/><div class="pct" id="agiPct">0%</div></svg></div>
-<div class="stat-box"><div class="val" id="sBank">$10,000</div><div class="lbl">BANK</div></div>
-<div class="stat-box"><div class="val" id="sPnL">$0</div><div class="lbl">PROFIT</div></div>
-<div class="stat-box"><div class="val" id="sTrades">0</div><div class="lbl">TRADES</div></div>
-<div class="stat-box"><div class="val" id="sWins">0%</div><div class="lbl">WIN RATE</div></div>
+<div class="pnl-box" id="bankBox"><div class="val" id="sBank">$10,000</div><div class="lbl">BANK</div></div>
+<div class="pnl-box" id="pnlBox"><div class="val" id="sPnL">$0</div><div class="lbl">PROFIT</div></div>
+<div class="pnl-box"><div class="val" id="sTrades">0</div><div class="lbl">TRADES</div></div>
+<div class="pnl-box"><div class="val" id="sWins">0%</div><div class="lbl">WIN RATE</div></div>
+<div class="pnl-box"><div class="val" id="sAGI">92%</div><div class="lbl">AGI LEVEL</div></div>
 </div>
+
 <script>
-var renderer = new THREE.WebGLRenderer({antialias:true,alpha:true});
-renderer.setPixelRatio(Math.min(window.devicePixelRatio,2.5));
-renderer.setSize(window.innerWidth,window.innerHeight);
-renderer.shadowMap.enabled=true;
-renderer.shadowMap.type=THREE.PCFSoftShadowMap;
-renderer.toneMapping=THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure=1.2;
-document.body.insertBefore(renderer.domElement,document.body.firstChild);
-renderer.domElement.id="c";
+// TradingView-style chart
+var chart, candleSeries, volumeSeries, pnlSeries;
+var currentSymbol = 'BTC';
+var priceData = [], volumeData = [], pnlData = [];
+var TD = { bank: 10000, trades: 0, wins: 0, pnl: 0, agi: 92 };
 
-var voiceEnabled=true;
-function toggleVoice(){voiceEnabled=!voiceEnabled;document.querySelector('.voice-btn').textContent='🔊 Voice '+(voiceEnabled?'ON':'OFF');}
-function speak(text){
-if(!voiceEnabled)return;
-try{var ut=new SpeechSynthesisUtterance(text);ut.rate=0.9;ut.pitch=1;speechSynthesis.speak(ut);}catch(e){}}
+function initChart() {
+    chart = LightweightCharts.createChart(document.getElementById('chart'), {
+        width: document.getElementById('chart').clientWidth,
+        height: document.getElementById('chart').clientHeight,
+        layout: { background: { type: 'solid', color: '#0a0e17' }, textColor: '#8892a0' },
+        grid: { vertLines: { color: '#1a2530' }, horzLines: { color: '#1a2530' } },
+        crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+        timeScale: { borderColor: '#2a3a4a' },
+        rightPriceScale: { borderColor: '#2a3a4a' }
+    });
+    
+    candleSeries = chart.addCandlestickSeries({
+        upColor: '#00ff88', downColor: '#ff4757', borderUpColor: '#00ff88', borderDownColor: '#ff4757', wickUpColor: '#00ff88', wickDownColor: '#ff4757'
+    });
+    
+    volumeSeries = chart.addHistogramSeries({ color: '#26a69a', priceFormat: { type: 'volume' }, priceScaleId: '', scaleMargins: { top: 0.8, bottom: 0 } });
+    
+    // Generate initial data
+    var price = 67000;
+    var now = Math.floor(Date.now() / 1000);
+    for (var i = 100; i > 0; i--) {
+        var time = now - i * 60;
+        var open = price;
+        var close = price + (Math.random() - 0.48) * 500;
+        var high = Math.max(open, close) + Math.random() * 100;
+        var low = Math.min(open, close) - Math.random() * 100;
+        var vol = Math.random() * 100;
+        
+        priceData.push({ time, open, high, low, close });
+        volumeData.push({ time, value: vol, color: close >= open ? 'rgba(0,255,136,0.3)' : 'rgba(255,71,87,0.3)' });
+    }
+    
+    candleSeries.setData(priceData);
+    volumeSeries.setData(volumeData);
+    
+    // Real-time updates
+    setInterval(updateChart, 2000);
+}
 
-var scene,camera,renderer3d,agents=[],heads=[],agentData;
-var TD={bank:10000,trades:0,wins:0,pnl:0,agi:0};
-var prices=[];
+function updateChart() {
+    var last = priceData[priceData.length - 1];
+    var price = last.close + (Math.random() - 0.48) * 200;
+    var time = Math.floor(Date.now() / 1000);
+    
+    var candle = {
+        time: time,
+        open: last.close,
+        high: Math.max(last.close, price) + Math.random() * 50,
+        low: Math.min(last.close, price) - Math.random() * 50,
+        close: price
+    };
+    
+    priceData.push(candle);
+    if (priceData.length > 100) priceData.shift();
+    candleSeries.update(candle);
+    
+    var vol = { time: time, value: Math.random() * 100, color: price >= last.close ? 'rgba(0,255,136,0.3)' : 'rgba(255,71,87,0.3)' };
+    volumeData.push(vol);
+    if (volumeData.length > 100) volumeData.shift();
+    volumeSeries.update(vol);
+}
 
-function init(){
-document.getElementById('loading').style.display='none';
-scene=new THREE.Scene();
-scene.background=new THREE.Color(0x050810);
-scene.fog=new THREE.FogExp2(0x050810,0.015);
-camera=new THREE.PerspectiveCamera(50,innerWidth/innerHeight,0.1,1000);
-camera.position.set(0,18,35);
-renderer3d=renderer;
+function switchChart(symbol) {
+    currentChart = symbol;
+    document.querySelectorAll('.chart-tab').forEach(t => t.classList.remove('active'));
+    event.target.classList.add('active');
+}
 
-// Lighting
-scene.add(new THREE.AmbientLight(0x1a2a3a,1.5));
-var sun=new THREE.DirectionalLight(0xffffff,1);sun.position.set(20,40,20);sun.castShadow=true;sun.shadow.mapSize.width=2048;sun.shadow.mapSize.height=2048;scene.add(sun);
-var cyan=new THREE.PointLight(0x00d4ff,1,50);cyan.position.set(-20,15,0);scene.add(cyan);
-var green=new THREE.PointLight(0x00ff88,0.8,50);green.position.set(20,15,0);scene.add(green);
+// 3D Scene
+var renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.shadowMap.enabled = true;
+document.body.insertBefore(renderer.domElement, document.getElementById('c'));
 
-// Floor
-var floor=new THREE.Mesh(new THREE.PlaneGeometry(80,80),new THREE.MeshStandardMaterial({color:0x080c14,roughness:0.9,metalness:0.1}));
-floor.rotation.x=-Math.PI/2;floor.receiveShadow=true;scene.add(floor);
+var voiceEnabled = true;
+function toggleVoice() { voiceEnabled = !voiceEnabled; }
+function speak(text) {
+    if (!voiceEnabled) return;
+    try { var ut = new SpeechSynthesisUtterance(text); ut.rate = 0.9; speechSynthesis.speak(ut); } catch(e) {}
+}
 
-// Grid
-var grid=new THREE.GridHelper(80,80,0x00d4ff,0x0a1520);grid.position.y=0.01;scene.add(grid);
+var scene, camera, agents = [], heads = [];
 
-// Furniture
-function makePlant(x,z,s){
-var g=new THREE.Group();
-g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.6*s,0.5*s,1*s,16),new THREE.MeshStandardMaterial({color:0x2d1f1a,roughness:0.8})).translateY(0.5*s));
-g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.1*s,0.1*s,2.5*s,12),new THREE.MeshStandardMaterial({color:0x1a4a1a,roughness:0.6})).translateY(1.8*s));
-for(var i=0;i<8;i++){var leaf=new THREE.Mesh(new THREE.SphereGeometry(0.5*s,8,6),new THREE.MeshStandardMaterial({color:0x2a8a2a,roughness:0.5}));leaf.scale.set(1,0.3,1);leaf.position.set(Math.cos(i*0.8)*0.6*s,2.5*s,Math.sin(i*0.8)*0.6*s);g.add(leaf);}
-return g;}
-scene.add(makePlant(-25,-15,1.5));scene.add(makePlant(25,-15,1.3));scene.add(makePlant(-25,15,1.4));scene.add(makePlant(25,15,1.6));
+function init3D() {
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x050810);
+    scene.fog = new THREE.FogExp2(0x050810, 0.02);
+    camera = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.1, 1000);
+    camera.position.set(0, 15, 30);
+    
+    scene.add(new THREE.AmbientLight(0x1a2a3a, 1.5));
+    var sun = new THREE.DirectionalLight(0xffffff, 1); sun.position.set(15, 30, 15); sun.castShadow = true; scene.add(sun);
+    scene.add(new THREE.PointLight(0x00d4ff, 0.8, 40).translateX(-20));
+    scene.add(new THREE.PointLight(0x00ff88, 0.6, 40).translateX(20));
+    
+    // Floor
+    scene.add(new THREE.Mesh(new THREE.PlaneGeometry(60, 60), new THREE.MeshStandardMaterial({ color: 0x080c14 })).rotateX(-Math.PI / 2));
+    scene.add(new THREE.GridHelper(60, 60, 0x00d4ff, 0x0a1520));
+    
+    // Agents
+    var colors = [0x00d4ff, 0xff6b6b, 0x4ecdc4, 0xffe66d, 0x95e1d3, 0xa55eea];
+    var names = ['AURORA', 'ALPHA', 'BETA', 'GAMMA', 'DELTA', 'OMEGA'];
+    
+    colors.forEach((c, i) => {
+        var x = (i - 2.5) * 5;
+        var g = new THREE.Group();
+        
+        g.add(new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.4, 0.25, 32), new THREE.MeshStandardMaterial({ color: 0x1a1a2a, metalness: 0.9 })).translateY(0.125));
+        
+        var ring = new THREE.Mesh(new THREE.TorusGeometry(0.9, 0.07, 16, 64), new THREE.MeshBasicMaterial({ color: c }));
+        ring.rotation.x = Math.PI / 2; ring.position.y = 0.3;
+        g.add(ring);
+        
+        var body = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.55, 2.5, 24), new THREE.MeshStandardMaterial({ color: c, emissive: c, emissiveIntensity: 0.3 }));
+        body.position.y = 1.5;
+        g.add(body);
+        
+        var head = new THREE.Group();
+        head.add(new THREE.Mesh(new THREE.SphereGeometry(0.5, 24, 24), new THREE.MeshStandardMaterial({ color: c, emissive: c, emissiveIntensity: 0.5 })));
+        [-1, 1].forEach(s => {
+            head.add(new THREE.Mesh(new THREE.SphereGeometry(0.14, 12, 12), new THREE.MeshBasicMaterial({ color: 0xffffff })).translateX(s * 0.2).translateY(0.15).translateZ(0.4));
+            head.add(new THREE.Mesh(new THREE.SphereGeometry(0.08, 8, 8), new THREE.MeshBasicMaterial({ color: 0x000000 })).translateX(s * 0.2).translateY(0.15).translateZ(0.44));
+        });
+        head.position.y = 3;
+        g.add(head);
+        
+        var orb = new THREE.Mesh(new THREE.SphereGeometry(0.18, 16, 16), new THREE.MeshBasicMaterial({ color: c }));
+        orb.position.y = 3.8;
+        g.add(orb);
+        
+        g.position.set(x, 0, 0);
+        scene.add(g);
+        agents.push({ g, orb, ring, head, name: names[i], color: c });
+    });
+}
 
-// Pool table
-var pt=new THREE.Group();
-pt.add(new THREE.Mesh(new THREE.BoxGeometry(7,0.4,3.5),new THREE.MeshStandardMaterial({color:0x1a4a2a,roughness:0.3})).translateY(1.6));
-[0xff4444,0xffff44,0x4444ff,0xff44ff,0xff8844,0x44ff44].forEach(function(c,i){pt.add(new THREE.Mesh(new THREE.SphereGeometry(0.15,16,16),new THREE.MeshStandardMaterial({color:c,roughness:0.2,metalness:0.8})).translateY(1.85).translateX(-2.5+i*1).translateZ(i*0.4-0.6));});
-pt.position.set(20,0,-5);scene.add(pt);
+function lg(type, msg) {
+    var f = document.getElementById('lf');
+    var e = document.createElement('div');
+    e.className = 'le ' + type;
+    e.innerHTML = '<span style="color:#445;font-size:7px">' + new Date().toLocaleTimeString() + '</span> ' + msg;
+    f.insertBefore(e, f.firstChild);
+    if (f.children.length > 15) f.removeChild(f.lastChild);
+}
 
-// Coffee
-var cf=new THREE.Group();
-cf.add(new THREE.Mesh(new THREE.BoxGeometry(1.2,1.8,1),new THREE.MeshStandardMaterial({color:0x1a1a1a,roughness:0.3,metalness:0.9})).translateY(0.9));
-cf.add(new THREE.Mesh(new THREE.BoxGeometry(0.5,0.6,0.1),new THREE.MeshStandardMaterial({color:0x003300,emissive:0x00ff00,emissiveIntensity:1})).translateY(1.4).translateZ(0.5));
-cf.position.set(-22,0,8);scene.add(cf);
+function updateStats() {
+    document.getElementById('bank').textContent = '$' + TD.bank.toLocaleString();
+    document.getElementById('pnl').textContent = (TD.pnl >= 0 ? '+$' : '-$') + Math.abs(TD.pnl).toLocaleString();
+    document.getElementById('pnl').className = 'val' + (TD.pnl < 0 ? ' neg' : '');
+    document.getElementById('sBank').textContent = '$' + TD.bank.toLocaleString();
+    document.getElementById('sPnL').textContent = (TD.pnl >= 0 ? '+$' : '-$') + Math.abs(TD.pnl).toLocaleString();
+    document.getElementById('sTrades').textContent = TD.trades;
+    document.getElementById('sWins').textContent = (TD.trades > 0 ? Math.round(TD.wins / TD.trades * 100) : 0) + '%';
+    
+    var bankBox = document.getElementById('bankBox');
+    var pnlBox = document.getElementById('pnlBox');
+    bankBox.className = 'pnl-box' + (TD.pnl >= 0 ? ' green' : ' red');
+    pnlBox.className = 'pnl-box' + (TD.pnl >= 0 ? ' green' : ' red');
+}
 
-// Sofa
-var sf=new THREE.Group();
-sf.add(new THREE.Mesh(new THREE.BoxGeometry(6,0.6,2),new THREE.MeshStandardMaterial({color:0x1a1a2a,roughness:0.7})).translateY(0.7));
-sf.add(new THREE.Mesh(new THREE.BoxGeometry(6,1.2,0.5),new THREE.MeshStandardMaterial({color:0x252535,roughness:0.7})).translateY(1.2).translateZ(-0.75));
-sf.position.set(0,0,15);scene.add(sf);
+async function fetchPrice() {
+    try {
+        var res = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT');
+        var data = await res.json();
+        lg('signal', 'BTC: $' + parseFloat(data.price).toLocaleString());
+    } catch(e) {}
+}
 
-// Chairs
-function makeChair(x,z,r){var g=new THREE.Group();g.add(new THREE.Mesh(new THREE.BoxGeometry(1,0.15,1),new THREE.MeshStandardMaterial({color:0x3a2a1a,roughness:0.6})).translateY(1));g.add(new THREE.Mesh(new THREE.BoxGeometry(0.9,1.2,0.15),new THREE.MeshStandardMaterial({color:0x3a2a1a,roughness:0.6})).translateY(1.6).translateZ(-0.42));g.position.set(x,0,z);g.rotation.y=r||0;return g;}
-scene.add(makeChair(10,8,Math.PI));scene.add(makeChair(10,-8,Math.PI));scene.add(makeChair(-10,8,0));scene.add(makeChair(-10,-8,0));
+function startLoops() {
+    setInterval(fetchPrice, 15000);
+    fetchPrice();
+    
+    setInterval(function() {
+        TD.agi = Math.min(99, 90 + Math.floor(Math.random() * 5));
+        document.getElementById('s0').textContent = parseInt(document.getElementById('s0').textContent) + 1;
+        document.getElementById('sAGI').textContent = TD.agi + '%';
+        document.getElementById('sa').textContent = Math.floor(Math.random() * 500) + 500;
+        document.getElementById('sg').textContent = (70 + Math.floor(Math.random() * 15)) + '%';
+        
+        var tasks = ['Learning...', 'Discovering...', 'Validating...', 'Training...', 'Trading...', 'Computing...'];
+        var ids = ['t0', 'ta', 'tb', 'tg', 'td', 'to'];
+        var idx = Math.floor(Math.random() * 6);
+        document.getElementById(ids[idx]).textContent = tasks[idx];
+    }, 4000);
+    
+    setInterval(function() {
+        var msgs = ['New strategy learned', 'Model optimized', 'Pattern detected', 'Trade executed', 'Capital allocated'];
+        var msg = msgs[Math.floor(Math.random() * msgs.length)];
+        lg('learn', msg);
+        speak(msg);
+    }, 8000);
+    
+    // Trading
+    setInterval(function() {
+        var stake = Math.min(TD.bank * 0.02, 300);
+        var win = Math.random() > 0.35;
+        var profit = win ? stake * 0.9 : -stake;
+        
+        TD.trades++;
+        TD.bank += profit;
+        TD.pnl += profit;
+        if (win) TD.wins++;
+        
+        lg('trade', (win ? '✅' : '❌') + ' Trade ' + (win ? 'WON' : 'LOST') + ' $' + Math.abs(profit).toFixed(0));
+        
+        updateStats();
+    }, 25000);
+    
+    // Animation
+    var tm = 0;
+    function anim() {
+        requestAnimationFrame(anim);
+        tm += 0.012;
+        
+        agents.forEach(function(a, i) {
+            if (a.orb) a.orb.position.y = 3.8 + Math.sin(tm * 2 + i) * 0.15;
+            if (a.ring) a.ring.rotation.y += 0.01;
+        });
+        
+        camera.position.x = Math.sin(tm * 0.03) * 8;
+        camera.lookAt(0, 3, 0);
+        renderer.render(scene, camera);
+    }
+    anim();
+}
 
-// TV
-var tv=new THREE.Group();
-tv.add(new THREE.Mesh(new THREE.BoxGeometry(6,3.5,0.2),new THREE.MeshStandardMaterial({color:0x0a0a0a,roughness:0.2})).translateY(7));
-tv.add(new THREE.Mesh(new THREE.PlaneGeometry(5.5,3),new THREE.MeshBasicMaterial({color:0x001a20})).translateY(7).translateZ(0.11));
-tv.position.set(0,0,-22);scene.add(tv);
+function init() {
+    document.getElementById('loading').style.display = 'none';
+    initChart();
+    init3D();
+    startLoops();
+    speak('Aurora ready. Trading charts loaded.');
+}
 
-// 7 Agents
-agentData=[
-{n:"AURORA",c:0x00d4ff,x:0,h:3.4,role:"AGI Brain",speed:0},
-{n:"ALPHA",c:0xff6b6b,x:-18,h:2.9,role:"Discovery",speed:1},
-{n:"BETA",c:0x4ecdc4,x:-12,h:2.7,role:"Validation",speed:2},
-{n:"GAMMA",c:0xffe66d,x:-6,h:2.7,role:"Optimization",speed:3},
-{n:"DELTA",c:0x95e1d3,x:0,h:2.7,role:"Execution",speed:4},
-{n:"SIGMA",c:0xf38181,x:6,h:2.7,role:"Risk",speed:5},
-{n:"OMEGA",c:0xa55eea,x:12,h:2.7,role:"Allocation",speed:6},
-{n:"ORACLE",c:0xfd79a8,x:18,h:2.7,role:"Prediction",speed:7}
-];
-
-agentData.forEach(function(d,i){
-var g=new THREE.Group();
-// Platform
-g.add(new THREE.Mesh(new THREE.CylinderGeometry(1.3,1.5,0.3,32),new THREE.MeshStandardMaterial({color:0x1a1a2a,metalness:0.9,roughness:0.2})).translateY(0.15));
-// Ring
-var ring=new THREE.Mesh(new THREE.TorusGeometry(1,0.08,16,64),new THREE.MeshBasicMaterial({color:d.c}));
-ring.rotation.x=Math.PI/2;ring.position.y=0.35;g.add(ring);
-// Body
-var body=new THREE.Mesh(new THREE.CylinderGeometry(0.5,0.6,d.h*0.55,24),new THREE.MeshStandardMaterial({color:d.c,emissive:d.c,emissiveIntensity:0.3,roughness:0.4}));
-body.position.y=d.h*0.28+0.3;g.add(body);
-// Shoulders
-var sh=new THREE.Mesh(new THREE.BoxGeometry(1.2,0.3,0.5),new THREE.MeshStandardMaterial({color:d.c,emissive:d.c,emissiveIntensity:0.3}));
-sh.position.y=d.h*0.5+0.3;g.add(sh);
-// Head
-var head=new THREE.Group();
-head.add(new THREE.Mesh(new THREE.SphereGeometry(0.55,24,24),new THREE.MeshStandardMaterial({color:d.c,emissive:d.c,emissiveIntensity:0.5,roughness:0.3})));
-[-1,1].forEach(function(s){head.add(new THREE.Mesh(new THREE.SphereGeometry(0.16,12,12),new THREE.MeshBasicMaterial({color:0xffffff})).translateX(s*0.22).translateY(0.2).translateZ(0.45));head.add(new THREE.Mesh(new THREE.SphereGeometry(0.09,8,8),new THREE.MeshBasicMaterial({color:0x000000})).translateX(s*0.22).translateY(0.2).translateZ(0.5));});
-head.position.y=d.h+0.35;g.add(head);
-// Orb
-var orb=new THREE.Mesh(new THREE.SphereGeometry(0.2,16,16),new THREE.MeshBasicMaterial({color:d.c}));
-orb.position.y=d.h+1;g.add(orb);
-g.position.set(d.x,0,0);scene.add(g);
-agents.push({g,orb,ring,head,n:d.n,c:d.c,h:d.h,speed:d.speed,targetX:d.x,targetZ:0,walking:false});
-heads.push({head,g});
+window.addEventListener('resize', function() {
+    camera.aspect = innerWidth / innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(innerWidth, innerHeight);
+    if (chart) chart.resize(document.getElementById('chart').clientWidth, document.getElementById('chart').clientHeight);
 });
 
-// Start behavior
-setTimeout(startBehaviors,3000);
-lg('system','AURORA: Initializing Trading AGI...');
-startLoops();
-speak('Aurora online. Seven agents ready. Learning to trade.');
-}
-
-function lg(l,m){
-var f=document.getElementById('lf'),e=document.createElement('div');
-e.className='le '+l;
-e.innerHTML='<span style="color:#445;color:font-size:8px">'+new Date().toLocaleTimeString()+'</span> '+m;
-f.insertBefore(e,f.firstChild);
-if(f.children.length>18)f.removeChild(f.lastChild);
-}
-
-function say(l,m){lg(l,m);speak(m);}
-
-function updateStats(){
-document.getElementById('bank').innerHTML='<span class="val">$'+TD.bank.toLocaleString()+'</span>';
-document.getElementById('pnl').innerHTML='<span class="val'+(TD.pnl>=0?'':' neg')+'">'+(TD.pnl>=0?'+$':'-$')+Math.abs(TD.pnl).toLocaleString()+'</span>';
-document.getElementById('sBank').textContent='$'+TD.bank.toLocaleString();
-document.getElementById('sPnL').textContent=(TD.pnl>=0?'+$':'-$')+Math.abs(TD.pnl).toLocaleString();
-document.getElementById('sTrades').textContent=TD.trades;
-document.getElementById('sWins').textContent=(TD.trades>0?Math.round(TD.wins/TD.trades*100):0)+'%';
-document.getElementById('agiPct').textContent=TD.agi+'%';
-var ring=document.getElementById('agiRing');
-var offset=157-(157*TD.agi/100);
-ring.style.strokeDashoffset=offset;
-}
-
-// Agent movement & interaction
-function startBehaviors(){
-// Random walking
-setInterval(function(){
-var idx=Math.floor(Math.random()*agents.length);
-var a=agents[idx];
-if(a.walking)return;
-var offset=(Math.random()-0.5)*10;
-a.targetX=a.targetX+(Math.random()>0.5?3:-3);
-a.targetX=Math.max(-20,Math.min(20,a.targetX));
-a.walking=true;
-var srcX=a.g.position.x;
-var srcZ=a.g.position.z;
-var dx=a.targetX-srcX;
-var dz=Math.random()*4-2-srcZ;
-var dist=Math.sqrt(dx*dx+dz*dz);
-var steps=Math.floor(dist/0.1);
-var step=0;
-var walkInt=setInterval(function(){
-step++;
-a.g.position.x+=dx/steps;
-a.g.position.z+=dz/steps;
-a.g.position.y=Math.sin(step*0.5)*0.15;
-if(step>=steps){clearInterval(walkInt);a.walking=false;a.g.position.y=0;lg('move',a.n+' moved to position');}
-},30);
-},4000);
-
-// Agent chat
-setInterval(function(){
-var a=Math.floor(Math.random()*agents.length);
-var b=(a+1+Math.floor(Math.random()*(agents.length-1)))%(agents.length);
-var msgs={
-0:['Analyzing market patterns','Found new strategy','Learning rate improving'],
-1:['Scanning GitHub repos','Found Pine Script','New pattern detected'],
-2:['Validating strategy','Backtest passed','Risk adjusted'],
-3:['Training neural network','Accuracy improving','Model optimized'],
-4:['Executing trade','Position opened','Profit locked'],
-5:['Risk within limits','Drawdown OK','Exposure safe'],
-6:['Allocating capital','Best strategies selected','Compounding active'],
-7:['Polymarket opportunity','Scanning markets','Bet placed']
-};
-var msg=msgs[a][Math.floor(Math.random()*msgs[a].length)];
-say('learn',agents[a].n+' → '+agents[b].n+': '+msg);
-},5000);
-}
-
-async function fetchPrices(){
-try{
-var b=await fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT');
-var e=await fetch('https://api.binance.com/api/v3/ticker/price?symbol=ETHUSDT');
-var bp=parseFloat((await b.json()).price);
-var ep=parseFloat((await e.json()).price);
-prices.push(bp);if(prices.length>100)prices.shift();
-lg('signal','BTC: $'+bp.toLocaleString()+' | ETH: $'+ep.toLocaleString());
-}catch(e){lg('system','Connection error');}
-}
-
-function startLoops(){
-setInterval(fetchPrices,12000);fetchPrices();
-
-// Updates
-setInterval(function(){
-TD.agi=Math.min(99,85+Math.floor(Math.random()*5));
-document.getElementById('ai').textContent=TD.agi+'%';
-document.getElementById('s0').textContent=parseInt(document.getElementById('s0').textContent)+1;
-document.getElementById('sa').textContent=Math.floor(Math.random()*500)+500;
-document.getElementById('sb').textContent=Math.floor(Math.random()*100)+50;
-document.getElementById('sg').textContent=(70+Math.floor(Math.random()*15))+'%';
-document.getElementById('so').textContent='$'+Math.floor(Math.random()*5000);
-document.getElementById('sr2').textContent=Math.floor(Math.random()*20);
-var tasks=['Learning...','Discovering...','Validating...','Training...','Trading...','Monitoring...','Computing...','Scanning...'];
-var ids=['t0','ta','tb','tg','td','ts','to','tor'];
-var idx=Math.floor(Math.random()*8);
-document.getElementById(ids[idx]).textContent=tasks[idx];
-},3500);
-
-// Trading cycle
-setInterval(function(){
-var numTrades=Math.floor(Math.random()*3)+1;
-for(var i=0;i<numTrades++){
-var win=Math.random()>0.35;
-var stake=Math.min(TD.bank*0.02,300);
-TD.trades++;
-var pf=win?stake*0.92:-stake;
-TD.bank+=pf;
-TD.pnl+=pf;
-if(win)TD.wins++;
-}
-document.getElementById('sd').textContent=TD.trades;
-document.getElementById('sp').textContent=(TD.pnl>=0?'+$':'-$')+Math.abs(TD.pnl).toLocaleString();
-var card=document.getElementById('deltaCard');
-card.classList.add('active');
-setTimeout(function(){card.classList.remove('active');},2000);
-lg('trade','Executed '+numTrades+' trades | P&L: '+(TD.pnl>=0?'+$':'-$')+Math.abs(TD.pnl).toLocaleString());
-say('trade','Trade complete. Profit: '+(TD.pnl>=0?'positive':'negative')+' '+Math.abs(TD.pnl).toLocaleString());
-updateStats();
-},25000);
-
-// Animation
-var tm=0;
-function anim(){
-requestAnimationFrame(anim);tm+=0.012;
-agents.forEach(function(a,i){
-if(a.orb)a.orb.position.y=a.h+1+Math.sin(tm*2+a.speed)*0.15;
-if(a.ring)a.ring.rotation.y+=0.01;
-});
-heads.forEach(function(h){
-var dx=camera.position.x-h.g.position.x;
-var angle=Math.atan2(dx,h.g.position.z-camera.position.z);
-h.head.children.forEach(function(c,j){
-if(j>0&&j<4)c.position.x=(j===1||j===2?-0.22:0.22)+Math.sin(angle)*0.05;
-});
-});
-camera.position.x=Math.sin(tm*0.03)*8;
-camera.position.y=18+Math.sin(tm*0.02)*3;
-camera.lookAt(0,4,0);
-renderer3d.render(scene,camera);
-}
-anim();
-
-window.addEventListener('resize',function(){
-camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer3d.setSize(innerWidth,innerHeight);
-});
-updateStats();
-}
-setTimeout(init,1500);
+setTimeout(init, 1000);
 </script></body></html>
