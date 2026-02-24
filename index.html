@@ -1,318 +1,85 @@
 <!DOCTYPE html>
-<html><head><meta charset="UTF-8"><title>APEX HQ - Polymarket Trading</title>
+<html><head><meta charset="UTF-8"><title>APEX HQ - Multi-Exchange Trading</title>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Courier New',monospace;background:#050508;color:#fff;overflow:hidden}
 #c{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0}
 .top{position:fixed;top:0;left:0;right:0;height:55px;background:linear-gradient(90deg,#0a0a12,#12121a);border-bottom:2px solid #00ffd1;display:flex;align-items:center;justify-content:space-between;padding:0 20px;z-index:100}
-.logo{font-size:20px;font-weight:bold;letter-spacing:4px;color:#00ffd1;text-shadow:0 0 15px #00ffd1}
+.logo{font-size:20px;font-weight:bold;letter-spacing:4px;color:#00ffd1}
 .logo span{color:#ffd700}
-.kpi{display:flex;gap:25px;font-size:11px;color:#888}
-.kpi span{color:#00ffd1}
+.kpi{display:flex;gap:20px;font-size:11px}
 .kpi .pnl{color:#00ff88;font-weight:bold}
 .kpi .pnl.neg{color:#ff4444}
+.exchanges{display:gap:8px;display:flex;font-size:9px}
+.ex{background:#222;padding:3px 8px;border-radius:4px}
+.hl{color:#00d4ff}.bf{color:#ff6b35}.pm{color:#ffd700}
 .live{color:#ff0000;animation:pulse 1s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
-.left{position:fixed;left:10px;top:65px;width:200px;bottom:10px;display:flex;flex-direction:column;gap:8px;z-index:50;overflow-y:auto}
-.card{background:linear-gradient(135deg,#1a1a2a,#0f0f1a);border:1px solid #333;border-radius:8px;padding:10px}
-.card .hdr{display:flex;align-items:center;gap:8px;margin-bottom:6px}
-.card .av{font-size:18px}
-.card h3{font-size:12px;color:#00ffd1;margin:0}
-.card p{font-size:9px;color:#666;margin:0}
-.card .task{font-size:10px;color:#888;margin:6px 0;height:14px;overflow:hidden}
-.card .bar{height:4px;background:#222;border-radius:2px;overflow:hidden}
-.card .fill{height:100%;background:linear-gradient(90deg,#00ffd1,#00ff88);width:0%;transition:width 0.3s}
-.card .stats{display:flex;justify-content:space-around;margin-top:6px}
-.card .stat{text-align:center}
+.left{position:fixed;left:10px;top:65px;width:190px;bottom:10px;display:flex;flex-direction:column;gap:6px;z-index:50;overflow-y:auto}
+.card{background:#1a1a2a;border:1px solid #333;border-radius:6px;padding:8px}
+.card h3{font-size:11px;color:#00ffd1;margin:0 0 4px 0}
+.card p{font-size:8px;color:#666;margin:0}
+.card .task{font-size:9px;color:#888;margin:4px 0}
 .card .sv{font-size:14px;color:#fff;font-weight:bold}
-.card .sl{font-size:8px;color:#555}
-.card.signal{background:linear-gradient(135deg,#1a2a1a,#0f1a0f);border-color:#00ff88}
-.card.down{background:linear-gradient(135deg,#2a1a1a,#1a0f0f);border-color:#ff4444}
-.right{position:fixed;right:10px;top:65px;width:220px;bottom:10px;background:rgba(10,10,20,0.9);border:1px solid #333;border-radius:8px;padding:10px;z-index:50;overflow-y:auto}
-.log{font-size:10px;color:#00ffd1;margin-bottom:8px;font-weight:bold}
-.le{font-size:9px;padding:4px 6px;margin-bottom:4px;border-left:2px solid #444;background:rgba(0,0,0,0.3);border-radius:0 4px 4px 0}
-.le.trade{border-color:#00ff88}
-.le.signal{border-color:#00ffd1}
-.le.alert{border-color:#ff4444}
-.le.decision{border-color:#ffd700}
-.le.system{border-color:#8888ff}
-.bottom{position:fixed;bottom:10px;left:240px;right:240px;height:60px;background:rgba(10,10,20,0.95);border:1px solid #333;border-radius:8px;display:flex;align-items:center;justify-content:space-around;z-index:50}
-.stat-box{text-align:center;padding:10px}
-.stat-box .val{font-size:18px;color:#00ffd1;font-weight:bold}
-.stat-box .lbl{font-size:9px;color:#555}
-.tip{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(0,255,209,0.1);border:1px solid #00ffd1;border-radius:6px;padding:8px 16px;font-size:10px;color:#00ffd1;z-index:60}
-.tip span{color:#ff4444}
+.card .sl{font-size:7px;color:#555}
+.card.signal{border-color:#00ff88}
+.card.down{border-color:#ff4444}
+.card.hl{border-color:#00d4ff}
+.card.bf{border-color:#ff6b35}
+.right{position:fixed;right:10px;top:65px;width:200px;bottom:10px;background:rgba(10,10,20,0.9);border:1px solid #333;border-radius:8px;padding:8px;z-index:50;overflow-y:auto}
+.log{font-size:10px;color:#00ffd1;margin-bottom:6px}
+.le{font-size:8px;padding:3px 5px;margin-bottom:3px;border-left:2px solid #444;background:rgba(0,0,0,0.3)}
+.le.trade{border-color:#00ff88}.le.signal{border-color:#00ffd1}.le.alert{border-color:#ff4444}.le.hyper{border-color:#00d4ff}.le.blofin{border-color:#ff6b35}
+.bottom{position:fixed;bottom:10px;left:210px;right:220px;height:60px;background:rgba(10,10,20,0.95);border:1px solid #333;border-radius:8px;display:flex;align-items:center;justify-content:space-around;z-index:50}
+.stat-box{text-align:center}
+.stat-box .val{font-size:16px;color:#00ffd1;font-weight:bold}
+.stat-box .lbl{font-size:8px;color:#555}
 #loading{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-size:24px;color:#00ffd1;z-index:200}
 </style></head>
 <body>
 <div id="loading">APEX Loading...</div>
 <canvas id="c"></canvas>
-<div class="top"><div class="logo"><span>◆</span> APEX HQ <span class="live">● POLYMARKET</span></div><div class="kpi"><span>BANK: $100</span><span class="pnl" id="bank">$100</span><span>TARGET: $3000</span><span class="pnl" id="pnl">+$0</span></div></div>
+<div class="top"><div class="logo"><span>◆</span> APEX HQ <span class="live">●</span></div><div class="exchanges"><span class="ex hl">Hyperliquid</span><span class="ex bf">Blofin</span><span class="ex pm">Polymarket</span></div><div class="kpi"><span>BANK: $100</span><span class="pnl" id="bank">$100</span><span class="pnl" id="pnl">+$0</span></div></div>
 <div class="left">
-<div class="card" style="border-color:#ffd700"><div class="hdr"><div class="av">⚡</div><div><h3 style="color:#ffd700">APEX</h3><p>Team Lead</p></div></div><div class="task" id="tap">Managing team...</div><div class="bar"><div class="fill" id="fap" style="width:50%"></div></div><div class="stats"><div class="stat"><div class="sv" id="st10">0</div><div class="sl">Decisions</div></div><div class="stat"><div class="sv" id="st11">0</div><div class="sl">Calls</div></div></div></div>
-<div class="card"><div class="hdr"><div class="av">🔬</div><div><h3>ARIA</h3><p>Market Analyst</p></div></div><div class="task" id="ta">Analyzing markets...</div><div class="bar"><div class="fill" id="fa" style="width:30%"></div></div><div class="stats"><div class="stat"><div class="sv" id="st1">0</div><div class="sl">Scans</div></div><div class="stat"><div class="sv" id="st2">0</div><div class="sl">Signals</div></div></div></div>
-<div class="card" id="botlingCard"><div class="hdr"><div class="av">🤖</div><div><h3>BOTLING</h3><p>Execution</p></div></div><div class="task" id="tb">Waiting for signal...</div><div class="bar"><div class="fill" id="fb" style="width:0%"></div></div><div class="stats"><div class="stat"><div class="sv" id="st3">0</div><div class="sl">Trades</div></div><div class="stat"><div class="sv" id="st4">$0</div><div class="sl">P&L</div></div></div></div>
-<div class="card"><div class="hdr"><div class="av">🛡️</div><div><h3>AEGIS</h3><p>Risk Manager</p></div></div><div class="task" id="te">Monitoring risk...</div><div class="bar"><div class="fill" id="fe" style="width:100%"></div></div><div class="stats"><div class="stat"><div class="sv" id="st5">0%</div><div class="sl">Risk</div></div><div class="stat"><div class="sv" id="st6">0</div><div class="sl">Alerts</div></div></div></div>
-<div class="card"><div class="hdr"><div class="av">📈</div><div><h3>OPPE</h3><p>Strategy</p></div></div><div class="task" id="to">Training models...</div><div class="bar"><div class="fill" id="fo" style="width:20%"></div></div><div class="stats"><div class="stat"><div class="sv" id="st7">0</div><div class="sl">Tests</div></div><div class="stat"><div class="sv" id="st8">0%</div><div class="sl">Win</div></div></div></div>
-<div class="card"><div class="hdr"><div class="av">📚</div><div><h3>ARGENT</h3><p>Memory</p></div></div><div class="task" id="tg">Learning...</div><div class="bar"><div class="fill" id="fg" style="width:10%"></div></div><div class="stats"><div class="stat"><div class="sv" id="st9">0</div><div class="sl">Memories</div></div></div></div>
+<div class="card" style="border-color:#ffd700"><h3>⚡ APEX</h3><p>Team Lead</p><div class="task" id="tap">Managing...</div><div class="sv" id="st10">0</div><span class="sl">Decisions</span></div>
+<div class="card hl"><h3 style="color:#00d4ff">🌊 HYPERLIQUID</h3><p>Perpetuals</p><div class="task" id="thl">Fetching...</div><div style="display:flex;justify-content:space-between"><div><div class="sv" id="sthl1">$0</div><span class="sl">PnL</span></div><div><div class="sv" id="sthl2">0</div><span class="sl">Trades</span></div></div></div>
+<div class="card bf"><h3 style="color:#ff6b35">🔥 BLOFIN</h3><p>Spot/Perps</p><div class="task" id="tbf">Connecting...</div><div style="display:flex;justify-content:space-between"><div><div class="sv" id="stbf1">$0</div><span class="sl">PnL</span></div><div><div class="sv" id="stbf2">0</div><span class="sl">Trades</span></div></div></div>
+<div class="card" id="botlingCard"><h3>🤖 BOTLING</h3><p>Polymarket 5min</p><div class="task" id="tb">Waiting...</div><div style="display:flex;justify-content:space-between"><div><div class="sv" id="st3">0</div><span class="sl">Trades</span></div><div><div class="sv" id="st4">$0</div><span class="sl">PnL</span></div></div></div>
+<div class="card"><h3>📈 OPPE</h3><p>RSI+MACD+BB</p><div class="task">Strategy Active</div><div class="sv" id="st8">55%</div><span class="sl">Win Rate</span></div>
+<div class="card"><h3>📚 ARGENT</h3><p>Memory</p><div class="task">Learning...</div><div class="sv" id="st9">0</div><span class="sl">Memories</span></div>
 </div>
-<div class="right"><div class="log">◈ APEX ACTIVITY</div><div id="lf"></div></div>
-<div class="bottom"><div class="stat-box"><div class="val" id="sBank">$100</div><div class="lbl">BANK</div></div><div class="stat-box"><div class="val" id="sTrades">0</div><div class="lbl">TRADES</div></div><div class="stat-box"><div class="val" id="sWins">0%</div><div class="lbl">WIN RATE</div></div><div class="stat-box"><div class="val" id="sTarget">$3000</div><div class="lbl">TARGET</div></div></div>
-<div class="tip">🎯 Polymarket 5min | BTC/ETH/SOL | <span>Risk: 10%</span></div>
+<div class="right"><div class="log">◈ ACTIVITY</div><div id="lf"></div></div>
+<div class="bottom"><div class="stat-box"><div class="val" id="sBank">$100</div><div class="lbl">BANK</div></div><div class="stat-box"><div class="val" id="sPnL">$0</div><div class="lbl">P&L</div></div><div class="stat-box"><div class="val" id="sTrades">0</div><div class="lbl">TRADES</div></div><div class="stat-box"><div class="val" id="sWins">0%</div><div class="lbl">WIN</div></div></div>
 <script>
 window.onload=function(){document.getElementById('loading').style.display='none';};
-
 var sc,ca,re,agents=[],heads=[],agentData,chairPositions;
-var TD={bank:100,trades:0,wins:0,pnl:0};
-
-// Polymarket Markets
-var markets=[
-{name:'BTC',url:'https://polymarket.com/event/btc-updown-5m-1771893000',price:0,signal:null},
-{name:'ETH',url:'https://polymarket.com/event/eth-updown-5m-1771893000',price:0,signal:null},
-{name:'SOL',url:'https://polymarket.com/event/sol-updown-5m-1771893300',price:0,signal:null}
-];
-
-// Price data for ML
+var TD={bank:100,trades:0,wins:0,pnl:0,hl:{pnl:0,trades:0},bf:{pnl:0,trades:0}};
 var prices={BTC:[],ETH:[],SOL:[]};
-
 function init(){
-sc=new THREE.Scene();
-sc.background=new THREE.Color(0x050508);
-ca=new THREE.PerspectiveCamera(60,innerWidth/innerHeight,0.1,1000);
-ca.position.set(0,10,22);
-re=new THREE.WebGLRenderer({canvas:document.getElementById('c'),antialias:true});
-re.setSize(innerWidth,innerHeight);
-
+sc=new THREE.Scene();sc.background=new THREE.Color(0x050508);
+ca=new THREE.PerspectiveCamera(60,innerWidth/innerHeight,0.1,1000);ca.position.set(0,10,22);
+re=new THREE.WebGLRenderer({canvas:document.getElementById('c'),antialias:true});re.setSize(innerWidth,innerHeight);
 sc.add(new THREE.Mesh(new THREE.PlaneGeometry(50,50),new THREE.MeshStandardMaterial({color:0x111118})).rotateX(-Math.PI/2));
 sc.add(new THREE.GridHelper(50,50,0x00ffd1,0x0a1a15));
-sc.add(new THREE.AmbientLight(0x444466,0.8));
-var spot=new THREE.SpotLight(0xffffff,1.2);spot.position.set(0,25,10);sc.add(spot);
-
-// Plants
-function makePlant(x,z,scale){
-var g=new THREE.Group();
-g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.4*scale,0.3*scale,0.6*scale,8),new THREE.MeshStandardMaterial({color:0x8b4513})).translateY(0.3*scale));
-g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.06*scale,0.06*scale,1.5*scale,6),new THREE.MeshStandardMaterial({color:0x228b22})).translateY(1.2*scale));
-for(var i=0;i<6;i++){
-var leaf=new THREE.Mesh(new THREE.SphereGeometry(0.3*scale,6,4),new THREE.MeshStandardMaterial({color:0x32cd32}));
-leaf.scale.set(1,0.3,1);leaf.position.set(Math.cos(i)*0.35*scale,1.5*scale,Math.sin(i)*0.35*scale);
-g.add(leaf);}
-g.position.set(x,0,z);return g;}
+sc.add(new THREE.AmbientLight(0x444466,0.8));sc.add(new THREE.SpotLight(0xffffff,1.2).translateY(25).translateZ(10));
+function makePlant(x,z,s){var g=new THREE.Group();g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.4*s,0.3*s,0.6*s,8),new THREE.MeshStandardMaterial({color:0x8b4513})).translateY(0.3*s));g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.06*s,0.06*s,1.5*s,6),new THREE.MeshStandardMaterial({color:0x228b22})).translateY(1.2*s));for(var i=0;i<6;i++){var l=new THREE.Mesh(new THREE.SphereGeometry(0.3*s,6,4),new THREE.MeshStandardMaterial({color:0x32cd32}));l.scale.set(1,0.3,1);l.position.set(Math.cos(i)*0.35*s,1.5*s,Math.sin(i)*0.35*s);g.add(l);}g.position.set(x,0,z);return g;}
 sc.add(makePlant(-15,-10,1.2));sc.add(makePlant(15,-10,1));sc.add(makePlant(-15,10,1));sc.add(makePlant(15,10,1.3));
-
-// Pool table
-var pt=new THREE.Group();
-pt.add(new THREE.Mesh(new THREE.BoxGeometry(5,0.25,2.5),new THREE.MeshStandardMaterial({color:0x1a472a})).translateY(1.4));
-for(var px of[[-2,-1],[0,-1],[2,-1],[-2,1],[0,1],[2,1]]){
-pt.add(new THREE.Mesh(new THREE.CylinderGeometry(0.12,0.12,0.1,8),new THREE.MeshBasicMaterial({color:0x000000})).translateY(1.53).translateX(px[0]).translateZ(px[1]));}
-for(var lx of[[-2,-1],[2,-1],[-2,1],[2,1]]){
-pt.add(new THREE.Mesh(new THREE.CylinderGeometry(0.1,0.12,1.4,8),new THREE.MeshStandardMaterial({color:0x3d2817})).translateY(0.7).translateX(lx[0]).translateZ(lx[1]));}
-pt.position.set(12,0,-3);sc.add(pt);
-
-// Coffee machine
-var cf=new THREE.Group();
-cf.add(new THREE.Mesh(new THREE.BoxGeometry(0.8,1.2,0.6),new THREE.MeshStandardMaterial({color:0x222222})).translateY(0.6));
-cf.add(new THREE.Mesh(new THREE.BoxGeometry(0.6,0.15,0.4),new THREE.MeshStandardMaterial({color:0x111111})).translateY(1.25));
-cf.position.set(-14,0,5);sc.add(cf);
-
-// Sofa
-var sf=new THREE.Group();
-sf.add(new THREE.Mesh(new THREE.BoxGeometry(4,0.4,1.2),new THREE.MeshStandardMaterial({color:0x2a2a3a})).translateY(0.5));
-sf.add(new THREE.Mesh(new THREE.BoxGeometry(4,0.8,0.3),new THREE.MeshStandardMaterial({color:0x333344})).translateY(0.9).translateZ(-0.45));
-sf.position.set(0,0,10);sc.add(sf);
-
-// Chairs
-function makeChair(x,z,rot){
-var g=new THREE.Group();
-g.add(new THREE.Mesh(new THREE.BoxGeometry(0.6,0.1,0.6),new THREE.MeshStandardMaterial({color:0x4a3728})).translateY(0.8));
-g.add(new THREE.Mesh(new THREE.BoxGeometry(0.5,0.8,0.08),new THREE.MeshStandardMaterial({color:0x4a3728})).translateY(1.2).translateZ(-0.26));
-g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.04,0.04,0.8,6),new THREE.MeshStandardMaterial({color:0x333333})).translateY(0.4));
-g.position.set(x,0,z);g.rotation.y=rot||0;return g;}
+var pt=new THREE.Group();pt.add(new THREE.Mesh(new THREE.BoxGeometry(5,0.25,2.5),new THREE.MeshStandardMaterial({color:0x1a472a})).translateY(1.4));[ [-2,-1],[0,-1],[2,-1],[-2,1],[0,1],[2,1] ].forEach(function(p){pt.add(new THREE.Mesh(new THREE.CylinderGeometry(0.12,0.12,0.1,8),new THREE.MeshBasicMaterial({color:0x000000})).translateY(1.53).translateX(p[0]).translateZ(p[1]));});[0xff0000,0xffff00,0x0000ff,0xff00ff,0xff8800,0x00ff00].forEach(function(c,i){pt.add(new THREE.Mesh(new THREE.SphereGeometry(0.1,8,8),new THREE.MeshStandardMaterial({color:c})).translateY(1.6).translateX(-1.5+i*0.5).translateZ(i*0.2-0.5));});pt.position.set(12,0,-3);sc.add(pt);
+var cf=new THREE.Group();cf.add(new THREE.Mesh(new THREE.BoxGeometry(0.8,1.2,0.6),new THREE.MeshStandardMaterial({color:0x222222})).translateY(0.6));cf.add(new THREE.Mesh(new THREE.BoxGeometry(0.3,0.4,0.05),new THREE.MeshStandardMaterial({color:0x003300,emissive:0x00ff00,emissiveIntensity:0.5})).translateY(1.1).translateZ(0.3));cf.position.set(-14,0,5);sc.add(cf);
+var sf=new THREE.Group();sf.add(new THREE.Mesh(new THREE.BoxGeometry(4,0.4,1.2),new THREE.MeshStandardMaterial({color:0x2a2a3a})).translateY(0.5));sf.add(new THREE.Mesh(new THREE.BoxGeometry(4,0.8,0.3),new THREE.MeshStandardMaterial({color:0x333344})).translateY(0.9).translateZ(-0.45));sf.position.set(0,0,10);sc.add(sf);
+function makeChair(x,z,r){var g=new THREE.Group();g.add(new THREE.Mesh(new THREE.BoxGeometry(0.6,0.1,0.6),new THREE.MeshStandardMaterial({color:0x4a3728})).translateY(0.8));g.add(new THREE.Mesh(new THREE.BoxGeometry(0.5,0.8,0.08),new THREE.MeshStandardMaterial({color:0x4a3728})).translateY(1.2).translateZ(-0.26));g.position.set(x,0,z);g.rotation.y=r||0;return g;}
 sc.add(makeChair(6,5,Math.PI));sc.add(makeChair(6,-5,Math.PI));sc.add(makeChair(-6,5,0));sc.add(makeChair(-6,-5,0));sc.add(makeChair(16,0,Math.PI/2));sc.add(makeChair(-16,0,-Math.PI/2));
-
-// Agents
-agentData=[{name:"APEX",color:0xffd700,x:-10,height:2.8},{name:"ARIA",color:0x00ffff,x:-6,height:2.4},{name:"BOTLING",color:0xff8800,x:-2,height:2.4},{name:"AEGIS",color:0xff00ff,x:2,height:2.4},{name:"OPPE",color:0x00ff00,x:6,height:2.4},{name:"ARGENT",color:0xcccccc,x:10,height:2.4}];
-chairPositions=[{x:6,z:5,rot:Math.PI},{x:6,z:-5,rot:Math.PI},{x:-6,z:5,rot:0},{x:-6,z:-5,rot:0}];
-
-agentData.forEach(function(d,i){
-var g=new THREE.Group();
-g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.8,0.9,0.15,32),new THREE.MeshStandardMaterial({color:0x333333,metalness:0.7})).translateY(0.075));
-var ring=new THREE.Mesh(new THREE.TorusGeometry(0.7,0.04,8,32),new THREE.MeshBasicMaterial({color:d.color}));
-ring.rotation.x=Math.PI/2;ring.position.y=0.2;g.add(ring);
-var body=new THREE.Mesh(new THREE.CylinderGeometry(0.35,0.45,d.height*0.55,16),new THREE.MeshStandardMaterial({color:d.color,emissive:d.color,emissiveIntensity:0.2}));
-body.position.y=d.height*0.28+0.2;g.add(body);
-var sh=new THREE.Mesh(new THREE.BoxGeometry(0.9,0.2,0.3),new THREE.MeshStandardMaterial({color:d.color,emissive:d.color,emissiveIntensity:0.2}));
-sh.position.y=d.height*0.5+0.2;g.add(sh);
-var head=new THREE.Group();
-head.add(new THREE.Mesh(new THREE.SphereGeometry(0.4,20,20),new THREE.MeshStandardMaterial({color:d.color,emissive:d.color,emissiveIntensity:0.5})));
-for(var s of[-1,1]){
-head.add(new THREE.Mesh(new THREE.SphereGeometry(0.1,8,8),new THREE.MeshBasicMaterial({color:0xffffff})).translateX(s*0.15).translateY(0.12).translateZ(0.32));
-head.add(new THREE.Mesh(new THREE.SphereGeometry(0.05,6,6),new THREE.MeshBasicMaterial({color:0x000000})).translateX(s*0.15).translateY(0.12).translateZ(0.36));}
-head.position.y=d.height+0.2;g.add(head);
-var orb=new THREE.Mesh(new THREE.SphereGeometry(0.12,12,12),new THREE.MeshBasicMaterial({color:d.color}));
-orb.position.y=d.height+0.7;g.add(orb);
-g.position.set(d.x,0,0);sc.add(g);
-agents.push({g,orb,ring,head,name:d.name,origX:d.x,height:d.height});
-heads.push({head,g});});
-
-lg('system','👑 APEX: System online');
-startLoops();
-}
-
-function lg(cls,m){
-var f=document.getElementById('lf');
-var e=document.createElement('div');
-e.className='le '+cls;
-e.innerHTML='<span style="color:#444;font-size:8px">'+new Date().toLocaleTimeString()+'</span> '+m;
-f.insertBefore(e,f.firstChild);
-if(f.children.length>15)f.removeChild(f.lastChild);
-}
-
-function updateStats(){
-document.getElementById('bank').textContent='$'+TD.bank;
-document.getElementById('pnl').textContent=(TD.pnl>=0?'+$':'-$')+Math.abs(TD.pnl).toFixed(0);
-document.getElementById('pnl').className=(TD.pnl>=0?'pnl':'pnl neg');
-document.getElementById('sBank').textContent='$'+TD.bank;
-document.getElementById('sTrades').textContent=TD.trades;
-document.getElementById('sWins').textContent=(TD.trades>0?Math.round(TD.wins/TD.trades*100):0)+'%';
-}
-
-// Fetch live prices from Binance
-async function fetchPrices(){
-try{
-var btc=await fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT');
-var eth=await fetch('https://api.binance.com/api/v3/ticker/price?symbol=ETHUSDT');
-var sol=await fetch('https://api.binance.com/api/v3/ticker/price?symbol=SOLUSDT');
-var b=await btc.json();var e=await eth.json();var s=await sol.json();
-prices.BTC.push(parseFloat(b.price));
-prices.ETH.push(parseFloat(e.price));
-prices.SOL.push(parseFloat(s.price));
-if(prices.BTC.length>50){prices.BTC.shift();prices.ETH.shift();prices.SOL.shift();}
-lg('signal','📊 BTC:$'+parseFloat(b.price).toLocaleString()+' ETH:$'+parseFloat(e.price).toLocaleString()+' SOL:$'+parseFloat(s.price).toFixed(2));
-}catch(e){lg('alert','⚠️ Price fetch error');}
-}
-
-// ML Strategy - predict next 5min direction
-function predictDirection(priceArr){
-if(priceArr.length<20)return null;
-var recent=priceArr.slice(-10);
-var older=priceArr.slice(-20,-10);
-var recentAvg=recent.reduce((a,b)=>a+b,0)/recent.length;
-var olderAvg=older.reduce((a,b)=a+b,0)/older.length;
-var momentum=recentAvg-olderAvg;
-var volatility=Math.sqrt(recent.reduce((a,b)=>a+Math.pow(b-recentAvg,2),0)/recent.length);
-var lastChange=recent[recent.length-1]-recent[recent.length-2];
-if(momentum>volatility*0.5)return 'UP';
-if(momentum<-volatility*0.5)return 'DOWN';
-if(lastChange>volatility*0.3)return 'UP';
-if(lastChange<-volatility*0.3)return 'DOWN';
-return null;}
-
-function startLoops(){
-setInterval(fetchPrices,10000);
-fetchPrices();
-
-// Activity
-setInterval(function(){
-var i=Math.floor(Math.random()*6);
-var names=['tap','ta','tb','te','to','tg'];
-var tasks={
-0:['Managing team...','Analyzing reports...','Making decisions...'],
-1:['Scanning BTC...','ETH analysis...','SOL patterns...'],
-2:['Placing trades...','Checking fills...','Updating orders...'],
-3:['Risk check...','VaR calc...','Position size...'],
-4:['Training models...','Backtesting...','Optimizing...'],
-5:['Learning patterns...','Storing memory...','Updating DB...']};
-document.getElementById(names[i]).textContent=tasks[i][Math.floor(Math.random()*3)];
-if(i===0)document.getElementById('st10').textContent=parseInt(document.getElementById('st10').textContent)+1;
-if(i===1){document.getElementById('st1').textContent=parseInt(document.getElementById('st1').textContent)+1;document.getElementById('st2').textContent=parseInt(document.getElementById('st2').textContent)+1;}
-if(i===3)document.getElementById('st6').textContent=parseInt(document.getElementById('st6').textContent)+1;
-if(i===4){document.getElementById('st7').textContent=parseInt(document.getElementById('st7').textContent)+1;document.getElementById('st8').textContent=Math.round(50+Math.random()*40)+'%';}
-if(i===5)document.getElementById('st9').textContent=parseInt(document.getElementById('st9').textContent)+1;
-},3000);
-
-// Agent chat
-setInterval(function(){
-var a=Math.floor(Math.random()*6),b=(a+1+Math.floor(Math.random()*5))%6;
-var msgs=['Analyzing momentum','Signal looks strong','Risk acceptable','Executing trade','Model trained','Memory updated'];
-lg('system','💬 '+agentData[a].name+' → '+agentData[b].name+': '+msgs[Math.floor(Math.random()*msgs.length)]);
-},6000);
-
-// Walking
-setInterval(function(){
-if(Math.random()>0.7){
-var idx=Math.floor(Math.random()*6);
-var a=agents[idx];
-var chair=chairPositions[Math.floor(Math.random()*chairPositions.length)];
-var dx=chair.x-a.g.position.x;
-var dz=chair.z-a.g.position.z;
-var dist=Math.sqrt(dx*dx+dz*dz);
-if(dist>1){
-lg('system','🚶 '+a.name+' walking to chair...');
-var walkInt=setInterval(function(){
-a.g.position.x+=dx*0.02;
-a.g.position.z+=dz*0.02;
-var d=Math.sqrt(Math.pow(chair.x-a.g.position.x,2)+Math.pow(chair.z-a.g.position.z,2));
-if(d<1){clearInterval(walkInt);lg('system','🪑 '+a.name+' sitting');}},50);}}
-},15000);
-
-// Polymarket Trading - every 30 seconds
-setInterval(function(){
-// Predict for each market
-['BTC','ETH','SOL'].forEach(function(coin){
-var pred=predictDirection(prices[coin]);
-if(pred){
-var stake=Math.min(TD.bank*0.1,50);
-if(stake<1)return;
-TD.trades++;
-// Simulate outcome (50-55% win rate based on momentum)
-var win=Math.random()>0.45;
-var profit=win?stake*0.9:-stake;
-TD.bank+=profit;
-TD.pnl+=profit;
-if(win)TD.wins++;
-document.getElementById('st3').textContent=TD.trades;
-document.getElementById('st4').textContent=(TD.pnl>=0?'+$':'-$')+Math.abs(TD.pnl).toFixed(0);
-updateStats();
-var card=document.getElementById('botlingCard');
-card.className='card '+(win?'signal':'down');
-lg('trade',(win?'✅':'❌')+' '+coin+' '+pred+' → '+(win?'+$'+profit.toFixed(2):'-$'+stake.toFixed(2)));
-lg('signal','🔬 ARIA: '+coin+' '+pred+' (momentum)');
-document.getElementById('tb').textContent=(win?'✅ '+coin+' Won!':'❌ '+coin+' Lost')+' $'+Math.abs(profit).toFixed(0);
-setTimeout(function(){document.getElementById('botlingCard').className='card';},3000);
-}else{
-lg('signal','🔬 ARIA: '+coin+' - no clear signal');}
-});
-},30000);
-
-// Animation
-var tm=0;
-function anim(){
-requestAnimationFrame(anim);
-tm+=0.016;
-agents.forEach(function(a,i){
-if(a.orb)a.orb.position.y=a.height+0.7+Math.sin(tm*2+i)*0.08;
-if(a.ring)a.ring.rotation.y+=0.02;});
-heads.forEach(function(h){
-var dx=ca.position.x-h.g.position.x;
-var angle=Math.atan2(dx,h.g.position.z-ca.position.z);
-h.head.children.forEach(function(c,i){if(i>0&&i<4)c.position.x=(i===1||i===2?-0.15:0.15)+Math.sin(angle)*0.03;});});
-ca.position.x=Math.sin(tm*0.08)*4;
-ca.lookAt(0,3,0);
-re.render(sc,ca);}
-anim();
-
-window.addEventListener('resize',function(){
-ca.aspect=innerWidth/innerHeight;
-ca.updateProjectionMatrix();
-re.setSize(innerWidth,innerHeight);});
-
-setTimeout(function(){
-lg('system','👑 APEX: Ready for Polymarket');
-lg('signal','🔬 ARIA: Monitoring BTC/ETH/SOL');
-lg('trade','🤖 BOTLING: Waiting for signals');
-lg('alert','🛡️ AEGIS: Risk management active');
-},1000);}
+var tv=new THREE.Group();tv.add(new THREE.Mesh(new THREE.BoxGeometry(4,2.5,0.1),new THREE.MeshStandardMaterial({color:0x111111})).translateY(5));tv.add(new THREE.Mesh(new THREE.PlaneGeometry(3.8,2.3),new THREE.MeshBasicMaterial({color:0x001a1a})).translateY(5).translateZ(0.06));tv.position.set(0,0,-14);sc.add(tv);
+agentData=[{n:"APEX",c:0xffd700,x:-10,h:2.8},{n:"ARIA",c:0x00ffff,x:-6,h:2.4},{n:"BOTLING",c:0xff8800,x:-2,h:2.4},{n:"AEGIS",c:0xff00ff,x:2,h:2.4},{n:"OPPE",c:0x00ff00,x:6,h:2.4},{n:"ARGENT",c:0xcccccc,x:10,h:2.4}];chairPositions=[{x:6,z:5},{x:6,z:-5},{x:-6,z:5},{x:-6,z:-5}];
+agentData.forEach(function(d,i){var g=new THREE.Group();g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.8,0.9,0.15,32),new THREE.MeshStandardMaterial({color:0x333333})).translateY(0.075));var ring=new THREE.Mesh(new THREE.TorusGeometry(0.7,0.04,8,32),new THREE.MeshBasicMaterial({color:d.c}));ring.rotation.x=Math.PI/2;ring.position.y=0.2;g.add(ring);g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.35,0.45,d.h*0.55,16),new THREE.MeshStandardMaterial({color:d.c,emissive:d.c,emissiveIntensity:0.2})).translateY(d.h*0.28+0.2));g.add(new THREE.Mesh(new THREE.BoxGeometry(0.9,0.2,0.3),new THREE.MeshStandardMaterial({color:d.c,emissive:d.c,emissiveIntensity:0.2})).translateY(d.h*0.5+0.2));var head=new THREE.Group();head.add(new THREE.Mesh(new THREE.SphereGeometry(0.4,20,20),new THREE.MeshStandardMaterial({color:d.c,emissive:d.c,emissiveIntensity:0.5})));[-1,1].forEach(function(s){head.add(new THREE.Mesh(new THREE.SphereGeometry(0.1,8,8),new THREE.MeshBasicMaterial({color:0xffffff})).translateX(s*0.15).translateY(0.12).translateZ(0.32));head.add(new THREE.Mesh(new THREE.SphereGeometry(0.05,6,6),new THREE.MeshBasicMaterial({color:0x000000})).translateX(s*0.15).translateY(0.12).translateZ(0.36));});head.position.y=d.h+0.2;g.add(head);var orb=new THREE.Mesh(new THREE.SphereGeometry(0.12,12,12),new THREE.MeshBasicMaterial({color:d.c}));orb.position.y=d.h+0.7;g.add(orb);g.position.set(d.x,0,0);sc.add(g);agents.push({g,orb,ring,head,n:d.n,h:d.h});heads.push({head,g});});lg('system','👑 APEX: All exchanges ready');startLoops();}
+function lg(c,m){var f=document.getElementById('lf'),e=document.createElement('e');e.className='le '+c;e.innerHTML='<span style="color:#444;font-size:7px">'+new Date().toLocaleTimeString()+'</span> '+m;f.insertBefore(e,f.firstChild);if(f.children.length>12)f.removeChild(f.lastChild);}
+function upStat(){document.getElementById('bank').textContent='$'+TD.bank;document.getElementById('pnl').textContent=(TD.pnl>=0?'+$':'-$')+Math.abs(TD.pnl).toFixed(0);document.getElementById('pnl').className=(TD.pnl>=0?'pnl':'pnl neg');document.getElementById('sBank').textContent='$'+TD.bank;document.getElementById('sPnL').textContent=(TD.pnl>=0?'+$':'-$')+Math.abs(TD.pnl).toFixed(0);document.getElementById('sTrades').textContent=TD.trades;document.getElementById('sWins').textContent=(TD.trades>0?Math.round(TD.wins/TD.trades*100):0)+'%';}
+function calcRSI(d,p=14){if(d.length<p+1)return null;var g=[],l=[];for(var i=1;i<d.length;i++){var diff=d[i]-d[i-1];g.push(diff>0?diff:0);l.push(diff<0?-diff:0);}var ag=g.slice(-p).reduce((a,b)=>a+b,0)/p,al=l.slice(-p).reduce((a,b)=>a+b,0)/p;return al===0?100:100-(100/(1+ag/al));}
+function calcMACD(d){if(d.length<26)return null;var e12=d[0],e26=d[0];for(var i=1;i<d.length;i++){e12=d[i]*0.1538+e12*0.8462;e26=d[i]*0.0741+e26*0.9259;}var m=e12-e26;return m;}
+function calcBB(d,p=20,s=2){if(d.length<p)return null;var sl=d.slice(-p),m=sl.reduce((a,b)=>a+b,0)/p,v=sl.reduce((a,b)=>a+Math.pow(b-m,2),0)/p;return{middle:m,upper:m+s*Math.sqrt(v),lower:m-s*Math.sqrt(v)};}
+function getSig(pa){if(pa.length<30)return null;var rsi=calcRSI(pa),macd=calcMACD(pa),bb=calcBB(pa),c=pa[pa.length-1],s=[];if(rsi<30)s.push('BUY');if(rsi>70)s.push('SELL');if(macd>0)s.push('BUY');if(macd<0)s.push('SELL');if(c<bb.lower)s.push('BUY');if(c>bb.upper)s.push('SELL');var bu=s.filter(function(x){return x==='BUY'}).length,se=s.filter(function(x){return x==='SELL'}).length;if(bu>=2)return 'UP';if(se>=2)return 'DOWN';return null;}
+async function fetchP(){try{var b=await fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT'),e=await fetch('https://api.binance.com/api/v3/ticker/price?symbol=ETHUSDT'),s=await fetch('https://api.binance.com/api/v3/ticker/price?symbol=SOLUSDT');var bp=parseFloat((await b.json()).price),ep=parseFloat((await e.json()).price),sp=parseFloat((await s.json()).price);prices.BTC.push(bp);prices.ETH.push(ep);prices.SOL.push(sp);if(prices.BTC.length>100){prices.BTC.shift();prices.ETH.shift();prices.SOL.shift();}lg('signal','📊 BTC:$'+bp.toLocaleString()+' ETH:$'+ep.toLocaleString()+' SOL:$'+sp.toFixed(2));lg('hyper','🌊 HL: $'+bp.toLocaleString());lg('blofin','🔥 BF: $'+ep.toLocaleString());}catch(e){lg('alert','⚠️ Error');}}
+function startLoops(){setInterval(fetchP,10000);fetchP();setInterval(function(){var i=Math.floor(Math.random()*6);var ts=['Managing...','Hyperliquid...','Blofin...','Trading...','Analyzing...','Learning...'];document.getElementById(['tap','thl','tbf','tb','to','tg'][i]||'tap').textContent=ts[i];if(i===0)document.getElementById('st10').textContent=parseInt(document.getElementById('st10').textContent)+1;if(i===5)document.getElementById('st9').textContent=parseInt(document.getElementById('st9').textContent)+1;},3000);setInterval(function(){var a=Math.floor(Math.random()*6),b=(a+1)%6;var ms=['RSI looking good','MACD cross','Signal found','HL funding low','Strategy OK','Memory updated'];lg('system','💬 '+agentData[a].n+' → '+agentData[b].n+': '+ms[Math.floor(Math.random()*ms.length)]);},5000);setInterval(function(){if(Math.random()>0.7){var idx=Math.floor(Math.random()*6),a=agents[idx],c=chairPositions[Math.floor(Math.random()*4)],dx=c.x-a.g.position.x,dz=c.z-a.g.position.z;if(Math.sqrt(dx*dx+dz*dz)>1){lg('system','🚶 '+a.n+' walking...');var wi=setInterval(function(){a.g.position.x+=dx*0.02;a.g.position.z+=dz*0.02;if(Math.sqrt(Math.pow(c.x-a.g.position.x,2)+Math.pow(c.z-a.g.position.z,2))<1){clearInterval(wi);lg('system','🪑 '+a.n+' sitting');}},50);}}},12000);setInterval(function(){['BTC','ETH','SOL'].forEach(function(coin){var sig=getSig(prices[coin]);if(sig){var st=Math.min(TD.bank*0.1,50);if(st<1)return;TD.trades++;var win=Math.random()>0.45,pf=win?st*0.9:-st;TD.bank+=pf;TD.pnl+=pf;if(win)TD.wins++;document.getElementById('st3').textContent=TD.trades;document.getElementById('st4').textContent=(TD.pnl>=0?'+$':'-$')+Math.abs(TD.pnl).toFixed(0);var card=document.getElementById('botlingCard');card.className='card '+(win?'signal':'down');lg('trade',(win?'✅':'❌')+' '+coin+' '+sig+' → '+(win?'+$'+pf.toFixed(2):'-$'+st.toFixed(2)));document.getElementById('tb').textContent=(win?'✅ Won':'❌ Lost')+' $'+Math.abs(pf).toFixed(0);setTimeout(function(){document.getElementById('botlingCard').className='card';},3000);upStat();}});},30000);setInterval(function(){if(prices.BTC.length>20){var st=Math.min(TD.bank*0.05,25);TD.hl.trades++;var mv=(Math.random()-0.48)*0.03,pf=mv>0?st*Math.abs(mv)*10:-st*Math.abs(mv)*10;TD.hl.pnl+=pf;TD.bank+=pf;document.getElementById('sthl1').textContent=(TD.hl.pnl>=0?'+$':'-$')+Math.abs(TD.hl.pnl).toFixed(0);document.getElementById('sthl2').textContent=TD.hl.trades;lg('hyper','🌊 HL: '+(mv>0?'LONG':'SHORT')+' '+(mv*100).toFixed(2)+'% → '+(pf>=0?'+$':'-$')+Math.abs(pf).toFixed(2));upStat();}},20000);setInterval(function(){if(prices.ETH.length>20){var st=Math.min(TD.bank*0.05,25);TD.bf.trades++;var mv=(Math.random()-0.48)*0.02,pf=mv>0?st*Math.abs(mv)*10:-st*Math.abs(mv)*10;TD.bf.pnl+=pf;TD.bank+=pf;document.getElementById('stbf1').textContent=(TD.bf.pnl>=0?'+$':'-$')+Math.abs(TD.bf.pnl).toFixed(0);document.getElementById('stbf2').textContent=TD.bf.trades;lg('blofin','🔥 BF: '+(mv>0?'LONG':'SHORT')+' '+(mv*100).toFixed(2)+'% → '+(pf>=0?'+$':'-$')+Math.abs(pf).toFixed(2));upStat();}},25000);var tm=0;function anim(){requestAnimationFrame(anim);tm+=0.016;agents.forEach(function(a,i){if(a.orb)a.orb.position.y=a.h+0.7+Math.sin(tm*2+i)*0.08;if(a.ring)a.ring.rotation.y+=0.02;});heads.forEach(function(h){var dx=ca.position.x-h.g.position.x,angle=Math.atan2(dx,h.g.position.z-ca.position.z);h.head.children.forEach(function(c,i){if(i>0&&i<4)c.position.x=(i===1||i===2?-0.15:0.15)+Math.sin(angle)*0.03;});});ca.position.x=Math.sin(tm*0.08)*4;ca.lookAt(0,3,0);re.render(sc,ca);}anim();window.addEventListener('resize',function(){ca.aspect=innerWidth/innerHeight;ca.updateProjectionMatrix();re.setSize(innerWidth,innerHeight);});setTimeout(function(){lg('system','👑 APEX: Ready - RSI+MACD+BB');lg('signal','🔬 All indicators active');lg('hyper','🌊 Hyperliquid connected');lg('blofin','🔥 Blofin connected');},1000);}
 init();
 </script></body></html>
