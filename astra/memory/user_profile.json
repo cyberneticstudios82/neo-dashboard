@@ -1,0 +1,12 @@
+{
+  "name": "Pankaj",
+  "conditions": ["Type 2 Diabetes", "High Cholesterol"],
+  "medicines": [
+    {"name": "Glimepiride", "time": "13:00", "taken": false},
+    {"name": "Rosuvastatin", "time": "21:00", "taken": false}
+  ],
+  "equipment": ["treadmill", "resistance bands", "adjustable dumbbells", "weight bench"],
+  "goals": ["reduce fat", "reduce cholesterol", "increase muscle"],
+  "sleep_schedule": "11pm-7am",
+  "created": "2026-02-24"
+}

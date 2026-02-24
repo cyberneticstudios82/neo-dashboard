@@ -1,0 +1,5 @@
+apscheduler
+sounddevice
+numpy
+TTS
+openai-whisper
