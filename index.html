@@ -505,6 +505,11 @@ body {
         </div>
 
         <div class="activity-card">
+            <div class="section-title">🎯 POLYMARKET MARKETS</div>
+            <div id="polymarket-markets" style="font-size:10px;"></div>
+        </div>
+
+        <div class="activity-card">
             <div class="section-title">🤖 AGENTS</div>
             <div id="agents-panel" style="display:flex;flex-wrap:wrap;gap:8px;">
                 <div class="agent-dot" id="agent-aurora">🌙<span>AURORA</span></div>
@@ -876,14 +881,40 @@ function updateAgents() {
     });
 }
 
+function fetchPolymarket() {
+    fetch('https://clob.polymarket.com/markets')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        var list = document.getElementById('polymarket-markets');
+        if (!list || !data || !data.markets) return;
+        
+        var markets = data.markets.slice(0, 8);
+        list.innerHTML = '';
+        markets.forEach(function(m) {
+            var item = document.createElement('div');
+            item.style.cssText = 'padding:6px;margin:4px 0;background:rgba(0,0,0,0.3);border-radius:4px;border-left:2px solid #00f5ff';
+            item.textContent = (m.question || 'Market').substring(0, 40) + '...';
+            list.appendChild(item);
+        });
+    })
+    .catch(function() {
+        var list = document.getElementById('polymarket-markets');
+        if (list) {
+            list.innerHTML = '<div style="color:#6a7a8a">Loading Polymarket...</div>';
+        }
+    });
+}
+
 // Start chart
 setTimeout(function() {
     updateChart();
     updateTrades();
     updateAgents();
+    fetchPolymarket();
     setInterval(updateChart, 5000);
     setInterval(updateTrades, 3000);
     setInterval(updateAgents, 10000);
+    setInterval(fetchPolymarket, 30000);
 }, 1000);
 </script>
 </body>
