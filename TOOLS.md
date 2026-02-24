@@ -35,6 +35,13 @@ Things like:
 
 Skills are shared. Your setup is yours. Keeping them apart means you can update skills without losing your notes, and share skills without leaking your infrastructure.
 
+### Web Scraping
+
+- **Scrapling** - Adaptive web scraping framework
+  - Repo: https://github.com/D4Vinci/Scrapling
+  - Install: `pip install scrapling`
+  - Docs: https://scrapling.readthedocs.io
+
 ---
 
 Add whatever helps you do your job. This is your cheat sheet.
