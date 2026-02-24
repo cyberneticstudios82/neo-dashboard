@@ -178,9 +178,15 @@ async function fetchPrices() {
         ethEl.textContent = (ethChange >= 0 ? '+' : '') + ethChange + '%'; ethEl.className = 'ticker-change ' + (ethChange >= 0 ? 'up' : 'down');
     } catch(e) { console.log('Price fetch error'); }
 }
+// API Base - Change this to your tunnel URL
+const API_BASE = 'https://aurora-trading.loca.lt';
+
 async function fetchTradingState() {
-    // Demo data - in production, fetch from API
-    var state = { bank: 103.50 + Math.random() * 2, pnl: 3.5 + Math.random(), trades: 45 + Math.floor(Math.random() * 10), wins: 25, losses: 20 };
+    try {
+        var res = await fetch(API_BASE + '/api/combined');
+        if (!res.ok) throw new Error();
+        var data = await res.json();
+        var state = data.aurora;
     document.getElementById('bank').textContent = '$' + state.bank.toFixed(2);
     document.getElementById('total-pnl').textContent = (state.pnl >= 0 ? '+' : '') + '$' + state.pnl.toFixed(2);
     document.getElementById('total-pnl').style.color = state.pnl >= 0 ? '#00ff88' : '#ff3366';
@@ -191,6 +197,12 @@ async function fetchTradingState() {
     var pnlPct = ((state.bank - 100) / 100 * 100).toFixed(2);
     document.getElementById('pnl').textContent = (pnlPct >= 0 ? '+' : '') + pnlPct + '%';
     document.getElementById('pnl').style.color = pnlPct >= 0 ? '#00ff88' : '#ff3366';
+    
+    // Also update HFT display
+    if (data.hft) {
+        document.getElementById('hft-bank').textContent = '$' + data.hft.bank.toFixed(2);
+        document.getElementById('hft-trades').textContent = data.hft.trades;
+    }
     
     // Update chart
     pnlHistory.push(state.bank);
@@ -205,6 +217,28 @@ function addActivity(msg, type) {
     item.innerHTML = '<span class="activity-time">' + time + '</span>' + msg;
     list.insertBefore(item, list.firstChild);
     if(list.children.length > 10) list.removeChild(list.lastChild);
+}
+
+function updateTradesFromAPI() {
+    fetch(API_BASE + '/api/trades')
+    .then(function(r) { return r.json(); })
+    .then(function(trades) {
+        if (!trades || trades.length === 0) return;
+        var list = document.getElementById('trades-list');
+        var recent = trades.slice(0, 10);
+        
+        if (list.children.length !== recent.length) {
+            list.innerHTML = '';
+            recent.forEach(function(t) {
+                var profit = t.profit >= 0 ? '+$' + t.profit.toFixed(2) : '-$' + Math.abs(t.profit).toFixed(2);
+                var item = document.createElement('div');
+                item.className = 'activity-item ' + (t.result === 'WIN' ? 'trade' : '');
+                item.textContent = (t.signal || 'N/A') + ' ' + (t.token || '') + ' → ' + t.result + ' (' + profit + ')';
+                list.appendChild(item);
+            });
+        }
+    })
+    .catch(function() {});
 }
 function updateSignals() {
     var signals = ['LONG BTC - High confidence', 'SHORT ETH - Bearish divergence', 'HOLD - Waiting for entry', 'LONG LINK - Breakout', 'SHORT SOL - Profit take'];
@@ -224,6 +258,7 @@ window.onload = function() {
     addActivity('Aurora initialized', '');
     setInterval(fetchPrices, 5000);
     setInterval(fetchTradingState, 3000);
+    setInterval(updateTradesFromAPI, 3000);
     setInterval(function() {
         var activities = ['Analyzing market patterns...', 'Fetching Bankr Signals...', 'Evaluating risk...', 'Checking sentiment...', 'Optimizing portfolio...'];
         addActivity(activities[Math.floor(Math.random() * activities.length)]);
