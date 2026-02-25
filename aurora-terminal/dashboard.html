@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AURORA TERMINAL | 5-Min BTC Trading</title>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-terminal: #0d1117;
+            --accent-cyan: #00f5ff;
+            --accent-green: #00ff88;
+            --accent-red: #ff4466;
+            --accent-gold: #ffd700;
+            --text-primary: #e6edf3;
+            --text-muted: #7d8590;
+            --border-color: #30363d;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--bg-terminal);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Terminal Container */
+        .terminal {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: rgba(0, 245, 255, 0.05);
+            border: 1px solid var(--accent-cyan);
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-green));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 20px;
+        }
+
+        .logo h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--accent-cyan);
+        }
+
+        .logo span {
+            font-size: 10px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .live-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid var(--accent-green);
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .live-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--accent-green);
+            border-radius: 50%;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        /* Grid */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: rgba(13, 17, 23, 0.8);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .card-title {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        .card-value {
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .card-value.cyan { color: var(--accent-cyan); }
+        .card-value.green { color: var(--accent-green); }
+        .card-value.red { color: var(--accent-red); }
+        .card-value.gold { color: var(--accent-gold); }
+
+        /* BTC Price */
+        .btc-display {
+            grid-column: span 2;
+            text-align: center;
+            padding: 30px;
+        }
+
+        .btc-price {
+            font-size: 56px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 10px;
+        }
+
+        .btc-change {
+            font-size: 18px;
+        }
+
+        .btc-change.up { color: var(--accent-green); }
+        .btc-change.down { color: var(--accent-red); }
+
+        /* Order Book */
+        .orderbook {
+            grid-column: span 2;
+        }
+
+        .orderbook-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .orderbook-side {
+            font-size: 12px;
+        }
+
+        .orderbook-title {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        .orderbook-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .orderbook-row .price { color: var(--text-muted); }
+        .orderbook-row .qty { color: var(--text-primary); }
+
+        /* Position & P&L */
+        .position-card {
+            grid-column: span 2;
+        }
+
+        .position-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        .position-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .position-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px;
+            background: rgba(255,255,255,0.02);
+            border-radius: 6px;
+            border-left: 3px solid;
+        }
+
+        .position-item.up { border-left-color: var(--accent-green); }
+        .position-item.down { border-left-color: var(--accent-red); }
+
+        .position-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .position-direction {
+            font-size: 14px;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 4px;
+        }
+
+        .position-direction.up { background: rgba(0,255,136,0.2); color: var(--accent-green); }
+        .position-direction.down { background: rgba(255,68,102,0.2); color: var(--accent-red); }
+
+        .position-pair { font-size: 14px; }
+
+        .position-pnl {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .position-pnl.positive { color: var(--accent-green); }
+        .position-pnl.negative { color: var(--accent-red); }
+
+        /* Trade Log */
+        .trade-log {
+            grid-column: span 4;
+        }
+
+        .log-entries {
+            max-height: 200px;
+            overflow-y: auto;
+            font-size: 12px;
+        }
+
+        .log-entry {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            gap: 15px;
+        }
+
+        .log-time { color: var(--text-muted); min-width: 80px; }
+        .log-action { font-weight: 600; min-width: 60px; }
+        .log-action.open { color: var(--accent-cyan); }
+        .log-action.close { color: var(--accent-gold); }
+        .log-details { flex: 1; color: var(--text-muted); }
+        .log-pnl { min-width: 100px; text-align: right; }
+        .log-pnl.positive { color: var(--accent-green); }
+        .log-pnl.negative { color: var(--accent-red); }
+
+        /* Terminal Output */
+        .terminal-output {
+            grid-column: span 4;
+            background: #000;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            font-size: 12px;
+            max-height: 150px;
+            overflow-y: auto;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .output-line {
+            color: var(--text-muted);
+            margin: 2px 0;
+        }
+
+        .output-line.highlight { color: var(--accent-cyan); }
+        .output-line.success { color: var(--accent-green); }
+        .output-line.error { color: var(--accent-red); }
+
+        /* Stats Row */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .stat-box {
+            text-align: center;
+            padding: 15px;
+            background: rgba(13, 17, 23, 0.8);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+        }
+
+        .stat-label {
+            font-size: 10px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        /* Responsive */
+        @media (max-width: 1000px) {
+            .grid { grid-template-columns: repeat(2, 1fr); }
+            .btc-display, .orderbook, .position-card { grid-column: span 2; }
+            .stats-row { grid-template-columns: repeat(3, 1fr); }
+        }
+    </style>
+</head>
+<body>
+    <div class="terminal">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">
+                <div class="logo-icon">◈</div>
+                <div>
+                    <h1>AURORA TERMINAL</h1>
+                    <span>5-Min BTC Trading</span>
+                </div>
+            </div>
+            <div class="live-indicator">
+                <div class="live-dot"></div>
+                <span>LIVE</span>
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-row">
+            <div class="stat-box">
+                <div class="stat-label">Bank</div>
+                <div class="stat-value cyan" id="bank">$100.00</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">P&L</div>
+                <div class="stat-value" id="pnl">$0.00</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Trades</div>
+                <div class="stat-value" id="trades">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Win Rate</div>
+                <div class="stat-value green" id="winrate">0%</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Open</div>
+                <div class="stat-value gold" id="open">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Confidence</div>
+                <div class="stat-value cyan" id="confidence">0%</div>
+            </div>
+        </div>
+
+        <!-- Main Grid -->
+        <div class="grid">
+            <!-- BTC Price -->
+            <div class="card btc-display">
+                <div class="card-title">BTC/USDT</div>
+                <div class="btc-price" id="btc-price">$0</div>
+                <div class="btc-change" id="btc-change">0.00%</div>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="card">
+                <div class="card-title">Polymarket</div>
+                <div class="card-value cyan" id="poly-yes">0%</div>
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 5px;">BTC UP 5-min</div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Fair Value</div>
+                <div class="card-value green" id="fair-value">$0</div>
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 5px;">Computed</div>
+            </div>
+
+            <!-- Order Book -->
+            <div class="card orderbook">
+                <div class="card-title">ORDER BOOK</div>
+                <div class="orderbook-grid">
+                    <div class="orderbook-side">
+                        <div class="orderbook-title">ASKS</div>
+                        <div id="asks"></div>
+                    </div>
+                    <div class="orderbook-side">
+                        <div class="orderbook-title">BIDS</div>
+                        <div id="bids"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Positions -->
+            <div class="card position-card">
+                <div class="position-header">
+                    <div class="card-title">OPEN POSITIONS</div>
+                </div>
+                <div class="position-list" id="positions">
+                    <div style="color: var(--text-muted); text-align: center; padding: 20px;">
+                        No open positions
+                    </div>
+                </div>
+            </div>
+
+            <!-- Terminal Output -->
+            <div class="terminal-output" id="terminal-output">
+                <div class="output-line">🎯 Aurora Terminal initialized...</div>
+                <div class="output-line">📡 Connecting to Binance + Polymarket...</div>
+            </div>
+
+            <!-- Trade Log -->
+            <div class="card trade-log">
+                <div class="card-title">TRADE LOG</div>
+                <div class="log-entries" id="log-entries">
+                    <div style="color: var(--text-muted); text-align: center; padding: 20px;">
+                        No trades yet
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = '/api/aurora-terminal';
+
+        async function fetchData() {
+            try {
+                const response = await fetch(API_URL);
+                const data = await response.json();
+                updateDashboard(data);
+            } catch (error) {
+                console.error('Fetch error:', error);
+            }
+        }
+
+        function updateDashboard(data) {
+            // Bank & P&L
+            const bank = data.bank || 100;
+            const pnl = data.pnl || 0;
+            const pnlPercent = data.pnlPercent || 0;
+            
+            document.getElementById('bank').textContent = `$${bank.toFixed(2)}`;
+            
+            const pnlEl = document.getElementById('pnl');
+            pnlEl.textContent = `${pnl >= 0 ? '+' : ''}$${pnl.toFixed(2)}`;
+            pnlEl.className = `stat-value ${pnl >= 0 ? 'green' : 'red'}`;
+            
+            // Stats
+            document.getElementById('trades').textContent = (data.wins || 0) + (data.losses || 0);
+            const winRate = data.wins + data.losses > 0 
+                ? ((data.wins / (data.wins + data.losses)) * 100).toFixed(0) 
+                : 0;
+            document.getElementById('winrate').textContent = `${winRate}%`;
+            document.getElementById('open').textContent = data.openPositions || 0;
+            document.getElementById('confidence').textContent = 
+                data.confidence ? `${(data.confidence * 100).toFixed(0)}%` : '0%';
+
+            // BTC Price
+            if (data.binanceData) {
+                const btc = data.binanceData;
+                document.getElementById('btc-price').textContent = 
+                    btc.btcPrice ? `$${btc.btcPrice.toLocaleString()}` : '$0';
+                
+                const change = btc.btc24hChange || 0;
+                const changeEl = document.getElementById('btc-change');
+                changeEl.textContent = `${change >= 0 ? '+' : ''}${change.toFixed(2)}%`;
+                changeEl.className = `btc-change ${change >= 0 ? 'up' : 'down'}`;
+                
+                // Order Book
+                if (btc.orderBook) {
+                    updateOrderBook('asks', btc.orderBook.asks || []);
+                    updateOrderBook('bids', btc.orderBook.bids || []);
+                }
+            }
+
+            // Polymarket
+            if (data.polymarketData) {
+                const poly = data.polymarketData;
+                document.getElementById('poly-yes').textContent = 
+                    poly.probability ? `${(poly.probability * 100).toFixed(0)}%` : '0%';
+                
+                if (data.fairValue) {
+                    document.getElementById('fair-value').textContent = 
+                        `$${data.fairValue.toFixed(2)}`;
+                }
+            }
+
+            // Terminal Output
+            const output = document.getElementById('terminal-output');
+            if (data.logs && data.logs.length > 0) {
+                output.innerHTML = data.logs.map(l => {
+                    const cls = l.includes('QUOTE') ? 'highlight' : l.includes('CLOSED') ? 'success' : '';
+                    return `<div class="output-line ${cls}">${l}</div>`;
+                }).join('');
+            }
+        }
+
+        function updateOrderBook(elementId, orders) {
+            const container = document.getElementById(elementId);
+            container.innerHTML = orders.slice(0, 8).map(o => `
+                <div class="orderbook-row">
+                    <span class="price">$${o.price.toFixed(2)}</span>
+                    <span class="qty">${o.qty.toFixed(4)}</span>
+                </div>
+            `).join('');
+        }
+
+        // Initialize
+        fetchData();
+        setInterval(fetchData, 2000);
+    </script>
+</body>
+</html>

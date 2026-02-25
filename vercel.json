@@ -8,12 +8,20 @@
     {
       "src": "aurora-omega-real/dashboard.html",
       "use": "@vercel/static"
+    },
+    {
+      "src": "aurora-terminal/dashboard.html",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
     {
       "src": "/api/(.*)",
       "dest": "/api/server.js"
+    },
+    {
+      "src": "/terminal",
+      "dest": "/aurora-terminal/dashboard.html"
     },
     {
       "src": "/(.*)",

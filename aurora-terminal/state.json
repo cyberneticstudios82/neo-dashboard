@@ -1,0 +1,23 @@
+{
+  "pnl": 0,
+  "pnlPercent": 0,
+  "trades": 0,
+  "wins": 0,
+  "losses": 0,
+  "openPositions": 0,
+  "binanceData": {
+    "btcPrice": 67894.02,
+    "btcVolume": 25.0747900000027,
+    "orderBook": {
+      "bids": [],
+      "asks": []
+    },
+    "momentum": 0
+  },
+  "polymarketData": {
+    "btcYes": 0,
+    "btcNo": 0,
+    "lastPrice": 0
+  },
+  "lastUpdate": "2026-02-25T16:42:19.476Z"
+}

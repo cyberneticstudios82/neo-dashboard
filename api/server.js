@@ -125,10 +125,19 @@ app.get('/api/aurora-real', async (req, res) => {
         }
     }
     
-    // Get recent trades from log
+    // Get full trade log
     try {
         const log = fs.readFileSync('/root/.openclaw/workspace/aurora-omega-real/trades.log', 'utf8');
-        data.recentLog = log.split('\n').filter(l => l.includes('[TRADE]')).slice(-20);
+        const allTrades = log.split('\n').filter(l => l.includes('[TRADE]'));
+        
+        // Recent log (for dashboard)
+        data.recentLog = allTrades.slice(-20);
+        
+        // Open trades
+        data.openTradesList = allTrades.filter(l => l.includes('OPEN')).slice(-10).reverse();
+        
+        // Closed trades with P&L
+        data.closedTradesList = allTrades.filter(l => l.includes('CLOSED')).slice(-10).reverse();
     } catch {}
     
     res.json(data);
@@ -141,4 +150,24 @@ app.use(express.static('/root/.openclaw/workspace/aurora-omega-real'));
 
 app.listen(PORT, () => {
     console.log(`🚀 Aurora Real API + Dashboard: http://localhost:${PORT}/dashboard.html`);
+});
+
+// Aurora Terminal API
+app.get('/api/aurora-terminal', (req, res) => {
+    try {
+        const state = JSON.parse(fs.readFileSync('/root/.openclaw/workspace/aurora-terminal/state.json', 'utf8'));
+        
+        // Get terminal logs
+        let logs = [];
+        try {
+            const logFile = fs.readFileSync('/root/.openclaw/workspace/aurora-terminal/trades.log', 'utf8');
+            logs = logFile.split('\n').filter(l => l.trim()).slice(-20);
+        } catch {}
+        
+        state.logs = logs;
+        
+        res.json(state);
+    } catch (e) {
+        res.json({ error: e.message });
+    }
 });
