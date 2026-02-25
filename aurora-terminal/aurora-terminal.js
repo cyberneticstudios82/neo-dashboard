@@ -5,6 +5,32 @@ const WebSocket = require('ws');
 const https = require('https');
 const fs = require('fs');
 
+// ============== UPSTASH CONFIG ==============
+const UPSTASH_URL = "https://cute-lab-59871.upstash.io";
+const UPSTASH_TOKEN = "AenfAAIncDJkNDgyMWZjZjcwOTA0NjYyOGQ1MDY3MTg4MDA5YmVlY3AyNTk4NzE";
+
+async function saveToUpstash(key, data) {
+    try {
+        const url = `${UPSTASH_URL}/set/${key}`;
+        await new Promise((resolve, reject) => {
+            const req = https.request(url, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${UPSTASH_TOKEN}`,
+                    'Content-Type': 'application/json'
+                }
+            }, (res) => {
+                let d = '';
+                res.on('data', c => d += c);
+                res.on('end', () => resolve(d));
+            });
+            req.on('error', reject);
+            req.write(JSON.stringify(data));
+            req.end();
+        });
+    } catch (e) { console.log('Upstash save error:', e.message); }
+}
+
 // ============== CONFIG ==============
 const CONFIG = {
     // Binance WebSocket
@@ -299,17 +325,28 @@ class AuroraTerminal {
             wins: this.trades.filter(t => t.pnl > 0).length,
             losses: this.trades.filter(t => t.pnl < 0).length,
             openPositions: this.positions.filter(p => p.status === 'OPEN').length,
+            positions: this.positions,
             binanceData: this.binanceData,
             polymarketData: this.polymarketData,
             lastUpdate: new Date().toISOString()
         };
         
+        // Save locally
         fs.writeFileSync(this.stateFile, JSON.stringify(state, null, 2));
+        
+        // Save to Upstash for Vercel
+        saveToUpstash('aurora-terminal-state', state);
     }
 
     log(type, message) {
         const entry = `[${new Date().toISOString()}] [${type}] ${message}\n`;
         fs.appendFileSync(this.logFile, entry);
+        
+        // Save last 50 logs to Upstash
+        try {
+            const logs = fs.readFileSync(this.logFile, 'utf8').split('\n').filter(l => l.trim()).slice(-50);
+            saveToUpstash('aurora-terminal-logs', logs);
+        } catch {}
     }
 
     fetchJSON(url) {
