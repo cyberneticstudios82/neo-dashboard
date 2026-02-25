@@ -1,0 +1,14 @@
+{
+  "name": "aurora-trading",
+  "version": "1.0.0",
+  "description": "Aurora Autonomous Trading Bot",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "bot": "node aurora-omega/background/trader.js",
+    "hft": "python3 aurora-omega/agents/hft_agent.py"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}

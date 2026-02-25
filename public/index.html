@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aurora - Autonomous Trading</title>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--cyan:#00f5ff;--green:#00ff88;--red:#ff3366;--bg:#030508;--card:rgba(10,20,40,0.95);--border:rgba(0,245,255,0.2)}
+body{font-family:'Rajdhani',sans-serif;background:var(--bg);color:#e0f4ff;overflow-x:hidden}
+#c{position:fixed;inset:0;z-index:0}
+.c{position:relative;z-index:10;max-width:1400px;margin:0 auto;padding:70px 20px 20px}
+.h{position:fixed;top:0;right:0;left:0;height:55px;background:rgba(3,5,8,0.98);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 25px;z-index:100}
+.l{font-family:'Orbitron';font-size:16px;font-weight:900;background:linear-gradient(135deg,var(--cyan),var(--green));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.s{display:flex;gap:15px}
+.sr{display:flex;align-items:center;gap:8px;font-size:12px}
+.sd{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green)}
+.r{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-bottom:20px}
+.b{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:15px;text-align:center}
+.b h3{font-size:11px;color:#6a7a8a;text-transform:uppercase;margin-bottom:5px}
+.b .v{font-size:22px;font-weight:700;font-family:'Orbitron'}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.cr{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:20px;margin-bottom:20px}
+.cr h2{font-family:'Orbitron';font-size:14px;color:var(--cyan);margin-bottom:15px}
+.agent{background:rgba(0,0,0,0.4);border-radius:8px;padding:15px;margin:8px 0;border-left:3px solid var(--cyan)}
+.agent.active{border-left-color:var(--green);background:rgba(0,255,136,0.1)}
+.agent-row{display:flex;justify-content:space-between;align-items:center}
+.agent-name{font-weight:700;font-family:'Orbitron';font-size:13px}
+.agent-stat{font-size:11px;color:#6a7a8a}
+.agent-pnl{font-family:'Orbitron';font-size:16px}
+.ti{padding:8px;margin:4px 0;background:rgba(0,0,0,0.3);border-left:3px solid var(--cyan);border-radius:4px;font-size:12px}
+.ti.win{border-left-color:var(--green)}
+.ti.loss{border-left-color:var(--red)}
+#lo{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:1000}
+.ld{width:50px;height:50px;border:3px solid transparent;border-top-color:var(--cyan);border-radius:50%;animation:sp 1s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div id="lo"><div class="ld"></div></div>
+<canvas id="c"></canvas>
+<div class="h"><div class="l">◆ AURORA AUTONOMOUS</div><div class="sr"><div class="sd"></div><span>LIVE TRADING</span></div></div>
+<div class="c">
+<div class="r">
+<div class="b"><h3>Total Bank</h3><div class="v cy" id="totalBank">$0</div></div>
+<div class="b"><h3>Total P&L</h3><div class="v" id="totalPnl">$0</div></div>
+<div class="b"><h3>Total Trades</h3><div class="v" id="totalTrades">0</div></div>
+<div class="b"><h3>Win Rate</h3><div class="v gr" id="winRate">0%</div></div>
+</div>
+<div class="g2">
+<div class="cr">
+<h2>🤖 AUTONOMOUS AGENTS</h2>
+<div id="agents">
+<div class="agent"><div class="agent-row"><span class="agent-name">🌙 AURORA</span><span class="agent-stat">Signal Trading</span></div><div class="agent-stat">Bank: <span id="auroraBank">$0</span> | P&L: <span id="auroraPnl" class="agent-pnl">$0</span></div><div class="agent-stat">Trades: <span id="auroraTrades">0</span> | Win: <span id="auroraWin">0%</span></div></div>
+<div class="agent"><div class="agent-row"><span class="agent-name">⚡ HFT</span><span class="agent-stat">Market Making</span></div><div class="agent-stat">Bank: <span id="hftBank">$0</span> | P&L: <span id="hftPnl" class="agent-pnl">$0</span></div><div class="agent-stat">Trades: <span id="hftTrades">0</span> | Win: <span id="hftWin">0%</span></div></div>
+</div>
+</div>
+<div class="cr">
+<h2>📜 RECENT TRADES</h2>
+<div id="trades"><div style="color:#6a7a8a;text-align:center;padding:20px">Loading trades...</div></div>
+</div>
+</div>
+</div>
+<script>
+let aurora = {bank:100,pnl:0,trades:0,wins:0,losses:0};
+let hft = {bank:100,pnl:0,trades:0,wins:0,losses:0};
+
+var sc,ca,re,pt3,t=0;
+function in3(){sc=new THREE.Scene();sc.background=new THREE.Color(0x030508);
+ca=new THREE.PerspectiveCamera(75,innerWidth/innerHeight,0.1,1000);ca.position.z=25;
+re=new THREE.WebGLRenderer({canvas:document.getElementById('c'),antialias:true});re.setSize(innerWidth,innerHeight);
+var g=new THREE.BufferGeometry(),c=1500,p=new Float32Array(c*3),cl=new Float32Array(c*3);
+for(var i=0;i<c;i++){p[i*3]=(Math.random()-0.5)*60;p[i*3+1]=(Math.random()-0.5)*60;p[i*3+2]=(Math.random()-0.5)*30;var C=new THREE.Color();C.setHSL(0.5+Math.random()*0.2,0.8,0.5);cl[i*3]=C.r;cl[i*3+1]=C.g;cl[i*3+2]=C.b;}
+g.setAttribute('position',new THREE.BufferAttribute(p,3));g.setAttribute('color',new THREE.BufferAttribute(cl,3));
+pt3=new THREE.Points(g,new THREE.PointsMaterial({size:0.1,vertexColors:true,transparent:true,opacity:0.8,blending:THREE.AdditiveBlending}));sc.add(pt3);
+var gr=new THREE.GridHelper(60,30,0x00f5ff,0x0a1520);gr.position.y=-12;sc.add(gr);an()}
+function an(){requestAnimationFrame(an);t+=0.001;pt3.rotation.y=t*0.1;ca.position.x=Math.sin(t)*3;ca.position.y=Math.cos(t*0.7)*2;ca.lookAt(0,0,0);re.render(sc,ca)}
+
+async function fetchBotData(){
+  try{
+    var res = await fetch('/api/combined');
+    var data = await res.json();
+    aurora = data.aurora || aurora;
+    hft = data.hft || hft;
+  }catch(e){
+    console.log('API error, using cached');
+  }
+  updateDisplay();
+}
+
+function updateDisplay(){
+  document.getElementById('auroraBank').textContent = '$' + (aurora.bank||100).toFixed(2);
+  document.getElementById('auroraPnl').textContent = (aurora.pnl>=0?'+':'') + '$' + (aurora.pnl||0).toFixed(2);
+  document.getElementById('auroraPnl').style.color = aurora.pnl>=0 ? 'var(--green)' : 'var(--red)';
+  document.getElementById('auroraTrades').textContent = aurora.trades||0;
+  var aw = aurora.trades>0 ? (aurora.wins/aurora.trades*100).toFixed(0) : 0;
+  document.getElementById('auroraWin').textContent = aw + '%';
+  
+  document.getElementById('hftBank').textContent = '$' + (hft.bank||100).toFixed(2);
+  document.getElementById('hftPnl').textContent = (hft.pnl>=0?'+':'') + '$' + (hft.pnl||0).toFixed(2);
+  document.getElementById('hftPnl').style.color = hft.pnl>=0 ? 'var(--green)' : 'var(--red)';
+  document.getElementById('hftTrades').textContent = hft.trades||0;
+  var hw = hft.trades>0 ? (hft.wins/hft.trades*100).toFixed(0) : 0;
+  document.getElementById('hftWin').textContent = hw + '%';
+  
+  var totalBank = (aurora.bank||100) + (hft.bank||100);
+  var totalPnl = (aurora.pnl||0) + (hft.pnl||0);
+  var totalTrades = (aurora.trades||0) + (hft.trades||0);
+  var totalWins = (aurora.wins||0) + (hft.wins||0);
+  var winRate = totalTrades>0 ? (totalWins/totalTrades*100).toFixed(0) : 0;
+  
+  document.getElementById('totalBank').textContent = '$' + totalBank.toFixed(2);
+  document.getElementById('totalPnl').textContent = (totalPnl>=0?'+':'') + '$' + totalPnl.toFixed(2);
+  document.getElementById('totalPnl').style.color = totalPnl>=0 ? 'var(--green)' : 'var(--red)';
+  document.getElementById('totalTrades').textContent = totalTrades;
+  document.getElementById('winRate').textContent = winRate + '%';
+}
+
+onload=function(){
+  in3();
+  fetchBotData();
+  setInterval(fetchBotData, 3000);
+  setTimeout(function(){document.getElementById('lo').style.display='none'},500);
+}
+onresize=function(){
+  ca.aspect=innerWidth/innerHeight;
+  ca.updateProjectionMatrix();
+  re.setSize(innerWidth,innerHeight);
+}
+</script>
+</body>
+</html>
