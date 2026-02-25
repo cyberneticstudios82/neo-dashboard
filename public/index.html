@@ -75,8 +75,6 @@ body{font-family:'Rajdhani',sans-serif;background:var(--bg);color:#e0f4ff;overfl
 </div>
 </div>
 <script>
-const UPSTASH_URL = "https://cute-lab-59871.upstash.io/get/";
-const TOKEN = "AenfAAIncDJkNDgyMWZjZjcwOTA0NjYyOGQ1MDY3MTg4MDA5YmVlY3AyNTk4NzE";
 let aurora={bank:0,pnl:0,trades:0,wins:0,losses:0},hft={bank:0,pnl:0,trades:0,wins:0,losses:0},trades=[],pnlHistory=[100,105,108,110,112,115];
 
 var sc,ca,re,pt3,t=0;
@@ -92,21 +90,26 @@ function an(){requestAnimationFrame(an);t+=0.001;pt3.rotation.y=t*0.1;ca.positio
 
 async function fetchData(){
   try{
-    var h={"Authorization":"Bearer "+TOKEN};
-    var ar=await fetch(UPSTASH_URL+"aurora",{headers:h}),ad=await ar.json();
-    if(ad.result) aurora=JSON.parse(ad.result);
-    var hr=await fetch(UPSTASH_URL+"hft",{headers:h}),hd=await hr.json();
-    if(hd.result) hft=JSON.parse(hd.result);
-    var tr=await fetch(UPSTASH_URL+"trades",{headers:h}),td=await tr.json();
-    if(td.result) trades=JSON.parse(td.result);
+    // Use local API endpoint which proxies to Upstash
+    var ar=await fetch('/api/aurora'),aurora=await ar.json();
+    var hr=await fetch('/api/hft'),hft=await hr.json();
+    var tr=await fetch('/api/trades'),trades=await tr.json();
     
-    pnlHistory.push(aurora.bank+hft.bank);
+    if(aurora && aurora.bank) window.aurora = aurora;
+    if(hft && hft.bank) window.hft = hft;
+    if(trades) window.trades = trades;
+    
+    pnlHistory.push((window.aurora.bank||0)+(window.hft.bank||0));
     if(pnlHistory.length>30)pnlHistory.shift();
-  }catch(e){console.log(e);}
+  }catch(e){console.log('Error:',e);}
   updateDisplay();
 }
 
 function updateDisplay(){
+  aurora = window.aurora || {bank:100,pnl:0,trades:0,wins:0,losses:0};
+  hft = window.hft || {bank:100,pnl:0,trades:0,wins:0,losses:0};
+  trades = window.trades || [];
+  
   var tb=aurora.bank+hft.bank,tp=aurora.pnl+hft.pnl,tt=aurora.trades+hft.trades,tw=aurora.wins+hft.wins;
   var wr=tt>0?(tw/tt*100).toFixed(0):0;
   
@@ -123,8 +126,9 @@ function updateDisplay(){
   
   var t1=document.getElementById('trades1'),t2=document.getElementById('trades2');
   t1.innerHTML='';t2.innerHTML='';
-  (trades||[]).slice(0,10).forEach(function(tr,i){
-    var d='<div class="ti '+(tr.result==='WIN'?'win':'loss')+'"><div><span style="font-weight:700">'+(tr.signal||'')+'</span> '+(tr.token||'')+(tr.leverage?' '+tr.leverage+'x':'')+'</div><div class="ts">'+(tr.time||'').substring(11,16)+'</div><div style="color:'+(tr.profit>=0?'var(--green)':'var(--red)')+'">'+(tr.profit>=0?'+':'')+(tr.profit||0).toFixed(2)+'</div></div>';
+  trades.slice(0,10).forEach(function(tr,i){
+    var tm = tr.time ? new Date(tr.time).toLocaleTimeString() : '';
+    var d='<div class="ti '+(tr.result==='WIN'?'win':'loss')+'"><div><span style="font-weight:700">'+(tr.signal||'')+'</span> '+(tr.token||'')+(tr.leverage?' '+tr.leverage+'x':'')+'</div><div class="ts">'+tm+'</div><div style="color:'+(tr.profit>=0?'var(--green)':'var(--red)')+'">'+(tr.profit>=0?'+':'')+(tr.profit||0).toFixed(2)+'</div></div>';
     if(i<5)t1.innerHTML+=d;else t2.innerHTML+=d;
   });
   
