@@ -6,6 +6,10 @@
       "use": "@vercel/node"
     },
     {
+      "src": "unified-dashboard.html",
+      "use": "@vercel/static"
+    },
+    {
       "src": "aurora-omega-real/dashboard.html",
       "use": "@vercel/static"
     },
@@ -24,8 +28,12 @@
       "dest": "/aurora-terminal/dashboard.html"
     },
     {
-      "src": "/(.*)",
+      "src": "/aurora",
       "dest": "/aurora-omega-real/dashboard.html"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/unified-dashboard.html"
     }
   ]
 }

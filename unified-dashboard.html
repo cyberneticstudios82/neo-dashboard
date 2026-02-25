@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AURORA | Unified Trading Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-card: #1a1a25;
+            --accent-cyan: #00f5ff;
+            --accent-green: #00ff88;
+            --accent-red: #ff4466;
+            --accent-gold: #ffd700;
+            --accent-purple: #a855f7;
+            --text-primary: #ffffff;
+            --text-secondary: #8888aa;
+            --border-color: #2a2a3a;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 30px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-green), var(--accent-purple));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .logo h1 {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logo span {
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .live-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid var(--accent-green);
+            border-radius: 20px;
+        }
+
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--accent-green);
+            border-radius: 50%;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        /* Grid */
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 20px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 14px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .bot-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .bot-badge.terminal { background: rgba(168, 85, 247, 0.2); color: var(--accent-purple); }
+        .bot-badge.real { background: rgba(0, 245, 255, 0.2); color: var(--accent-cyan); }
+        .bot-badge.hft { background: rgba(255, 215, 0, 0.2); color: var(--accent-gold); }
+
+        /* Stats */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .stat {
+            text-align: center;
+            padding: 15px;
+            background: var(--bg-secondary);
+            border-radius: 10px;
+        }
+
+        .stat-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .stat-value.cyan { color: var(--accent-cyan); }
+        .stat-value.green { color: var(--accent-green); }
+        .stat-value.red { color: var(--accent-red); }
+        .stat-value.gold { color: var(--accent-gold); }
+        .stat-value.purple { color: var(--accent-purple); }
+
+        .stat-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 5px;
+        }
+
+        /* BTC Price */
+        .btc-display {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .btc-price {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 42px;
+            font-weight: 700;
+        }
+
+        .btc-change {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 16px;
+            margin-top: 5px;
+        }
+
+        /* Positions */
+        .positions-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .position-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 15px;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            border-left: 3px solid;
+        }
+
+        .position-item.up { border-left-color: var(--accent-green); }
+        .position-item.down { border-left-color: var(--accent-red); }
+
+        .position-direction {
+            font-weight: 700;
+            font-size: 12px;
+            padding: 3px 8px;
+            border-radius: 4px;
+        }
+
+        .position-direction.up { background: rgba(0,255,136,0.2); color: var(--accent-green); }
+        .position-direction.down { background: rgba(255,68,102,0.2); color: var(--accent-red); }
+
+        .position-pair { font-size: 14px; }
+        .position-pnl { font-family: 'JetBrains Mono', monospace; font-size: 14px; }
+
+        /* Live Prices */
+        .prices-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .price-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+        }
+
+        .price-symbol { font-weight: 600; }
+        .price-value { font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+
+        /* Trade Log */
+        .log-list {
+            max-height: 250px;
+            overflow-y: auto;
+        }
+
+        .log-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 12px;
+            gap: 10px;
+        }
+
+        .log-time { color: var(--text-secondary); min-width: 70px; }
+        .log-action { font-weight: 600; min-width: 50px; }
+        .log-action.open { color: var(--accent-cyan); }
+        .log-action.close { color: var(--accent-gold); }
+        .log-details { flex: 1; color: var(--text-secondary); }
+        .log-pnl { font-family: 'JetBrains Mono', monospace; }
+        .log-pnl.positive { color: var(--accent-green); }
+        .log-pnl.negative { color: var(--accent-red); }
+
+        /* Tab Navigation */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .tab:hover, .tab.active {
+            background: var(--accent-cyan);
+            color: var(--bg-primary);
+        }
+
+        /* Full width cards */
+        .card-full { grid-column: span 3; }
+
+        /* Chart */
+        .chart-container {
+            height: 150px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="logo">
+            <div class="logo-icon">◈</div>
+            <div>
+                <h1>AURORA</h1>
+                <span>Unified Trading System</span>
+            </div>
+        </div>
+        <div class="live-indicator">
+            <div class="live-dot"></div>
+            <span>LIVE</span>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Combined Stats -->
+        <div class="grid" style="margin-bottom: 20px;">
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Total Bank</span>
+                    <span class="bot-badge terminal">ALL BOTS</span>
+                </div>
+                <div class="btc-display">
+                    <div class="btc-price cyan" id="total-bank">$200.00</div>
+                    <div class="btc-change" id="total-pnl">+$0.00 (0.00%)</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">BTC Price</span>
+                </div>
+                <div class="btc-display">
+                    <div class="btc-price" id="btc-price">$0</div>
+                    <div class="btc-change" id="btc-change">0.00%</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Live Prices</span>
+                </div>
+                <div class="prices-grid" id="prices-grid">
+                    <div class="price-item"><span class="price-symbol">ETH</span><span class="price-value" id="price-eth">$0</span></div>
+                    <div class="price-item"><span class="price-symbol">SOL</span><span class="price-value" id="price-sol">$0</span></div>
+                    <div class="price-item"><span class="price-symbol">DOGE</span><span class="price-value" id="price-doge">$0</span></div>
+                    <div class="price-item"><span class="price-symbol">BNB</span><span class="price-value" id="price-bnb">$0</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bot Cards -->
+        <div class="grid">
+            <!-- Aurora Terminal -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Aurora Terminal</span>
+                    <span class="bot-badge terminal">5-MIN BTC</span>
+                </div>
+                <div class="stats-row">
+                    <div class="stat">
+                        <div class="stat-value purple" id="terminal-bank">$100</div>
+                        <div class="stat-label">Bank</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value" id="terminal-pnl">$0</div>
+                        <div class="stat-label">P&L</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value" id="terminal-trades">0</div>
+                        <div class="stat-label">Trades</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value" id="terminal-open">0</div>
+                        <div class="stat-label">Open</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Aurora Real -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Aurora Real</span>
+                    <span class="bot-badge real">SWING</span>
+                </div>
+                <div class="stats-row">
+                    <div class="stat">
+                        <div class="stat-value cyan" id="real-bank">$100</div>
+                        <div class="stat-label">Bank</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value" id="real-pnl">$0</div>
+                        <div class="stat-label">P&L</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value" id="real-trades">0</div>
+                        <div class="stat-label">Trades</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value" id="real-open">0</div>
+                        <div class="stat-label">Open</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Combined Positions -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">All Positions</span>
+                </div>
+                <div class="positions-list" id="all-positions">
+                    <div style="color: var(--text-secondary); text-align: center; padding: 20px;">Loading...</div>
+                </div>
+            </div>
+
+            <!-- Recent Trades -->
+            <div class="card card-full">
+                <div class="card-header">
+                    <span class="card-title">Recent Trades</span>
+                </div>
+                <div class="log-list" id="trade-log">
+                    <div style="color: var(--text-secondary); text-align: center; padding: 20px;">Loading...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function fetchAllData() {
+            try {
+                // Fetch all APIs in parallel
+                const [terminalRes, realRes] = await Promise.all([
+                    fetch('/api/aurora-terminal').catch(() => ({ json: () => ({}) })),
+                    fetch('/api/aurora-real').catch(() => ({ json: () => ({}) }))
+                ]);
+
+                const terminal = await terminalRes.json();
+                const real = await realRes.json();
+
+                updateDashboard(terminal, real);
+            } catch (e) {
+                console.error('Fetch error:', e);
+            }
+        }
+
+        function updateDashboard(terminal, real) {
+            // Combined stats
+            const terminalBank = terminal.bank || 100;
+            const realBank = real.bank || 100;
+            const totalBank = terminalBank + realBank;
+
+            const terminalPnl = terminal.pnl || 0;
+            const realPnl = real.pnl || 0;
+            const totalPnl = terminalPnl + realPnl;
+            const totalPnlPercent = ((totalPnl / 200) * 100);
+
+            document.getElementById('total-bank').textContent = `$${totalBank.toFixed(2)}`;
+            
+            const pnlEl = document.getElementById('total-pnl');
+            pnlEl.textContent = `${totalPnl >= 0 ? '+' : ''}$${totalPnl.toFixed(2)} (${totalPnlPercent.toFixed(2)}%)`;
+            pnlEl.style.color = totalPnl >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
+
+            // Terminal stats
+            document.getElementById('terminal-bank').textContent = `$${(terminal.bank || 100).toFixed(0)}`;
+            const termPnlEl = document.getElementById('terminal-pnl');
+            termPnlEl.textContent = `${(terminal.pnl || 0) >= 0 ? '+' : ''}$${(terminal.pnl || 0).toFixed(2)}`;
+            termPnlEl.style.color = (terminal.pnl || 0) >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
+            document.getElementById('terminal-trades').textContent = ((terminal.wins || 0) + (terminal.losses || 0));
+            document.getElementById('terminal-open').textContent = terminal.openPositions || 0;
+
+            // Real stats
+            document.getElementById('real-bank').textContent = `$${(real.bank || 100).toFixed(0)}`;
+            const realPnlEl = document.getElementById('real-pnl');
+            realPnlEl.textContent = `${(real.pnl || 0) >= 0 ? '+' : ''}$${(real.pnl || 0).toFixed(2)}`;
+            realPnlEl.style.color = (real.pnl || 0) >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
+            document.getElementById('real-trades').textContent = ((real.wins || 0) + (real.losses || 0));
+            document.getElementById('real-open').textContent = real.openTrades || 0;
+
+            // BTC Price
+            if (terminal.binanceData) {
+                const btc = terminal.binanceData.btcPrice;
+                document.getElementById('btc-price').textContent = btc ? `$${btc.toLocaleString()}` : '$0';
+                
+                const change = terminal.binanceData.btc24hChange || 0;
+                const changeEl = document.getElementById('btc-change');
+                changeEl.textContent = `${change >= 0 ? '+' : ''}${change.toFixed(2)}%`;
+                changeEl.style.color = change >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
+            }
+
+            // Prices
+            if (real.prices) {
+                const priceMap = { btc: 'btc', eth: 'eth', sol: 'sol', doge: 'doge', bnb: 'bnb' };
+                for (const [coin, id] of Object.entries(priceMap)) {
+                    if (real.prices[coin]) {
+                        const price = real.prices[coin].usd;
+                        const el = document.getElementById(`price-${id}`);
+                        if (el) el.textContent = price > 1 ? `$${price.toFixed(2)}` : `$${price.toFixed(6)}`;
+                    }
+                }
+            }
+
+            // All Positions
+            const positionsEl = document.getElementById('all-positions');
+            let positions = [];
+            
+            // Add terminal positions
+            if (terminal.positions) {
+                terminal.positions.forEach(p => {
+                    if (p.status === 'OPEN') {
+                        positions.push({ ...p, source: 'terminal' });
+                    }
+                });
+            }
+            
+            // Add real positions (from trade log)
+            if (real.openTradesList) {
+                real.openTradesList.forEach(log => {
+                    const isUp = log.includes('LONG') || !log.includes('SHORT');
+                    const match = log.match(/([A-Z]{3,6})\s*@/);
+                    if (match) {
+                        positions.push({
+                            direction: log.includes('LONG') ? 'UP' : 'DOWN',
+                            pair: match[1],
+                            source: 'real'
+                        });
+                    }
+                });
+            }
+
+            if (positions.length > 0) {
+                positionsEl.innerHTML = positions.slice(0, 10).map(p => `
+                    <div class="position-item ${p.direction.toLowerCase()}">
+                        <span class="position-direction ${p.direction.toLowerCase()}">${p.direction}</span>
+                        <span class="position-pair">${p.pair || 'BTC'}</span>
+                        <span class="position-pnl">${p.source}</span>
+                    </div>
+                `).join('');
+            } else {
+                positionsEl.innerHTML = '<div style="color: var(--text-secondary); text-align: center; padding: 20px;">No open positions</div>';
+            }
+
+            // Trade Log
+            const logEl = document.getElementById('trade-log');
+            let logs = [];
+            
+            if (terminal.logs) {
+                terminal.logs.slice(-10).forEach(l => {
+                    logs.push({ ...parseLog(l), source: 'terminal' });
+                });
+            }
+            
+            if (real.closedTradesList) {
+                real.closedTradesList.slice(-10).forEach(l => {
+                    logs.push({ ...parseLog(l), source: 'real' });
+                });
+            }
+
+            // Sort by time and dedupe
+            logs = logs.slice(0, 20);
+            
+            if (logs.length > 0) {
+                logEl.innerHTML = logs.map(l => `
+                    <div class="log-item">
+                        <span class="log-time">${l.time}</span>
+                        <span class="log-action ${l.action}">${l.action}</span>
+                        <span class="log-details">${l.details}</span>
+                        <span class="log-pnl ${l.pnlClass}">${l.pnl}</span>
+                    </div>
+                `).join('');
+            } else {
+                logEl.innerHTML = '<div style="color: var(--text-secondary); text-align: center; padding: 20px;">No trades yet</div>';
+            }
+        }
+
+        function parseLog(log) {
+            const time = log.match(/T(\d{2}:\d{2}:\d{2})/)?.[1] || '';
+            const action = log.includes('OPEN') ? 'open' : 'close';
+            
+            const match = log.match(/[A-Z]{3,6}\s*@/);
+            const details = match ? match[0].replace('@', '') : '';
+            
+            const pnlMatch = log.match(/P&L:.*?([+-]?\$[\d.]+)/);
+            const pnl = pnlMatch ? pnlMatch[1] : '';
+            const pnlClass = pnl && !pnl.includes('-') ? 'positive' : 'negative';
+            
+            return { time, action, details, pnl, pnlClass };
+        }
+
+        // Initialize
+        fetchAllData();
+        setInterval(fetchAllData, 3000);
+    </script>
+</body>
+</html>
