@@ -2,7 +2,7 @@
   "version": 2,
   "builds": [
     {
-      "src": "aurora-omega-real/api/aurora-real.js",
+      "src": "api/server.js",
       "use": "@vercel/node"
     },
     {
@@ -12,12 +12,12 @@
   ],
   "routes": [
     {
-      "src": "/api/aurora-real",
-      "dest": "aurora-omega-real/api/aurora-real.js"
+      "src": "/api/(.*)",
+      "dest": "/api/server.js"
     },
     {
       "src": "/(.*)",
-      "dest": "aurora-omega-real/dashboard.html"
+      "dest": "/aurora-omega-real/dashboard.html"
     }
   ]
 }
