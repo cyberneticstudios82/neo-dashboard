@@ -853,9 +853,14 @@
         let sessionStart = Date.now();
 
         // ============== FETCH AND UPDATE ==============
+        // Auto-detect API URL based on environment
+        const API_URL = window.location.hostname === 'localhost' 
+            ? '/api/aurora-real' 
+            : '/api/aurora-real';
+        
         async function fetchData() {
             try {
-                const response = await fetch('/api/aurora-real');
+                const response = await fetch(API_URL);
                 const data = await response.json();
                 updateDashboard(data);
             } catch (error) {
