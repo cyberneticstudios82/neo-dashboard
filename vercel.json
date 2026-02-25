@@ -1,11 +1,23 @@
 {
   "version": 2,
   "builds": [
-    { "src": "index.html", "use": "@vercel/static" },
-    { "src": "api/*.js", "use": "@vercel/node" }
+    {
+      "src": "aurora-omega-real/api/aurora-real.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "aurora-omega-real/dashboard.html",
+      "use": "@vercel/static"
+    }
   ],
   "routes": [
-    { "src": "/api/(.*)", "dest": "/api/$1.js" },
-    { "src": "/(.*)", "dest": "/index.html" }
+    {
+      "src": "/api/aurora-real",
+      "dest": "aurora-omega-real/api/aurora-real.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "aurora-omega-real/dashboard.html"
+    }
   ]
 }

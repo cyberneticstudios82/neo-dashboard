@@ -1,0 +1,31 @@
+🚀 AURORA REAL PAPER TRADING
+💰 Starting Bank: $100
+📊 Trading with REAL conditions, REAL indicators
+
+==================================================
+🔄 AURORA REAL TRADING CYCLE - 2026-02-25T04:42:28.236Z
+==================================================
+📈 Prices: bitcoin: $65618, bonk: $0.00000582, cardano: $0.266258, dogecoin: $0.092669, ethereum: $1913.14, pepe: $0.000004, polkadot: $1.28, solana: $82.27
+
+✅ REAL TRADE OPENED:
+   SHORT bitcoin @ $65618
+   Strategy: MACD_CROSS (100% confidence)
+   Size: $10.00
+
+✅ REAL TRADE OPENED:
+   LONG dogecoin @ $0.092669
+   Strategy: SUPPORT_RESISTANCE (65% confidence)
+   Size: $10.00
+❌ OHLCV fetch error for pepe: data.map is not a function
+
+----------------------------------------
+📊 AURORA REAL STATUS:
+   Bank: $100.00
+   P&L: $0.00 (0.00%)
+   Total Trades: 0
+   Win Rate: 0%
+   Open Trades: 2
+   Best Strategy: N/A
+
+📈 Strategy Performance:
+----------------------------------------

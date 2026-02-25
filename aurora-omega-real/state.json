@@ -1,0 +1,89 @@
+{
+  "bank": 100,
+  "pnl": 0,
+  "pnlPercent": 0,
+  "trades": 0,
+  "wins": 0,
+  "losses": 0,
+  "winRate": 0,
+  "openTrades": 2,
+  "bestStrategy": null,
+  "strategyStats": {
+    "RSI_MOMENTUM": {
+      "wins": 0,
+      "losses": 0,
+      "total": 0
+    },
+    "MACD_CROSS": {
+      "wins": 0,
+      "losses": 0,
+      "total": 0
+    },
+    "EMA_TREND": {
+      "wins": 0,
+      "losses": 0,
+      "total": 0
+    },
+    "BREAKOUT": {
+      "wins": 0,
+      "losses": 0,
+      "total": 0
+    },
+    "SUPPORT_RESISTANCE": {
+      "wins": 0,
+      "losses": 0,
+      "total": 0
+    }
+  },
+  "lastUpdate": "2026-02-25T04:50:39.447Z",
+  "prices": {
+    "bitcoin": {
+      "usd": 65535,
+      "usd_market_cap": 1311912821836.0166,
+      "usd_24h_vol": 42327334417.52759,
+      "usd_24h_change": 3.588051925251537
+    },
+    "bonk": {
+      "usd": 0.00000583,
+      "usd_market_cap": 513091023.70701665,
+      "usd_24h_vol": 44009463.6602664,
+      "usd_24h_change": 1.2716190637672518
+    },
+    "cardano": {
+      "usd": 0.266529,
+      "usd_market_cap": 9811605684.881666,
+      "usd_24h_vol": 412762737.1172141,
+      "usd_24h_change": 3.466897396507053
+    },
+    "dogecoin": {
+      "usd": 0.092827,
+      "usd_market_cap": 15667867343.8472,
+      "usd_24h_vol": 895460981.0374789,
+      "usd_24h_change": 1.6349119379892272
+    },
+    "ethereum": {
+      "usd": 1910.18,
+      "usd_market_cap": 230953196539.4678,
+      "usd_24h_vol": 24963304545.128773,
+      "usd_24h_change": 4.4523222604173425
+    },
+    "pepe": {
+      "usd": 0.00000401,
+      "usd_market_cap": 1684282330.7354672,
+      "usd_24h_vol": 320506128.9434354,
+      "usd_24h_change": 2.8267243499262964
+    },
+    "polkadot": {
+      "usd": 1.28,
+      "usd_market_cap": 2131406528.7996438,
+      "usd_24h_vol": 138936045.94855675,
+      "usd_24h_change": 2.140609327123559
+    },
+    "solana": {
+      "usd": 82.28,
+      "usd_market_cap": 46791259596.06465,
+      "usd_24h_vol": 4141631767.1904054,
+      "usd_24h_change": 7.243697159010064
+    }
+  }
+}
