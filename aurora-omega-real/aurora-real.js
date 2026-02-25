@@ -137,7 +137,7 @@ class AuroraRealBot {
             this.initialBank = state.initialBank || this.initialBank;
             this.pnl = state.pnl || 0;
             this.pnlPercent = state.pnlPercent || 0;
-            this.trades = state.trades || [];
+            this.trades = state.tradesList || [];  // Load actual trades array
             this.wins = state.wins || 0;
             this.losses = state.losses || 0;
             this.strategyStats = state.strategyStats || this.strategyStats;
@@ -558,6 +558,9 @@ class AuroraRealBot {
             
             // Check if we should trade
             if (bestSignal.confidence >= CONFIG.minConfidence) {
+                // Ensure trades is an array
+                if (!Array.isArray(this.trades)) this.trades = [];
+                
                 // Check if we already have open trade for this symbol
                 const openTrades = this.trades.filter(t => t.symbol === symbol && t.status === 'OPEN');
                 
@@ -629,15 +632,17 @@ class AuroraRealBot {
             bank: this.bank,
             pnl: this.pnl,
             pnlPercent: this.pnlPercent,
-            trades: this.wins + this.losses,
+            trades: this.wins + this.losses,  // Total count
             wins: this.wins,
             losses: this.losses,
             winRate: this.wins + this.losses > 0 ? ((this.wins / (this.wins + this.losses)) * 100).toFixed(1) : 0,
-            openTrades: this.trades.filter(t => t.status === 'OPEN').length,
+            openTrades: Array.isArray(this.trades) ? this.trades.filter(t => t.status === 'OPEN').length : 0,
             bestStrategy: this.bestStrategy,
             strategyStats: this.strategyStats,
             lastUpdate: this.lastUpdate,
-            prices: this.prices
+            prices: this.prices,
+            // Include actual trades array
+            tradesList: Array.isArray(this.trades) ? this.trades : []
         };
     }
 
