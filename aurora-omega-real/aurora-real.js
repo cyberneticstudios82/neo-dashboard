@@ -137,13 +137,14 @@ class AuroraRealBot {
             this.initialBank = state.initialBank || this.initialBank;
             this.pnl = state.pnl || 0;
             this.pnlPercent = state.pnlPercent || 0;
-            this.trades = state.tradesList || [];  // Load actual trades array
+            // Ensure trades is always an array
+            this.trades = Array.isArray(state.tradesList) ? state.tradesList : [];
             this.wins = state.wins || 0;
             this.losses = state.losses || 0;
             this.strategyStats = state.strategyStats || this.strategyStats;
             this.bestStrategy = state.bestStrategy || null;
             this.adaptiveSize = state.adaptiveSize || (this.initialBank * CONFIG.maxRiskPerTrade);
-            console.log('✅ Loaded state from Upstash');
+            console.log('✅ Loaded state from Upstash, trades:', this.trades.length);
             return true;
         }
         return null;
@@ -530,7 +531,13 @@ class AuroraRealBot {
 
     // ============ MAIN TRADING CYCLE ============
     
-    async runCycle() {
+    async runCycle() { try {
+        // ALWAYS ensure trades is an array
+        if (!Array.isArray(this.trades)) {
+            this.trades = [];
+            console.log('⚠️ Fixed: trades was not an array');
+        }
+        
         console.log('\n' + '='.repeat(50));
         console.log('🔄 AURORA REAL TRADING CYCLE - ' + new Date().toISOString());
         console.log('='.repeat(50));
@@ -602,7 +609,7 @@ class AuroraRealBot {
         this.saveState();
         this.printStatus();
         
-        return this.getState();
+        return this.getState(); } catch(e) { console.log("Cycle error:", e.message); }
     }
 
     // ============ UTILITIES ============
@@ -614,7 +621,7 @@ class AuroraRealBot {
         console.log(`   P&L: $${this.pnl.toFixed(2)} (${this.pnlPercent.toFixed(2)}%)`);
         console.log(`   Total Trades: ${this.wins + this.losses}`);
         console.log(`   Win Rate: ${this.wins + this.losses > 0 ? ((this.wins / (this.wins + this.losses)) * 100).toFixed(1) : 0}%`);
-        console.log(`   Open Trades: ${this.trades.filter(t => t.status === 'OPEN').length}`);
+        console.log(`   Open Trades: ${Array.isArray(this.trades) ? this.trades.filter(t => t.status === 'OPEN').length : 0}`);
         console.log(`   Best Strategy: ${this.bestStrategy || 'N/A'}`);
         
         console.log('\n📈 Strategy Performance:');
