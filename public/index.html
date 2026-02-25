@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Aurora - Autonomous Trading Empire</title>
+<title>Aurora - Autonomous Trading</title>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
 <style>
@@ -75,88 +75,192 @@ body{font-family:'Rajdhani',sans-serif;background:var(--bg);color:#e0f4ff;overfl
 </div>
 </div>
 <script>
-let aurora={bank:0,pnl:0,trades:0,wins:0,losses:0},hft={bank:0,pnl:0,trades:0,wins:0,losses:0},trades=[],pnlHistory=[100,105,108,110,112,115];
+// Global state
+var auroraData = null;
+var hftData = null;
+var tradesData = [];
+var pnlHistory = [100, 105, 108, 110, 112, 115];
 
-var sc,ca,re,pt3,t=0;
-function in3(){sc=new THREE.Scene();sc.background=new THREE.Color(0x030508);
-ca=new THREE.PerspectiveCamera(75,innerWidth/innerHeight,0.1,1000);ca.position.z=25;
-re=new THREE.WebGLRenderer({canvas:document.getElementById('c'),antialias:true});re.setSize(innerWidth,innerHeight);
-var g=new THREE.BufferGeometry(),c=1200,p=new Float32Array(c*3),cl=new Float32Array(c*3);
-for(var i=0;i<c;i++){p[i*3]=(Math.random()-0.5)*60;p[i*3+1]=(Math.random()-0.5)*60;p[i*3+2]=(Math.random()-0.5)*30;var C=new THREE.Color();C.setHSL(0.5+Math.random()*0.2,0.8,0.5);cl[i*3]=C.r;cl[i*3+1]=C.g;cl[i*3+2]=C.b;}
-g.setAttribute('position',new THREE.BufferAttribute(p,3));g.setAttribute('color',new THREE.BufferAttribute(cl,3));
-pt3=new THREE.Points(g,new THREE.PointsMaterial({size:0.08,vertexColors:true,transparent:true,opacity:0.8,blending:THREE.AdditiveBlending}));sc.add(pt3);
-var gr=new THREE.GridHelper(50,25,0x00f5ff,0x0a1520);gr.position.y=-12;sc.add(gr);an()}
-function an(){requestAnimationFrame(an);t+=0.001;pt3.rotation.y=t*0.1;ca.position.x=Math.sin(t)*3;ca.position.y=Math.cos(t*0.7)*2;ca.lookAt(0,0,0);re.render(sc,ca)}
-
-async function fetchData(){
-  try{
-    // Use local API endpoint which proxies to Upstash
-    var ar=await fetch('/api/aurora'),aurora=await ar.json();
-    var hr=await fetch('/api/hft'),hft=await hr.json();
-    var tr=await fetch('/api/trades'),trades=await tr.json();
-    
-    if(aurora && aurora.bank) window.aurora = aurora;
-    if(hft && hft.bank) window.hft = hft;
-    if(trades) window.trades = trades;
-    
-    pnlHistory.push((window.aurora.bank||0)+(window.hft.bank||0));
-    if(pnlHistory.length>30)pnlHistory.shift();
-  }catch(e){console.log('Error:',e);}
-  updateDisplay();
+// Three.js background
+var sc, ca, re, pt3, t = 0;
+function init3D() {
+  sc = new THREE.Scene();
+  sc.background = new THREE.Color(0x030508);
+  ca = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+  ca.position.z = 25;
+  re = new THREE.WebGLRenderer({ canvas: document.getElementById('c'), antialias: true });
+  re.setSize(window.innerWidth, window.innerHeight);
+  
+  var g = new THREE.BufferGeometry();
+  var count = 1200;
+  var positions = new Float32Array(count * 3);
+  var colors = new Float32Array(count * 3);
+  for (var i = 0; i < count; i++) {
+    positions[i * 3] = (Math.random() - 0.5) * 60;
+    positions[i * 3 + 1] = (Math.random() - 0.5) * 60;
+    positions[i * 3 + 2] = (Math.random() - 0.5) * 30;
+    var c = new THREE.Color();
+    c.setHSL(0.5 + Math.random() * 0.2, 0.8, 0.5);
+    colors[i * 3] = c.r;
+    colors[i * 3 + 1] = c.g;
+    colors[i * 3 + 2] = c.b;
+  }
+  g.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  g.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  
+  pt3 = new THREE.Points(g, new THREE.PointsMaterial({ size: 0.08, vertexColors: true, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending }));
+  sc.add(pt3);
+  
+  var grid = new THREE.GridHelper(50, 25, 0x00f5ff, 0x0a1520);
+  grid.position.y = -12;
+  sc.add(grid);
+  
+  animate();
 }
 
-function updateDisplay(){
-  aurora = window.aurora || {bank:100,pnl:0,trades:0,wins:0,losses:0};
-  hft = window.hft || {bank:100,pnl:0,trades:0,wins:0,losses:0};
-  trades = window.trades || [];
+function animate() {
+  requestAnimationFrame(animate);
+  t += 0.001;
+  pt3.rotation.y = t * 0.1;
+  ca.position.x = Math.sin(t) * 3;
+  ca.position.y = Math.cos(t * 0.7) * 2;
+  ca.lookAt(0, 0, 0);
+  re.render(sc, ca);
+}
+
+async function fetchData() {
+  try {
+    // Fetch aurora
+    var r1 = await fetch('/api/aurora');
+    var d1 = await r1.json();
+    if (d1 && d1.bank && d1.bank > 0) {
+      auroraData = d1;
+    }
+    
+    // Fetch hft
+    var r2 = await fetch('/api/hft');
+    var d2 = await r2.json();
+    if (d2 && d2.bank && d2.bank > 0) {
+      hftData = d2;
+    }
+    
+    // Fetch trades
+    var r3 = await fetch('/api/trades');
+    var d3 = await r3.json();
+    if (d3 && Array.isArray(d3)) {
+      tradesData = d3;
+    }
+    
+    // Update pnl history
+    var total = (auroraData ? auroraData.bank : 0) + (hftData ? hftData.bank : 0);
+    if (total > 0) {
+      pnlHistory.push(total);
+      if (pnlHistory.length > 30) pnlHistory.shift();
+    }
+    
+    updateDisplay();
+  } catch (e) {
+    console.log('Error fetching:', e);
+  }
+}
+
+function updateDisplay() {
+  var a = auroraData || { bank: 100, pnl: 0, trades: 0, wins: 0, losses: 0 };
+  var h = hftData || { bank: 100, pnl: 0, trades: 0, wins: 0, losses: 0 };
   
-  var tb=aurora.bank+hft.bank,tp=aurora.pnl+hft.pnl,tt=aurora.trades+hft.trades,tw=aurora.wins+hft.wins;
-  var wr=tt>0?(tw/tt*100).toFixed(0):0;
+  var totalBank = a.bank + h.bank;
+  var totalPnl = a.pnl + h.pnl;
+  var totalTrades = a.trades + h.trades;
+  var totalWins = a.wins + h.wins;
+  var winRate = totalTrades > 0 ? Math.round((totalWins / totalTrades) * 100) : 0;
   
-  document.getElementById('totalBank').textContent='$'+tb.toFixed(2);
-  var tpEl=document.getElementById('totalPnl');
-  tpEl.textContent='$'+(tp>=0?'+':'')+tp.toFixed(2);
-  tpEl.style.color=tp>=0?'var(--green)':'var(--red)';
-  document.getElementById('totalTrades').textContent=tt;
-  document.getElementById('winRate').textContent=wr+'%';
-  document.getElementById('auroraBank').textContent='$'+aurora.bank.toFixed(0);
-  document.getElementById('hftBank').textContent='$'+hft.bank.toFixed(0);
-  document.getElementById('auroraVal').textContent='$'+aurora.bank.toFixed(2);
-  document.getElementById('hftVal').textContent='$'+hft.bank.toFixed(2);
+  document.getElementById('totalBank').textContent = '$' + totalBank.toFixed(2);
   
-  var t1=document.getElementById('trades1'),t2=document.getElementById('trades2');
-  t1.innerHTML='';t2.innerHTML='';
-  trades.slice(0,10).forEach(function(tr,i){
+  var pnlEl = document.getElementById('totalPnl');
+  pnlEl.textContent = '$' + (totalPnl >= 0 ? '+' : '') + totalPnl.toFixed(2);
+  pnlEl.style.color = totalPnl >= 0 ? 'var(--green)' : 'var(--red)';
+  
+  document.getElementById('totalTrades').textContent = totalTrades;
+  document.getElementById('winRate').textContent = winRate + '%';
+  document.getElementById('auroraBank').textContent = '$' + a.bank.toFixed(0);
+  document.getElementById('hftBank').textContent = '$' + h.bank.toFixed(0);
+  document.getElementById('auroraVal').textContent = '$' + a.bank.toFixed(2);
+  document.getElementById('hftVal').textContent = '$' + h.bank.toFixed(2);
+  
+  // Trades
+  var t1 = document.getElementById('trades1');
+  var t2 = document.getElementById('trades2');
+  t1.innerHTML = '';
+  t2.innerHTML = '';
+  
+  tradesData.slice(0, 10).forEach(function(tr, i) {
     var tm = tr.time ? new Date(tr.time).toLocaleTimeString() : '';
-    var d='<div class="ti '+(tr.result==='WIN'?'win':'loss')+'"><div><span style="font-weight:700">'+(tr.signal||'')+'</span> '+(tr.token||'')+(tr.leverage?' '+tr.leverage+'x':'')+'</div><div class="ts">'+tm+'</div><div style="color:'+(tr.profit>=0?'var(--green)':'var(--red)')+'">'+(tr.profit>=0?'+':'')+(tr.profit||0).toFixed(2)+'</div></div>';
-    if(i<5)t1.innerHTML+=d;else t2.innerHTML+=d;
+    var cls = tr.result === 'WIN' ? 'win' : 'loss';
+    var profit = tr.profit || 0;
+    var html = '<div class="ti ' + cls + '"><div><span style="font-weight:700">' + (tr.signal || '') + '</span> ' + (tr.token || '') + (tr.leverage ? ' ' + tr.leverage + 'x' : '') + '</div><div class="ts">' + tm + '</div><div style="color:' + (profit >= 0 ? 'var(--green)' : 'var(--red)') + '">' + (profit >= 0 ? '+$' : '-$') + Math.abs(profit).toFixed(2) + '</div></div>';
+    
+    if (i < 5) t1.innerHTML += html;
+    else t2.innerHTML += html;
   });
   
   drawChart();
 }
 
-function drawChart(){
-  var ca=document.getElementById('pnlChart'),ctx=ca.getContext('2d');
-  ca.width=ca.offsetWidth;ca.height=ca.offsetHeight;
-  var w=ca.width,h=ca.height;
-  ctx.clearRect(0,0,w,h);
-  if(pnlHistory.length<2)return;
-  var mn=Math.min(...pnlHistory),mx=Math.max(...pnlHistory),rg=mx-mn||1;
-  ctx.strokeStyle='#00ff88';ctx.lineWidth=2;ctx.beginPath();
-  pnlHistory.forEach(function(v,i){var x=(i/(pnlHistory.length-1))*w,y=h-((v-mn)/rg)*(h-20)-10;if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);});
+function drawChart() {
+  var canvas = document.getElementById('pnlChart');
+  var ctx = canvas.getContext('2d');
+  canvas.width = canvas.offsetWidth;
+  canvas.height = canvas.offsetHeight;
+  var w = canvas.width;
+  var h = canvas.height;
+  
+  ctx.clearRect(0, 0, w, h);
+  
+  if (pnlHistory.length < 2) return;
+  
+  var mn = Math.min(...pnlHistory);
+  var mx = Math.max(...pnlHistory);
+  var range = mx - mn || 1;
+  
+  ctx.strokeStyle = '#00ff88';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  
+  pnlHistory.forEach(function(v, i) {
+    var x = (i / (pnlHistory.length - 1)) * w;
+    var y = h - ((v - mn) / range) * (h - 20) - 10;
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  });
+  
   ctx.stroke();
-  ctx.lineTo(w,h);ctx.lineTo(0,h);ctx.closePath();
-  var g=ctx.createLinearGradient(0,0,0,h);g.addColorStop(0,'rgba(0,255,136,0.3)');g.addColorStop(1,'rgba(0,255,136,0)');
-  ctx.fillStyle=g;ctx.fill();
-  ctx.fillStyle='#00ff88';ctx.font='bold 14px Orbitron';ctx.fillText('$'+pnlHistory[pnlHistory.length-1].toFixed(0),w-60,20);
+  ctx.lineTo(w, h);
+  ctx.lineTo(0, h);
+  ctx.closePath();
+  
+  var gradient = ctx.createLinearGradient(0, 0, 0, h);
+  gradient.addColorStop(0, 'rgba(0,255,136,0.3)');
+  gradient.addColorStop(1, 'rgba(0,255,136,0)');
+  ctx.fillStyle = gradient;
+  ctx.fill();
+  
+  ctx.fillStyle = '#00ff88';
+  ctx.font = 'bold 14px Orbitron';
+  ctx.fillText('$' + pnlHistory[pnlHistory.length - 1].toFixed(0), w - 60, 20);
 }
 
-onload=function(){
-  in3();fetchData();
-  setInterval(fetchData,3000);
-  setTimeout(function(){document.getElementById('lo').style.display='none'},800);
-}
-onresize=function(){ca.aspect=innerWidth/innerHeight;ca.updateProjectionMatrix();re.setSize(innerWidth,innerHeight);}
+window.onload = function() {
+  init3D();
+  fetchData();
+  setInterval(fetchData, 3000);
+  setTimeout(function() { document.getElementById('lo').style.display = 'none'; }, 800);
+};
+
+window.onresize = function() {
+  ca.aspect = window.innerWidth / window.innerHeight;
+  ca.updateProjectionMatrix();
+  re.setSize(window.innerWidth, window.innerHeight);
+};
 </script>
 </body>
 </html>
