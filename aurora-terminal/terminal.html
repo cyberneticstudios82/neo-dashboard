@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AURORA TERMINAL</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #111111;
+            --bg-tertiary: #1a1a1a;
+            --accent-cyan: #00ff9d;
+            --accent-green: #00ff88;
+            --accent-red: #ff4444;
+            --accent-yellow: #ffdd00;
+            --accent-blue: #0088ff;
+            --text-primary: #e0e0e0;
+            --text-secondary: #888888;
+            --text-muted: #555555;
+            --border: #333333;
+        }
+
+        body {
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Scanlines effect */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0, 0, 0, 0.1) 2px,
+                rgba(0, 0, 0, 0.1) 4px
+            );
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        .terminal {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--accent-cyan);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 20px;
+            color: var(--bg-primary);
+        }
+
+        .logo-text {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--accent-cyan);
+            letter-spacing: 2px;
+        }
+
+        .logo-sub {
+            font-size: 10px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+
+        .status-bar {
+            display: flex;
+            gap: 20px;
+            font-size: 12px;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            animation: pulse 1s infinite;
+        }
+
+        .status-dot.green { background: var(--accent-green); }
+        .status-dot.yellow { background: var(--accent-yellow); }
+        .status-dot.red { background: var(--accent-red); }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Main Grid */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            flex: 1;
+        }
+
+        /* Panels */
+        .panel {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .panel-title {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .panel-content {
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* Stats */
+        .stat-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .stat-box {
+            background: var(--bg-tertiary);
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .stat-value.cyan { color: var(--accent-cyan); }
+        .stat-value.green { color: var(--accent-green); }
+        .stat-value.red { color: var(--accent-red); }
+        .stat-value.yellow { color: var(--accent-yellow); }
+        .stat-value.blue { color: var(--accent-blue); }
+
+        .stat-label {
+            font-size: 10px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-top: 5px;
+        }
+
+        /* Price Ticker */
+        .ticker {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .ticker:last-child { border-bottom: none; }
+
+        .ticker-symbol {
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .ticker-price {
+            font-weight: 600;
+        }
+
+        .ticker-change {
+            margin-left: 10px;
+        }
+
+        .ticker-change.positive { color: var(--accent-green); }
+        .ticker-change.negative { color: var(--accent-red); }
+
+        /* Order Book */
+        .orderbook-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            font-size: 12px;
+        }
+
+        .orderbook-row.ask { color: var(--accent-red); }
+        .orderbook-row.bid { color: var(--accent-green); }
+
+        .ob-bar {
+            height: 4px;
+            border-radius: 2px;
+            margin-top: 2px;
+        }
+
+        .ob-bar.ask { background: var(--accent-red); }
+        .ob-bar.bid { background: var(--accent-green); }
+
+        /* Positions */
+        .position-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+            margin-bottom: 8px;
+            border-left: 3px solid;
+        }
+
+        .position-row.long { border-left-color: var(--accent-green); }
+        .position-row.short { border-left-color: var(--accent-red); }
+
+        .pos-direction {
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+        }
+
+        .pos-direction.long { background: rgba(0,255,136,0.2); color: var(--accent-green); }
+        .pos-direction.short { background: rgba(255,68,68,0.2); color: var(--accent-red); }
+
+        .pos-pair { font-weight: 600; }
+        .pos-pnl { font-weight: 600; }
+        .pos-pnl.positive { color: var(--accent-green); }
+        .pos-pnl.negative { color: var(--accent-red); }
+
+        /* Terminal Output */
+        .terminal-output {
+            background: #000;
+            border-radius: 6px;
+            padding: 10px;
+            font-size: 11px;
+            height: 200px;
+            overflow-y: auto;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .output-line {
+            margin: 2px 0;
+            color: var(--text-muted);
+        }
+
+        .output-line.time { color: var(--text-muted); }
+        .output-line.info { color: var(--accent-blue); }
+        .output-line.success { color: var(--accent-green); }
+        .output-line.error { color: var(--accent-red); }
+        .output-line.warning { color: var(--accent-yellow); }
+        .output-line.cyan { color: var(--accent-cyan); }
+
+        /* Full width panels */
+        .panel-full { grid-column: span 4; }
+        .panel-half { grid-column: span 2; }
+        .panel-quarter { grid-column: span 1; }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: var(--bg-primary); }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+        /* Responsive */
+        @media (max-width: 1000px) {
+            .grid { grid-template-columns: repeat(2, 1fr); }
+            .panel-full, .panel-half { grid-column: span 2; }
+        }
+    </style>
+</head>
+<body>
+    <div class="terminal">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">
+                <div class="logo-icon">▲</div>
+                <div>
+                    <div class="logo-text">AURORA TERMINAL</div>
+                    <div class="logo-sub">5-Min BTC Trading System</div>
+                </div>
+            </div>
+            <div class="status-bar">
+                <div class="status-item">
+                    <div class="status-dot green"></div>
+                    <span>TERMINAL</span>
+                </div>
+                <div class="status-item">
+                    <div class="status-dot green"></div>
+                    <span>BINANCE</span>
+                </div>
+                <div class="status-item">
+                    <div class="status-dot yellow"></div>
+                    <span>POLYMARKET</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Grid -->
+        <div class="grid">
+            <!-- Bank & P&L -->
+            <div class="panel panel-half">
+                <div class="panel-header">
+                    <span class="panel-title">Account</span>
+                </div>
+                <div class="stat-grid">
+                    <div class="stat-box">
+                        <div class="stat-value cyan" id="bank">$100.00</div>
+                        <div class="stat-label">Bank</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="pnl">$0.00</div>
+                        <div class="stat-label">P&L</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="trades">0</div>
+                        <div class="stat-label">Trades</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value green" id="winrate">0%</div>
+                        <div class="stat-label">Win Rate</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BTC Price -->
+            <div class="panel panel-half">
+                <div class="panel-header">
+                    <span class="panel-title">BTC / USDT</span>
+                </div>
+                <div style="text-align: center; padding: 20px;">
+                    <div class="stat-value cyan" id="btc-price" style="font-size: 42px;">$0</div>
+                    <div class="stat-value" id="btc-change" style="font-size: 18px;">0.00%</div>
+                </div>
+            </div>
+
+            <!-- Live Prices -->
+            <div class="panel">
+                <div class="panel-header">
+                    <span class="panel-title">Prices</span>
+                </div>
+                <div class="panel-content" id="prices">
+                    <div class="ticker"><span class="ticker-symbol">ETH</span><span class="ticker-price">$0</span></div>
+                    <div class="ticker"><span class="ticker-symbol">SOL</span><span class="ticker-price">$0</span></div>
+                    <div class="ticker"><span class="ticker-symbol">DOGE</span><span class="ticker-price">$0</span></div>
+                    <div class="ticker"><span class="ticker-symbol">BNB</span><span class="ticker-price">$0</span></div>
+                </div>
+            </div>
+
+            <!-- Order Book -->
+            <div class="panel">
+                <div class="panel-header">
+                    <span class="panel-title">Order Book</span>
+                </div>
+                <div class="panel-content">
+                    <div style="color: var(--accent-red); font-size: 10px; margin-bottom: 5px;">ASKS</div>
+                    <div id="asks"></div>
+                    <div style="color: var(--text-muted); text-align: center; padding: 5px;">$<span id="mid-price">0</span></div>
+                    <div style="color: var(--accent-green); font-size: 10px; margin: 10px 0 5px;">BIDS</div>
+                    <div id="bids"></div>
+                </div>
+            </div>
+
+            <!-- Terminal Output -->
+            <div class="panel panel-full">
+                <div class="panel-header">
+                    <span class="panel-title">Terminal Output</span>
+                    <span class="status-dot green"></span>
+                </div>
+                <div class="terminal-output" id="output">
+                    <div class="output-line cyan">◈ AURORA TERMINAL v1.0</div>
+                    <div class="output-line">Initializing trading system...</div>
+                    <div class="output-line info">Connecting to Binance WebSocket...</div>
+                    <div class="output-line info">Connecting to Polymarket API...</div>
+                    <div class="output-line success">✓ All systems online</div>
+                </div>
+            </div>
+
+            <!-- Positions -->
+            <div class="panel panel-half">
+                <div class="panel-header">
+                    <span class="panel-title">Open Positions</span>
+                    <span id="open-count" style="color: var(--accent-yellow);">0</span>
+                </div>
+                <div class="panel-content" id="positions">
+                    <div style="color: var(--text-muted); text-align: center; padding: 20px;">No positions</div>
+                </div>
+            </div>
+
+            <!-- Recent Trades -->
+            <div class="panel panel-half">
+                <div class="panel-header">
+                    <span class="panel-title">Recent Trades</span>
+                </div>
+                <div class="panel-content" id="trades-list">
+                    <div style="color: var(--text-muted); text-align: center; padding: 20px;">No trades yet</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = '/api/aurora-terminal';
+
+        // Colors
+        const GREEN = 'var(--accent-green)';
+        const RED = 'var(--accent-red)';
+        const CYAN = 'var(--accent-cyan)';
+
+        async function fetchData() {
+            try {
+                const response = await fetch(API_URL);
+                const data = await response.json();
+                updateDashboard(data);
+            } catch (e) {
+                addOutput('error', 'API Error: ' + e.message);
+            }
+        }
+
+        function updateDashboard(data) {
+            // Bank
+            const bank = data.bank || 100;
+            const pnl = data.pnl || 0;
+            const pnlPercent = data.pnlPercent || 0;
+            
+            document.getElementById('bank').textContent = '$' + bank.toFixed(2);
+            
+            const pnlEl = document.getElementById('pnl');
+            pnlEl.textContent = (pnl >= 0 ? '+' : '') + '$' + pnl.toFixed(2);
+            pnlEl.style.color = pnl >= 0 ? GREEN : RED;
+            
+            const totalTrades = (data.wins || 0) + (data.losses || 0);
+            document.getElementById('trades').textContent = totalTrades;
+            
+            const winRate = totalTrades > 0 ? ((data.wins / totalTrades) * 100).toFixed(0) : 0;
+            document.getElementById('winrate').textContent = winRate + '%';
+            document.getElementById('winrate').style.color = winRate >= 50 ? GREEN : RED;
+
+            // BTC Price
+            if (data.binanceData) {
+                const btc = data.binanceData;
+                document.getElementById('btc-price').textContent = btc.btcPrice ? '$' + btc.btcPrice.toLocaleString() : '$0';
+                
+                const change = btc.btc24hChange || 0;
+                const changeEl = document.getElementById('btc-change');
+                changeEl.textContent = (change >= 0 ? '+' : '') + change.toFixed(2) + '%';
+                changeEl.style.color = change >= 0 ? GREEN : RED;
+                
+                // Order Book
+                if (btc.orderBook) {
+                    updateOrderBook(btc.orderBook);
+                }
+            }
+
+            // Terminal Output
+            if (data.logs && data.logs.length > 0) {
+                const output = document.getElementById('output');
+                output.innerHTML = data.logs.slice(-30).map(l => {
+                    let cls = 'time';
+                    if (l.includes('QUOTE') || l.includes('OPEN')) cls = 'cyan';
+                    else if (l.includes('CLOSED')) cls = 'success';
+                    else if (l.includes('ERROR') || l.includes('fail')) cls = 'error';
+                    else if (l.includes('WARN')) cls = 'warning';
+                    return `<div class="output-line ${cls}">${l}</div>`;
+                }).join('');
+            }
+
+            // Positions
+            const openEl = document.getElementById('positions');
+            document.getElementById('open-count').textContent = data.openPositions || 0;
+            
+            if (data.positions && data.positions.length > 0) {
+                openEl.innerHTML = data.positions.slice(0, 5).map(p => {
+                    const pnlClass = (p.pnl || 0) >= 0 ? 'positive' : 'negative';
+                    return `
+                        <div class="position-row ${p.direction.toLowerCase()}">
+                            <span class="pos-direction ${p.direction.toLowerCase()}">${p.direction}</span>
+                            <span class="pos-pair">BTC</span>
+                            <span class="pos-pnl ${pnlClass}">${(p.pnl || 0) >= 0 ? '+' : ''}${(p.pnl || 0).toFixed(2)}</span>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+
+        function updateOrderBook(ob) {
+            const asksEl = document.getElementById('asks');
+            const bidsEl = document.getElementById('bids');
+            
+            if (ob.asks && ob.asks.length > 0) {
+                asksEl.innerHTML = ob.asks.slice(0, 6).map(a => `
+                    <div class="orderbook-row ask">
+                        <span>$${a.price.toFixed(2)}</span>
+                        <span>${a.qty.toFixed(4)}</span>
+                    </div>
+                `).join('');
+            }
+            
+            if (ob.bids && ob.bids.length > 0) {
+                bidsEl.innerHTML = ob.bids.slice(0, 6).map(b => `
+                    <div class="orderbook-row bid">
+                        <span>$${b.price.toFixed(2)}</span>
+                        <span>${b.qty.toFixed(4)}</span>
+                    </div>
+                `).join('');
+                
+                // Mid price
+                if (ob.asks && ob.asks[0] && ob.bids && ob.bids[0]) {
+                    const mid = (ob.asks[0].price + ob.bids[0].price) / 2;
+                    document.getElementById('mid-price').textContent = mid.toFixed(2);
+                }
+            }
+        }
+
+        function addOutput(type, msg) {
+            const output = document.getElementById('output');
+            const time = new Date().toLocaleTimeString();
+            output.innerHTML += `<div class="output-line ${type}">[${time}] ${msg}</div>`;
+            output.scrollTop = output.scrollHeight;
+        }
+
+        // Initialize
+        fetchData();
+        setInterval(fetchData, 2000);
+    </script>
+</body>
+</html>
