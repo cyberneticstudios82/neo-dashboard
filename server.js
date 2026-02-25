@@ -1,58 +1,60 @@
 const express = require('express');
-const fs = require('fs');
-const path = require('path');
 const https = require('https');
+const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Serve static files (dashboard)
+// Upstash config
+const UPSTASH_URL = "https://cute-lab-59871.upstash.io";
+const TOKEN = "AenfAAIncDJkNDgyMWZjZjcwOTA0NjYyOGQ1MDY3MTg4MDA5YmVlY3AyNTk4NzE";
+
+function fetchFromUpstash(key) {
+  return new Promise((resolve, reject) => {
+    const url = `${UPSTASH_URL}/get/${key}`;
+    https.get(url, { headers: { "Authorization": `Bearer ${TOKEN}` } }, (res) => {
+      let data = '';
+      res.on('data', chunk => data += chunk);
+      res.on('end', () => {
+        try {
+          const parsed = JSON.parse(data);
+          resolve(parsed.result ? JSON.parse(parsed.result) : null);
+        } catch(e) { resolve(null); }
+      });
+    }).on('error', reject);
+  });
+}
+
+// Serve static files
 app.use(express.static(path.join(__dirname, 'public')));
 
-// API Routes
-app.get('/api/aurora', (req, res) => {
-    try {
-        const state = JSON.parse(fs.readFileSync('/root/.openclaw/workspace/aurora-omega/logs/state.json', 'utf8'));
-        res.json(state);
-    } catch (e) {
-        res.json({ bank: 100, pnl: 0, trades: 0, wins: 0, losses: 0 });
-    }
+// API Routes - fetch from Upstash
+app.get('/api/aurora', async (req, res) => {
+  const data = await fetchFromUpstash('aurora');
+  res.json(data || { bank: 100, pnl: 0, trades: 0, wins: 0, losses: 0 });
 });
 
-app.get('/api/hft', (req, res) => {
-    try {
-        const state = JSON.parse(fs.readFileSync('/root/.openclaw/workspace/aurora-omega/logs/hft_state.json', 'utf8'));
-        res.json(state);
-    } catch (e) {
-        res.json({ bank: 100, pnl: 0, trades: 0, wins: 0, losses: 0 });
-    }
+app.get('/api/hft', async (req, res) => {
+  const data = await fetchFromUpstash('hft');
+  res.json(data || { bank: 100, pnl: 0, trades: 0, wins: 0, losses: 0 });
 });
 
-app.get('/api/combined', (req, res) => {
-    try {
-        const aurora = JSON.parse(fs.readFileSync('/root/.openclaw/workspace/aurora-omega/logs/state.json', 'utf8'));
-        const hft = JSON.parse(fs.readFileSync('/root/.openclaw/workspace/aurora-omega/logs/hft_state.json', 'utf8'));
-        const trades = JSON.parse(fs.readFileSync('/root/.openclaw/workspace/aurora-omega/logs/trades.json', 'utf8'));
-        res.json({ aurora, hft, trades: trades.slice(-20).reverse() });
-    } catch (e) {
-        res.json({ error: e.message });
-    }
+app.get('/api/combined', async (req, res) => {
+  const aurora = await fetchFromUpstash('aurora');
+  const hft = await fetchFromUpstash('hft');
+  const trades = await fetchFromUpstash('trades');
+  res.json({ aurora: aurora||{}, hft: hft||{}, trades: trades||[] });
 });
 
-app.get('/api/trades', (req, res) => {
-    try {
-        const trades = JSON.parse(fs.readFileSync('/root/.openclaw/workspace/aurora-omega/logs/trades.json', 'utf8'));
-        res.json(trades.slice(-20).reverse());
-    } catch (e) {
-        res.json([]);
-    }
+app.get('/api/trades', async (req, res) => {
+  const trades = await fetchFromUpstash('trades');
+  res.json(trades || []);
 });
 
-// Fallback to index.html
 app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 app.listen(PORT, () => {
-    console.log(`Aurora API running on port ${PORT}`);
+  console.log(`Aurora running on port ${PORT}`);
 });
