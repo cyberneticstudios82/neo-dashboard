@@ -26,7 +26,8 @@ async function saveToUpstash(key, data) {
                 res.on('end', () => resolve(d));
             });
             req.on('error', reject);
-            req.write(JSON.stringify({ value: JSON.stringify(data) }));
+            // Save data directly, not wrapped
+            req.write(JSON.stringify(data));
             req.end();
         });
     } catch (e) { console.log('Upstash save error:', e.message); }
@@ -42,7 +43,12 @@ async function loadFromUpstash(key) {
                 res.on('end', () => {
                     try {
                         const parsed = JSON.parse(data);
-                        resolve(parsed.result ? JSON.parse(parsed.result) : null);
+                        // Result is a string containing JSON, need to parse it
+                        if (parsed.result) {
+                            resolve(typeof parsed.result === 'string' ? JSON.parse(parsed.result) : parsed.result);
+                        } else {
+                            resolve(null);
+                        }
                     } catch(e) { resolve(null); }
                 });
             }).on('error', reject);
@@ -58,8 +64,7 @@ const CONFIG = {
     maxDailyTrades: 5,
     minConfidence: 0.6,
     
-    // Exchange APIs (real data)
-    coingecko: 'https://api.coingecko.com/api/v3',
+    // Use Binance API (higher rate limits than CoinGecko)
     binance: 'https://api.binance.com/api/v3',
     
     // Timeframes to analyze
@@ -67,7 +72,11 @@ const CONFIG = {
     
     // Learning
     learningRate: 0.1,
-    minWinRateToIncreaseSize: 0.60
+    minWinRateToIncreaseSize: 0.60,
+    
+    // Rate limiting
+    minApiInterval: 10000,  // 10 seconds between API calls
+    maxRetries: 3
 };
 
 class AuroraRealBot {
@@ -108,50 +117,91 @@ class AuroraRealBot {
 
     init() {
         console.log('🚀 AURORA REAL PAPER TRADING');
-        console.log('💰 Starting Bank: $' + this.initialBank);
-        console.log('📊 Trading with REAL conditions, REAL indicators');
         
-        // Initialize logs
-        this.log('SYSTEM', 'Aurora Real started with $' + this.initialBank);
-        this.saveState();
+        // Try to load state from Upstash FIRST
+        this.loadStateFromUpstash().then(() => {
+            console.log('💰 Bank: $' + this.bank.toFixed(2));
+            console.log('📊 Trading with REAL conditions, REAL indicators');
+            this.log('SYSTEM', 'Aurora Real resumed with $' + this.bank.toFixed(2));
+        }).catch(() => {
+            console.log('💰 Starting Bank: $' + this.initialBank);
+            console.log('📊 Trading with REAL conditions, REAL indicators');
+            this.log('SYSTEM', 'Aurora Real started with $' + this.initialBank);
+        });
     }
 
-    // ============ REAL DATA FETCHING ============
+    async loadStateFromUpstash() {
+        const state = await loadFromUpstash('aurora-real-state');
+        if (state && state.bank) {
+            this.bank = state.bank;
+            this.initialBank = state.initialBank || this.initialBank;
+            this.pnl = state.pnl || 0;
+            this.pnlPercent = state.pnlPercent || 0;
+            this.trades = state.trades || [];
+            this.wins = state.wins || 0;
+            this.losses = state.losses || 0;
+            this.strategyStats = state.strategyStats || this.strategyStats;
+            this.bestStrategy = state.bestStrategy || null;
+            this.adaptiveSize = state.adaptiveSize || (this.initialBank * CONFIG.maxRiskPerTrade);
+            console.log('✅ Loaded state from Upstash');
+            return true;
+        }
+        return null;
+    }
+
+    // ============ REAL DATA FETCHING (BINANCE - HIGHER LIMITS) ============
     
     async fetchPrices() {
+        // Use Binance API - much higher rate limits
+        const pairs = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'DOGEUSDT', 'PEPEUSDT', 'BNBUSDT', 'ADAUSDT', 'DOTUSDT'];
+        
         try {
-            const symbols = ['bitcoin', 'ethereum', 'solana', 'dogecoin', 'pepe', 'bonk', 'cardano', 'polkadot'];
-            const url = `${CONFIG.coingecko}/simple/price?ids=${symbols.join(',')}&vs_currencies=usd&include_24hr_change=true&include_24hr_vol=true&include_market_cap=true`;
-            
+            // Get all prices in one call
+            const url = `${CONFIG.binance}/ticker/24hr?symbols=${JSON.stringify(pairs)}`;
             const data = await this.fetchJSON(url);
-            this.prices = data;
             
-            console.log('📈 Prices:', Object.keys(this.prices).map(k => `${k}: $${data[k]?.usd}`).join(', '));
-            return data;
+            if (Array.isArray(data)) {
+                this.prices = {};
+                data.forEach(ticker => {
+                    const symbol = ticker.symbol.replace('USDT', '').toLowerCase();
+                    this.prices[symbol] = {
+                        usd: parseFloat(ticker.lastPrice),
+                        usd_24h_change: parseFloat(ticker.priceChangePercent),
+                        usd_24h_vol: parseFloat(ticker.volume)
+                    };
+                });
+            }
+            
+            console.log('📈 Prices:', Object.keys(this.prices).map(k => `${k.toUpperCase()}: $${this.prices[k]?.usd?.toFixed(4)}`).join(', '));
+            return this.prices;
         } catch (e) {
             console.log('❌ Price fetch error:', e.message);
             return this.prices;
         }
     }
 
-    async fetchOHLCV(symbol, days = 7) {
+    async fetchOHLCV(symbol, interval = '1h', limit = 100) {
+        // Use Binance klines/candles API
         try {
-            const url = `${CONFIG.coingecko}/coins/${symbol}/ohlc?vs_currency=usd&days=${days}`;
+            const pair = symbol.toUpperCase() + 'USDT';
+            const url = `${CONFIG.binance}/klines?symbol=${pair}&interval=${interval}&limit=${limit}`;
             const data = await this.fetchJSON(url);
             
-            // Convert to OHLCV format
-            this.ohlcv[symbol] = data.map(d => ({
-                time: d[0],
-                open: d[1],
-                high: d[2],
-                low: d[3],
-                close: d[4]
-            }));
+            if (Array.isArray(data)) {
+                this.ohlcv[symbol] = data.map(d => ({
+                    time: d[0],
+                    open: parseFloat(d[1]),
+                    high: parseFloat(d[2]),
+                    low: parseFloat(d[3]),
+                    close: parseFloat(d[4]),
+                    volume: parseFloat(d[5])
+                }));
+            }
             
-            return this.ohlcv[symbol];
+            return this.ohlcv[symbol] || [];
         } catch (e) {
             console.log(`❌ OHLCV fetch error for ${symbol}:`, e.message);
-            return [];
+            return this.ohlcv[symbol] || [];
         }
     }
 
@@ -488,15 +538,15 @@ class AuroraRealBot {
         // Fetch real prices
         await this.fetchPrices();
         
-        // Get top liquid assets
-        const symbols = ['bitcoin', 'ethereum', 'solana', 'dogecoin', 'pepe'];
+        // Get top liquid assets (Binance pairs)
+        const symbols = ['btc', 'eth', 'sol', 'doge', 'pepe', 'bnb', 'ada', 'dot'];
         
         for (const symbol of symbols) {
             const price = this.prices[symbol]?.usd;
             if (!price) continue;
             
-            // Get OHLCV data for analysis
-            const ohlcv = await this.fetchOHLCV(symbol, 7);
+            // Get OHLCV data for analysis (1 hour candles, last 100)
+            const ohlcv = await this.fetchOHLCV(symbol, '1h', 100);
             
             // Analyze with all strategies
             const signals = await this.analyzeAllStrategies(symbol, ohlcv);
@@ -630,9 +680,26 @@ class AuroraRealBot {
 // ============== RUN ==============
 const bot = new AuroraRealBot();
 
-// Run immediately then every 5 minutes
-bot.runCycle().then(() => {
-    setInterval(() => {
-        bot.runCycle();
-    }, 5 * 60 * 1000); // 5 minutes
-});
+// US Market Hours: 9:30 AM - 4:00 PM EST (14:30 - 21:00 UTC)
+// Focus trading during US session for best liquidity
+function isUSMarketHours() {
+    const utc = new Date();
+    const hour = utc.getUTCHours();
+    // Active: 14:00 UTC (9AM EST) to 21:00 UTC (4PM EST)
+    return hour >= 14 && hour < 21;
+}
+
+// Wait for init to load state, then run cycles
+setTimeout(() => {
+    bot.runCycle().then(() => {
+        // Run every 5 minutes but only during US hours
+        setInterval(() => {
+            if (isUSMarketHours()) {
+                console.log('🟢 US Market Open - Trading Active');
+                bot.runCycle();
+            } else {
+                console.log('🔴 US Market Closed - Sleep Mode');
+            }
+        }, 5 * 60 * 1000); // 5 minutes
+    });
+}, 2000); // Wait 2 seconds for init to complete

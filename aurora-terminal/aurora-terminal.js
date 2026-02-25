@@ -98,6 +98,15 @@ class AuroraTerminal {
         // Start trading cycle every 5 seconds
         setInterval(() => this.tradingCycle(), 5000);
         
+        // US Market focus logging
+        setInterval(() => {
+            const utc = new Date();
+            const hour = utc.getUTCHours();
+            if (hour >= 14 && hour < 21) {
+                console.log('🟢 US Market Active - High Liquidity');
+            }
+        }, 60000);
+        
         // New 5-min window every 5 minutes
         setInterval(() => this.newWindow(), CONFIG.windowSize);
         
