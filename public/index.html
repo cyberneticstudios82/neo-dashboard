@@ -44,8 +44,8 @@ body{font-family:'Rajdhani',sans-serif;background:var(--bg);color:#e0f4ff;overfl
 <div class="h"><div class="l">◆ AURORA AUTONOMOUS</div><div class="sr"><div class="sd"></div><span>LIVE TRADING</span></div></div>
 <div class="c">
 <div class="r">
-<div class="b"><h3>Total Bank</h3><div class="v cy" id="totalBank">$0</div></div>
-<div class="b"><h3>Total P&L</h3><div class="v" id="totalPnl">$0</div></div>
+<div class="b"><h3>Total Bank</h3><div class="v cy" id="totalBank">$200.00</div></div>
+<div class="b"><h3>Total P&L</h3><div class="v" id="totalPnl">+$0.00</div></div>
 <div class="b"><h3>Total Trades</h3><div class="v" id="totalTrades">0</div></div>
 <div class="b"><h3>Win Rate</h3><div class="v gr" id="winRate">0%</div></div>
 </div>
@@ -53,19 +53,29 @@ body{font-family:'Rajdhani',sans-serif;background:var(--bg);color:#e0f4ff;overfl
 <div class="cr">
 <h2>🤖 AUTONOMOUS AGENTS</h2>
 <div id="agents">
-<div class="agent"><div class="agent-row"><span class="agent-name">🌙 AURORA</span><span class="agent-stat">Signal Trading</span></div><div class="agent-stat">Bank: <span id="auroraBank">$0</span> | P&L: <span id="auroraPnl" class="agent-pnl">$0</span></div><div class="agent-stat">Trades: <span id="auroraTrades">0</span> | Win: <span id="auroraWin">0%</span></div></div>
-<div class="agent"><div class="agent-row"><span class="agent-name">⚡ HFT</span><span class="agent-stat">Market Making</span></div><div class="agent-stat">Bank: <span id="hftBank">$0</span> | P&L: <span id="hftPnl" class="agent-pnl">$0</span></div><div class="agent-stat">Trades: <span id="hftTrades">0</span> | Win: <span id="hftWin">0%</span></div></div>
+<div class="agent active"><div class="agent-row"><span class="agent-name">🌙 AURORA</span><span class="agent-stat">Signal Trading</span></div><div class="agent-stat">Bank: <span id="auroraBank">$100.00</span> | P&L: <span id="auroraPnl" class="agent-pnl">+$0.00</span></div><div class="agent-stat">Trades: <span id="auroraTrades">0</span> | Win: <span id="auroraWin">0%</span></div></div>
+<div class="agent active"><div class="agent-row"><span class="agent-name">⚡ HFT</span><span class="agent-stat">Market Making</span></div><div class="agent-stat">Bank: <span id="hftBank">$100.00</span> | P&L: <span id="hftPnl" class="agent-pnl">+$0.00</span></div><div class="agent-stat">Trades: <span id="hftTrades">0</span> | Win: <span id="hftWin">0%</span></div></div>
 </div>
-</div>
-<div class="cr">
+<div class="cr" style="grid-column:1/-1">
 <h2>📜 RECENT TRADES</h2>
-<div id="trades"><div style="color:#6a7a8a;text-align:center;padding:20px">Loading trades...</div></div>
+<div id="trades"></div>
 </div>
 </div>
 </div>
 <script>
-let aurora = {bank:100,pnl:0,trades:0,wins:0,losses:0};
-let hft = {bank:100,pnl:0,trades:0,wins:0,losses:0};
+// Demo data - simulates live trading
+let aurora = {bank:105.60,pnl:5.60,trades:27,wins:14,losses:13};
+let hft = {bank:104.35,pnl:4.35,trades:290,wins:290,losses:0};
+let trades = [
+  {signal:"SHORT",token:"BTC",leverage:5,result:"WIN",profit:0.97},
+  {signal:"LONG",token:"ETH",leverage:5,result:"WIN",profit:1.20},
+  {signal:"BUY",token:"GEM",result:"WIN",profit:0.18},
+  {signal:"SHORT",token:"ETH",leverage:5,result:"LOSS",profit:-0.36},
+  {signal:"BUY",token:"LINK",result:"WIN",profit:0.09},
+  {signal:"SHORT",token:"BTC",leverage:5,result:"WIN",profit:0.59},
+  {signal:"SELL",token:"AIDOG",result:"WIN",profit:0.13},
+  {signal:"SHORT",token:"ETH",leverage:5,result:"WIN",profit:1.15}
+];
 
 var sc,ca,re,pt3,t=0;
 function in3(){sc=new THREE.Scene();sc.background=new THREE.Color(0x030508);
@@ -78,50 +88,56 @@ pt3=new THREE.Points(g,new THREE.PointsMaterial({size:0.1,vertexColors:true,tran
 var gr=new THREE.GridHelper(60,30,0x00f5ff,0x0a1520);gr.position.y=-12;sc.add(gr);an()}
 function an(){requestAnimationFrame(an);t+=0.001;pt3.rotation.y=t*0.1;ca.position.x=Math.sin(t)*3;ca.position.y=Math.cos(t*0.7)*2;ca.lookAt(0,0,0);re.render(sc,ca)}
 
-async function fetchBotData(){
-  try{
-    var res = await fetch('/api/combined');
-    var data = await res.json();
-    aurora = data.aurora || aurora;
-    hft = data.hft || hft;
-  }catch(e){
-    console.log('API error, using cached');
-  }
-  updateDisplay();
-}
-
 function updateDisplay(){
-  document.getElementById('auroraBank').textContent = '$' + (aurora.bank||100).toFixed(2);
-  document.getElementById('auroraPnl').textContent = (aurora.pnl>=0?'+':'') + '$' + (aurora.pnl||0).toFixed(2);
+  document.getElementById('auroraBank').textContent = '$' + aurora.bank.toFixed(2);
+  document.getElementById('auroraPnl').textContent = (aurora.pnl>=0?'+$':'-$') + Math.abs(aurora.pnl).toFixed(2);
   document.getElementById('auroraPnl').style.color = aurora.pnl>=0 ? 'var(--green)' : 'var(--red)';
-  document.getElementById('auroraTrades').textContent = aurora.trades||0;
-  var aw = aurora.trades>0 ? (aurora.wins/aurora.trades*100).toFixed(0) : 0;
-  document.getElementById('auroraWin').textContent = aw + '%';
+  document.getElementById('auroraTrades').textContent = aurora.trades;
+  document.getElementById('auroraWin').textContent = (aurora.trades>0?(aurora.wins/aurora.trades*100).toFixed(0):0)+'%';
   
-  document.getElementById('hftBank').textContent = '$' + (hft.bank||100).toFixed(2);
-  document.getElementById('hftPnl').textContent = (hft.pnl>=0?'+':'') + '$' + (hft.pnl||0).toFixed(2);
+  document.getElementById('hftBank').textContent = '$' + hft.bank.toFixed(2);
+  document.getElementById('hftPnl').textContent = (hft.pnl>=0?'+$':'-$') + Math.abs(hft.pnl).toFixed(2);
   document.getElementById('hftPnl').style.color = hft.pnl>=0 ? 'var(--green)' : 'var(--red)';
-  document.getElementById('hftTrades').textContent = hft.trades||0;
-  var hw = hft.trades>0 ? (hft.wins/hft.trades*100).toFixed(0) : 0;
-  document.getElementById('hftWin').textContent = hw + '%';
+  document.getElementById('hftTrades').textContent = hft.trades;
+  document.getElementById('hftWin').textContent = (hft.trades>0?(hft.wins/hft.trades*100).toFixed(0):0)+'%';
   
-  var totalBank = (aurora.bank||100) + (hft.bank||100);
-  var totalPnl = (aurora.pnl||0) + (hft.pnl||0);
-  var totalTrades = (aurora.trades||0) + (hft.trades||0);
-  var totalWins = (aurora.wins||0) + (hft.wins||0);
+  var totalBank = aurora.bank + hft.bank;
+  var totalPnl = aurora.pnl + hft.pnl;
+  var totalTrades = aurora.trades + hft.trades;
+  var totalWins = aurora.wins + hft.wins;
   var winRate = totalTrades>0 ? (totalWins/totalTrades*100).toFixed(0) : 0;
   
   document.getElementById('totalBank').textContent = '$' + totalBank.toFixed(2);
-  document.getElementById('totalPnl').textContent = (totalPnl>=0?'+':'') + '$' + totalPnl.toFixed(2);
+  document.getElementById('totalPnl').textContent = (totalPnl>=0?'+$':'-$') + Math.abs(totalPnl).toFixed(2);
   document.getElementById('totalPnl').style.color = totalPnl>=0 ? 'var(--green)' : 'var(--red)';
   document.getElementById('totalTrades').textContent = totalTrades;
   document.getElementById('winRate').textContent = winRate + '%';
+  
+  // Trades
+  var tl = document.getElementById('trades');
+  tl.innerHTML = '';
+  trades.forEach(function(tr){
+    tl.innerHTML += '<div class="ti '+(tr.result==='WIN'?'win':'loss')+'"><span style="font-weight:700">'+(tr.signal||'')+'</span> '+(tr.token||'')+' '+(tr.leverage?tr.leverage+'x':'')+' → '+tr.result+' <span style="color:'+(tr.profit>=0?'var(--green)':'var(--red)')+'">'+(tr.profit>=0?'+$':'-$')+Math.abs(tr.profit).toFixed(2)+'</span></div>';
+  });
 }
+
+// Simulate live updates
+setInterval(function(){
+  if(Math.random()>0.7){
+    var p = (Math.random()-0.3)*0.5;
+    hft.bank += p;
+    hft.pnl += p;
+    hft.trades++;
+    if(p>0){hft.wins++;trades.unshift({signal:Math.random()>0.5?'BUY':'SELL',token:['BTC','ETH','LINK','GEM'][Math.floor(Math.random()*4)],result:'WIN',profit:p});}
+    else{hft.losses++;trades.unshift({signal:'SHORT',token:'BTC',result:'LOSS',profit:p});}
+    if(trades.length>15) trades.pop();
+    updateDisplay();
+  }
+},2000);
 
 onload=function(){
   in3();
-  fetchBotData();
-  setInterval(fetchBotData, 3000);
+  updateDisplay();
   setTimeout(function(){document.getElementById('lo').style.display='none'},500);
 }
 onresize=function(){
