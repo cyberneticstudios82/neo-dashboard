@@ -95,22 +95,9 @@ app.get('/api/aurora-real', async (req, res) => {
         
         const parsed = JSON.parse(response);
         
-        // Upstash returns {result: "{\"value\":\"{\\\"bank\\\":...}\"}"} - double nested!
-        let raw = parsed.result;
-        
-        if (raw) {
-            // First parse: result is a string containing JSON
-            let inner = typeof raw === 'string' ? JSON.parse(raw) : raw;
-            
-            // Second parse: inner.value contains the actual data
-            if (inner && inner.value) {
-                let actual = inner.value;
-                if (typeof actual === 'string') {
-                    data = JSON.parse(actual);
-                } else {
-                    data = actual;
-                }
-            }
+        // Upstash returns {result: "{\"bank\":...}"} - already properly formatted
+        if (parsed.result) {
+            data = typeof parsed.result === 'string' ? JSON.parse(parsed.result) : parsed.result;
         }
     } catch (e) {
         console.log('Upstash error:', e.message);
