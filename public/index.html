@@ -29,7 +29,7 @@ body{font-family:'Rajdhani',sans-serif;background:var(--bg);color:#e0f4ff;overfl
 .agent-row{display:flex;justify-content:space-between;align-items:center}
 .agent-name{font-weight:700;font-family:'Orbitron';font-size:13px}
 .agent-stat{font-size:11px;color:#6a7a8a}
-.agent-pnl{font-family:'Orbitron';font-size:16px}
+font-family:'Orbitron';font.agent-pnl{-size:16px}
 .ti{padding:8px;margin:4px 0;background:rgba(0,0,0,0.3);border-left:3px solid var(--cyan);border-radius:4px;font-size:12px}
 .ti.win{border-left-color:var(--green)}
 .ti.loss{border-left-color:var(--red)}
@@ -56,6 +56,7 @@ body{font-family:'Rajdhani',sans-serif;background:var(--bg);color:#e0f4ff;overfl
 <div class="agent active"><div class="agent-row"><span class="agent-name">🌙 AURORA</span><span class="agent-stat">Signal Trading</span></div><div class="agent-stat">Bank: <span id="auroraBank">$100.00</span> | P&L: <span id="auroraPnl" class="agent-pnl">+$0.00</span></div><div class="agent-stat">Trades: <span id="auroraTrades">0</span> | Win: <span id="auroraWin">0%</span></div></div>
 <div class="agent active"><div class="agent-row"><span class="agent-name">⚡ HFT</span><span class="agent-stat">Market Making</span></div><div class="agent-stat">Bank: <span id="hftBank">$100.00</span> | P&L: <span id="hftPnl" class="agent-pnl">+$0.00</span></div><div class="agent-stat">Trades: <span id="hftTrades">0</span> | Win: <span id="hftWin">0%</span></div></div>
 </div>
+</div>
 <div class="cr" style="grid-column:1/-1">
 <h2>📜 RECENT TRADES</h2>
 <div id="trades"></div>
@@ -63,20 +64,21 @@ body{font-family:'Rajdhani',sans-serif;background:var(--bg);color:#e0f4ff;overfl
 </div>
 </div>
 <script>
-// Demo data - simulates live trading
+// State
 let aurora = {bank:105.60,pnl:5.60,trades:27,wins:14,losses:13};
 let hft = {bank:104.35,pnl:4.35,trades:290,wins:290,losses:0};
 let trades = [
-  {signal:"SHORT",token:"BTC",leverage:5,result:"WIN",profit:0.97},
-  {signal:"LONG",token:"ETH",leverage:5,result:"WIN",profit:1.20},
-  {signal:"BUY",token:"GEM",result:"WIN",profit:0.18},
-  {signal:"SHORT",token:"ETH",leverage:5,result:"LOSS",profit:-0.36},
-  {signal:"BUY",token:"LINK",result:"WIN",profit:0.09},
-  {signal:"SHORT",token:"BTC",leverage:5,result:"WIN",profit:0.59},
-  {signal:"SELL",token:"AIDOG",result:"WIN",profit:0.13},
-  {signal:"SHORT",token:"ETH",leverage:5,result:"WIN",profit:1.15}
+  {signal:"SHORT",token:"BTC",leverage:5,result:"WIN",profit:0.97,time:"00:27"},
+  {signal:"LONG",token:"ETH",leverage:5,result:"WIN",profit:1.20,time:"00:26"},
+  {signal:"BUY",token:"GEM",result:"WIN",profit:0.18,time:"00:25"},
+  {signal:"SHORT",token:"ETH",leverage:5,result:"LOSS",profit:-0.36,time:"00:24"},
+  {signal:"BUY",token:"LINK",result:"WIN",profit:0.09,time:"00:23"},
+  {signal:"SHORT",token:"BTC",leverage:5,result:"WIN",profit:0.59,time:"00:22"},
+  {signal:"SELL",token:"AIDOG",result:"WIN",profit:0.13,time:"00:21"},
+  {signal:"SHORT",token:"ETH",leverage:5,result:"WIN",profit:1.15,time:"00:20"}
 ];
 
+// Three.js
 var sc,ca,re,pt3,t=0;
 function in3(){sc=new THREE.Scene();sc.background=new THREE.Color(0x030508);
 ca=new THREE.PerspectiveCamera(75,innerWidth/innerHeight,0.1,1000);ca.position.z=25;
@@ -113,7 +115,6 @@ function updateDisplay(){
   document.getElementById('totalTrades').textContent = totalTrades;
   document.getElementById('winRate').textContent = winRate + '%';
   
-  // Trades
   var tl = document.getElementById('trades');
   tl.innerHTML = '';
   trades.forEach(function(tr){
@@ -121,16 +122,32 @@ function updateDisplay(){
   });
 }
 
-// Simulate live updates
+// Simulate live trading
 setInterval(function(){
-  if(Math.random()>0.7){
-    var p = (Math.random()-0.3)*0.5;
-    hft.bank += p;
-    hft.pnl += p;
+  // Random trade every 2-4 seconds
+  if(Math.random() > 0.6){
+    var isWin = Math.random() > 0.35;
+    var profit = isWin ? (Math.random() * 2) : -(Math.random() * 0.5);
+    var signals = ['BUY', 'SELL', 'LONG', 'SHORT'];
+    var tokens = ['BTC', 'ETH', 'LINK', 'SOL', 'GEM', 'AIDOG'];
+    var signal = signals[Math.floor(Math.random() * signals.length)];
+    var token = tokens[Math.floor(Math.random() * tokens.length)];
+    var leverage = Math.random() > 0.5 ? 5 : 1;
+    
+    hft.bank += profit;
+    hft.pnl += profit;
     hft.trades++;
-    if(p>0){hft.wins++;trades.unshift({signal:Math.random()>0.5?'BUY':'SELL',token:['BTC','ETH','LINK','GEM'][Math.floor(Math.random()*4)],result:'WIN',profit:p});}
-    else{hft.losses++;trades.unshift({signal:'SHORT',token:'BTC',result:'LOSS',profit:p});}
-    if(trades.length>15) trades.pop();
+    var time = new Date().toLocaleTimeString().substring(0,5);
+    
+    if(isWin){
+      hft.wins++;
+      trades.unshift({signal:signal,token:token,leverage:leverage,result:'WIN',profit:profit,time:time});
+    }else{
+      hft.losses++;
+      trades.unshift({signal:signal,token:token,leverage:leverage,result:'LOSS',profit:profit,time:time});
+    }
+    
+    if(trades.length > 15) trades.pop();
     updateDisplay();
   }
 },2000);
